@@ -3,7 +3,7 @@
 - PostgresSQL Database
 - Docker Support
 - API
-- Chatting Applcation like Disocrd
+- Chatting Applcation like Discord
 
 ✨ ✨ ✨
 
