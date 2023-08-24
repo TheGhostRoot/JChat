@@ -6,3 +6,6 @@
 - Chatting Applcation like Disocrd
 
 ✨ ✨ ✨
+
+## In development. 
+## Personal Project.
