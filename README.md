@@ -1,1 +1,6 @@
-Yay\n
+#Features
+- All with Java
+- PostgresSQL Database
+- Docker Support
+- API
+- Chatting Applcation like Disocrd
