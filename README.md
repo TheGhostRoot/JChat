@@ -1,6 +1,6 @@
 ## Features
 - All with Java
-- PostgresSQL Database
+- PostgresSQL and ScyllaDB Database (for test)
 - Docker Support
 - API
 - Chatting Applcation like Discord
