@@ -35,7 +35,7 @@ If you have kind heart and want to help me with this masive project. Please cont
 
 * Developer API
 - It is ment to be only use by bots that are registered on the server as legit bots by developers. Users can't use this API.
-- It is used only for **GROUPS** to customize user experience by using the API's doc. The API can be used in Python, Java, C++, JavaScript and C#
+- It is used only for **GROUPS** to customize user experience by using the API's doc. The API can be used in **Python**, **Java**, **C++**, **JavaScript** and **C#**
 - Has protection against spamming and abusing.
 
 Endpoints and Security information is in the docs: LINK IN THE FUTURE
