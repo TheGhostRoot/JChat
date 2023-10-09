@@ -1,6 +1,6 @@
 ### JCoreChat
 
-Open-source social media application with customazation and everything you need to host it without knowing how to code. My first atempt was the YT-Downloader, but I want to go bigger and better so Welcome to JCoreChat.
+Open-source social media application with customazation and everything you need to host it without knowing how to code. My first atempt was the YT-Downloader, but I want to go bigger and better so Welcome to **JCoreChat**.
 
 **J** stands for Java, because Java will be the most used language for the project
 
