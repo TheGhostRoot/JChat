@@ -1,0 +1,14 @@
+plugins {
+    id "java"
+    id "application"
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+    maven { url 'https://repo.spring.io/milestone' }
+    flatDir {
+        dirs 'libs'
+    }
+}
