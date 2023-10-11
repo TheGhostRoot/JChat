@@ -1,0 +1,7 @@
+
+r
+java:S1104"PMake text a static final constant or non-public and provide accessors if needed.(†±œùÿÿÿÿ8Îà‰ü±1
+L
+java:S1444"*Make this "public static text" field final(†±œùÿÿÿÿ8Ñà‰ü±1
+
+java:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(Çµí‘8àà‰ü±1

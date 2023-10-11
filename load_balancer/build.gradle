@@ -25,13 +25,13 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'lb.LoadBalancer'
+    mainClass = group
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'lb.LoadBalancer'
+        attributes 'Main-Class': group
     }
 }
 

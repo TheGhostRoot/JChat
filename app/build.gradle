@@ -7,6 +7,10 @@ plugins {
     id 'java'
 }
 
+group = 'app.App'
+version = '0.1'
+sourceCompatibility = '17'
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -23,13 +27,13 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'app.App'
+    mainClass = group
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'app.App'
+        attributes 'Main-Class': group
     }
 }
 
@@ -40,7 +44,3 @@ java {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-
-group = 'app.App'
-version = '0.1'
-sourceCompatibility = '17'

@@ -4,6 +4,10 @@ plugins {
     id 'java'
 }
 
+group = 'api'
+version = '0.1'
+sourceCompatibility = '17'
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -12,11 +16,16 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+
 }
 
 dependencies {
-    // implementation project(':utilities')
 
+    //comple project(':Util')
+
+    //implementation project(':Util')
+
+    implementation 'jcorechathelpers:Util:0.1'
 }
 
 application {
@@ -39,6 +48,3 @@ java {
     }
 }
 
-group = 'api.API'
-version = '0.1'
-sourceCompatibility = '17'

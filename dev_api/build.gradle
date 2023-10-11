@@ -28,13 +28,13 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'api.API'
+    mainClass = group
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'api.API'
+        attributes 'Main-Class': group
     }
 }
 
