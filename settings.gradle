@@ -13,5 +13,5 @@ plugins {
 }
 
 
-
-include ':App_API', ":Util", ':App', ':Dev_API', ":Load_Balancer"
+rootProject.name = 'JCoreChat'
+include('App_API', 'App', 'Dev_API', "Load_Balancer")

@@ -4,39 +4,35 @@ plugins {
     id 'java'
 }
 
-group = 'api'
+group = 'jcorechat.app_api'
 version = '0.1'
 sourceCompatibility = '17'
 
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    mavenLocal()
     maven { url "https://jitpack.io" }
     maven { url 'https://repo.spring.io/milestone' }
     flatDir {
-        dirs 'libs'
+        dirs('libs')
     }
 
 }
 
 dependencies {
 
-    //comple project(':Util')
-
-    //implementation project(':Util')
-
-    implementation 'jcorechathelpers:Util:0.1'
 }
 
 application {
     // Define the main class for the application.
-    mainClass = 'api.API'
+    mainClass = 'jcorechat.app_api.API'
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'api.API'
+        attributes 'Main-Class': 'jcorechat.app_api.API'
     }
 }
 

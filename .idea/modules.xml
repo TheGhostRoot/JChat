@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.test.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/JCoreChat.App_API.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.iml" filepath="$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Dev_API/JCoreChat.Dev_API.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.iml" filepath="$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Load_Balancer/JCoreChat.Load_Balancer.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" />
+    </modules>
+  </component>
+</project>

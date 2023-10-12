@@ -14,7 +14,7 @@ repositories {
     }
 }
 
-group = 'lb.LoadBalancer'
+group = 'jcorechat.load_balancer'
 version = '0.1'
 sourceCompatibility = '17'
 
@@ -25,13 +25,13 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = group
+    mainClass = 'jcorechat.load_balancer.LoadBalancer'
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': group
+        attributes 'Main-Class': 'jcorechat.load_balancer.LoadBalancer'
     }
 }
 
