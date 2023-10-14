@@ -2,6 +2,8 @@
 plugins {
     id 'application'
     id 'java'
+    id 'org.springframework.boot' version '3.1.0'
+    id 'io.spring.dependency-management' version '1.1.0'
 }
 
 group = 'jcorechat.app_api'
@@ -21,11 +23,36 @@ repositories {
 }
 
 dependencies {
+    //testImplementation 'junit:junit:4.13.2'
+    //testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    //implementation 'org.yaml:snakeyaml:2.2'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation "org.springframework.security:spring-security-web"
+    implementation "org.springframework.security:spring-security-config"
 }
 
 application {
     // Define the main class for the application.
+    mainClass = 'jcorechat.app_api.API'
+}
+
+
+springBoot {
+    mainClass = 'jcorechat.app_api.API'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.named("bootJar") {
     mainClass = 'jcorechat.app_api.API'
 }
 

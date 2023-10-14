@@ -5,6 +5,8 @@
 plugins {
     id 'application'
     id 'java'
+    id 'org.springframework.boot' version '3.1.0'
+    id 'io.spring.dependency-management' version '1.1.0'
 }
 
 repositories {
@@ -23,7 +25,26 @@ sourceCompatibility = '17'
 
 dependencies {
     // implementation project(':utilities')
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation "org.springframework.security:spring-security-web"
+    implementation "org.springframework.security:spring-security-config"
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
+}
+
+springBoot {
+    mainClass = 'jcorechat.dev_api.API'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.named("bootJar") {
+    mainClass = 'jcorechat.dev_api.API'
 }
 
 application {
