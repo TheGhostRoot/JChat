@@ -1,7 +1,6 @@
 package jcorechat.app_api;
 
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -12,6 +11,8 @@ import java.util.Collections;
 
 @SpringBootApplication
 public class API {
+
+    public static final short API_VERSION = 1;
 
     public static final Logger logger = LogManager.getRootLogger();
     public static final Yaml yaml = new Yaml();
@@ -33,6 +34,17 @@ public class API {
 
         // TODO the ...Controller  job is to handle REST API requests and run some security checks before passing the
         //  given data to the Manager
+
+
+        //  /api/v{VERSION}/friends
+
+        //  /api/v{VERSION}/groups
+
+        //  /api/v{VERSION}/chats
+
+        //  /api/v{VERSION}/posts
+
+        //  /api/v{VERSION}/profile
 
         configManager = new ConfigManager();
 
