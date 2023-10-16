@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/../../../../GradleHome/.gradle/wrapper/dists/gradle-8.1.1-bin/9wiye5v2saajue4irfo8ybqfp/gradle-8.1.1/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.30/f195ee86e6c896ea47a1d39defbe20eb59cd149d/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="jcorechat.app_api.JCoreChat.App_API.main" />
+      </profile>
+    </annotationProcessing>
     <bytecodeTargetLevel target="17">
       <module name="Util" target="17" />
     </bytecodeTargetLevel>

@@ -1,6 +1,8 @@
 package jcorechat.app_api;
 
 
+import jcorechat.app_api.security.Cription;
+import jcorechat.app_api.security.JwtService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -18,6 +20,10 @@ public class API {
     public static final Yaml yaml = new Yaml();
 
     public static ConfigManager configManager;
+
+    public static JwtService jwtService;
+
+    public static Cription cription;
 
     public static void main(String[] args) {
 
@@ -46,7 +52,11 @@ public class API {
 
         //  /api/v{VERSION}/profile
 
+        // /api/v{VERSION}/account
+
         configManager = new ConfigManager();
+        jwtService = new JwtService();
+        cription = new Cription();
 
         SpringApplication app = new SpringApplication(API.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", configManager.getServerPort()));

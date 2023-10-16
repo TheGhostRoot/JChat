@@ -2,7 +2,6 @@ package jcorechat.app_api.accounts;
 
 
 import jcorechat.app_api.API;
-import jcorechat.app_api.security.JwtService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +17,6 @@ public class AccountController {
         HashMap<String, Object> map = new HashMap<>();
         map.put("username", "Idk");
         map.put("password", "123");
-        return new JwtService().generateJwt(map, "Creatig Account");
+        return API.jwtService.generateJwt(map, "Creatig Account");
     }
 }
