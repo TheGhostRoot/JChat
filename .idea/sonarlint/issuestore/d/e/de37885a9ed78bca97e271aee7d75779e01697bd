@@ -1,0 +1,19 @@
+
+q	java:S116"URename this field "SECRET_KEY" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ü„¬¯8²£àÈ³1
+p	java:S116"TRename this field "SignInKey" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(èŠ—ï8²£àÈ³1
+>
+java:S1170"!Make this final field static too.(ü„¬¯8²£àÈ³1
+Q
+java:S1874"5Remove this use of "setSigningKey"; it is deprecated.(âéÌ!8½£àÈ³1
+S
+java:S1874!"6Remove this use of "parseClaimsJws"; it is deprecated.(ø‰ãç8ü„áÈ³1
+L
+java:S1874""/Remove this use of "getBody"; it is deprecated.(ÊÄ¿Ì8ü„áÈ³1
+R
+java:S1874/"0Remove this use of "signWith"; it is deprecated.(ÆÔ¦Ÿÿÿÿÿÿ8°´âÈ³1
+\
+java:S1874/":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÆÔ¦Ÿÿÿÿÿÿ8°´âÈ³1
+\
+java:S1874/":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÆÔ¦Ÿÿÿÿÿÿ8°´âÈ³1
+J
+java:S11448"-Remove this unused private "getClaim" method.(¿âá¹8´´âÈ³1
