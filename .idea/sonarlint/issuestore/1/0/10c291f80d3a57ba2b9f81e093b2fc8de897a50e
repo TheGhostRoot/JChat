@@ -1,2 +1,23 @@
 
-F	java:S106"+Replace this use of System.out by a logger.(äÒƒ|8à¢Õì²1
+{
+java:S1104"YMake configManager a static final constant or non-public and provide accessors if needed.(ßÚöùÿÿÿÿ8‰Ö„“³1
+U
+java:S1444"3Make this "public static configManager" field final(ßÚöùÿÿÿÿ8‰Ö„“³1
+O
+java:S1135"2Complete the task associated to this TODO comment.(¨¢˜8´Ú…“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.(ìì’ùûÿÿÿÿ8´Ú…“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.(Ÿ”ëåıÿÿÿÿ8ßŸ‹“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.(®ŒÊ¦şÿÿÿÿ8ßŸ‹“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.(µÎ§¿øÿÿÿÿ8€ËŒ“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.(¿Ê§úÿÿÿÿ8È¹’“³1
+T
+java:S1135"2Complete the task associated to this TODO comment.( Í‹šıÿÿÿÿ8È¹’“³1
+O
+java:S1135 "2Complete the task associated to this TODO comment.(¾Ë¬ñ8ªç—“³1
+O
+java:S1135#"2Complete the task associated to this TODO comment.(õô÷Ü8©•œ“³1
