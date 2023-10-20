@@ -1,7 +1,9 @@
 package jcorechat.app_api;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.accounts.AccountManager;
+import jcorechat.app_api.captchas.CaptahaManager;
 import jcorechat.app_api.security.Cription;
 import jcorechat.app_api.security.JwtService;
 import org.apache.logging.log4j.LogManager;
@@ -10,9 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.yaml.snakeyaml.Yaml;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 @SpringBootApplication
 public class API {
@@ -30,19 +30,33 @@ public class API {
 
     public static AccountManager accountManager;
 
+    public static CaptahaManager captahaManager;
+
+    // user id : email
     public static HashMap<Long, String> emails = new HashMap<>();
+
+    // user id : user name
 
     public static HashMap<Long, String> names = new HashMap<>();
 
+    // user id : password
+
     public static HashMap<Long, String> passwords = new HashMap<>();
 
-    public static HashMap<Long, String> code = new HashMap<>();
 
-    public static HashMap<Long, String> sessions = new HashMap<>();
+    // user ID : session ID
+    public static HashMap<Long, Long> sessions = new HashMap<>();
 
+    // user id : encryption key
     public static HashMap<Long, String> encryption_user_keys = new HashMap<>();
 
+
+
+    // user id : sign key
     public static HashMap<Long, String> sign_user_keys = new HashMap<>();
+
+    // captcha ID : Captcha answer
+    public static HashMap<Long, HashSet<String>> captcha_results = new HashMap<>();
 
     public static Random random = new Random();
 
@@ -83,6 +97,7 @@ public class API {
         jwtService = new JwtService();
         cription = new Cription();
         accountManager = new AccountManager();
+        captahaManager = new CaptahaManager();
 
 
         /*
@@ -115,7 +130,6 @@ public class API {
         emails.put(id, "test@email.smth");
         names.put(id, "My name is");
         passwords.put(id, "123");
-        code.put(id, "IdK");
 
         String encryption_key = cription.generateUserKey();
         logger.info("User Encryption Key: "+encryption_key);
@@ -130,5 +144,14 @@ public class API {
         SpringApplication app = new SpringApplication(API.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", configManager.getServerPort()));
         app.run(args);
+    }
+
+    public static String get_IP(HttpServletRequest request) {
+        String IP;
+        try {
+            IP = request.getRemoteAddr();
+        } catch (Exception e) { return null; }
+
+        return "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
     }
 }

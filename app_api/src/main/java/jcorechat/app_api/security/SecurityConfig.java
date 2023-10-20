@@ -13,12 +13,17 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final String API_PREFIX = "/api/v"+ API.API_VERSION;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests()
-                .requestMatchers("/api/v"+ API.API_VERSION+"/account")
-                .permitAll();
+        http.authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests.requestMatchers(API_PREFIX+"/account")
+                                .permitAll()
+                                .requestMatchers(API_PREFIX+"/captcha")
+                                .permitAll()
+        );
 
         return http.build();
 

@@ -1,25 +1,45 @@
 
-q	java:S116"URename this field "SECRET_KEY" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ü„¬¯8úĞÍ³1
-p	java:S116"TRename this field "SignInKey" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ßÒô„8“úĞÍ³1
+~
+java:S2629"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(±¹Ô²ÿÿÿÿÿ8Ü©²œ´1
+~	java:S116"]Rename this field "AlphaNumericString" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÜğşÿÿÿÿÿ8ò©²œ´1
+w	java:S116"[Rename this field "GlobalSECRET_KEY" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(úö„Ï8ò©²œ´1
+{	java:S116"ZRename this field "GlobalSignInKey" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ìû‹ ıÿÿÿÿ8ò©²œ´1
+C
+java:S1170"!Make this final field static too.(ÖÜğşÿÿÿÿÿ8ò©²œ´1
 >
-java:S1170"!Make this final field static too.(ü„¬¯8˜úĞÍ³1
-Q
-java:S1874"5Remove this use of "setSigningKey"; it is deprecated.(âéÌ!8ºúĞÍ³1
-S
-java:S1874 "6Remove this use of "parseClaimsJws"; it is deprecated.(ø‰ãç8»úĞÍ³1
-L
-java:S1874!"/Remove this use of "getBody"; it is deprecated.(ÊÄ¿Ì8¼úĞÍ³1
+java:S1170"!Make this final field static too.(úö„Ï8ò©²œ´1
+c
+java:S3457"AFormat specifiers should be used instead of string concatenation.(±¹Ô²ÿÿÿÿÿ8€ª²œ´1
+A
+java:S1168"$Return an empty map instead of null.(ñÆ†­8†ª²œ´1
+N
+java:S1905#",Remove this unnecessary cast to "SecretKey".(µ­¶‡ÿÿÿÿÿ8‰ª²œ´1
+A
+java:S1168."$Return an empty map instead of null.(ñÆ†­8‹ª²œ´1
 M
-java:S18741"0Remove this use of "signWith"; it is deprecated.(ñ¬â8ÉúĞÍ³1
+java:S1874@"0Remove this use of "signWith"; it is deprecated.(•§8’ª²œ´1
 W
-java:S18741":Remove this use of "SignatureAlgorithm"; it is deprecated.(ñ¬â8ÊúĞÍ³1
+java:S1874@":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8“ª²œ´1
 W
-java:S18741":Remove this use of "SignatureAlgorithm"; it is deprecated.(ñ¬â8ÊúĞÍ³1
+java:S1874@":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8Á´³œ´1
+R
+java:S1874D"0Remove this use of "signWith"; it is deprecated.(ÁÂœûşÿÿÿÿ8˜ô³œ´1
+\
+java:S1874D":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
+\
+java:S1874D":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
 M
-java:S1874;"0Remove this use of "signWith"; it is deprecated.(ñ¬â8ÏúĞÍ³1
+java:S1874N"0Remove this use of "signWith"; it is deprecated.(äÑ˜8Èœ´œ´1
 W
-java:S1874;":Remove this use of "SignatureAlgorithm"; it is deprecated.(ñ¬â8ÏúĞÍ³1
+java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8Éœ´œ´1
 W
-java:S1874;":Remove this use of "SignatureAlgorithm"; it is deprecated.(ñ¬â8ÏúĞÍ³1
-J
-java:S1144D"-Remove this unused private "getClaim" method.(¿âá¹8Ëÿ¿Í³1
+java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8Éœ´œ´1
+M
+java:S1874R"0Remove this use of "signWith"; it is deprecated.(äÑ˜8´·´œ´1
+W
+java:S1874R":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8¶·´œ´1
+W
+java:S1874R":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8¸·´œ´1
+X	java:S125\"<This block of commented-out lines of code should be removed.(«øé8›ª²œ´1
+5
+java:S2140]"Use "nextInt()" instead.(®ŸÓ 8ºúœ´1

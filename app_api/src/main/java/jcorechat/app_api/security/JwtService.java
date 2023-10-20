@@ -24,6 +24,8 @@ public class JwtService {
     }
 
     public Map<String, Object> getData(final String jwt, final String... key) {
+        // key[0]  - user encryption key
+        // key[1]  - user sign key
         Claims all = key.length != 2 ? getGlobalClaims(API.cription.GlobalDecrypt(jwt)) : getUserClaims(API.cription.UserDecrypt(jwt, key[0]), key[1]);
         return null != all ? new HashMap<>(all) : null;
     }
@@ -75,11 +77,11 @@ public class JwtService {
         return encrypted && key.length == 1 ? API.cription.UserEncrypt(Jwts.builder().claims(claims)
                 .subject(data)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.ES512)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact(), key[0]) : Jwts.builder().claims(claims)
                 .subject(data)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.ES512)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact();
 
     }

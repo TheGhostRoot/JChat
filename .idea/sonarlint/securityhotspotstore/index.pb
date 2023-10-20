@@ -3021,3 +3021,7 @@ w
 G.idea/sonarlint/issuestore/2/8/28e020cdddff3b93880c40ff82c4f11a78062d99,0\0\00064bcadf00a379ca1ca643e6756e3a48dceeb3
 w
 G.idea/sonarlint/issuestore/0/9/09bd337d7a4993f3aa752be8eb3baf88e4982cc9,4\2\42b8ab51f40efa86efd983a5a016a5bf54dab788
+t
+Dapp_api/src/main/java/jcorechat/app_api/captchas/CaptahaManager.java,b\3\b3036c2e4672d9ca05d7bd620cf957d55ddc8932
+w
+Gapp_api/src/main/java/jcorechat/app_api/captchas/CaptchaController.java,e\5\e50052ad0e29902340e2284eb22920fd9d198537

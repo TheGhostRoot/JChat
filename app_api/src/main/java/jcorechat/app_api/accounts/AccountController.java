@@ -5,48 +5,59 @@ import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.API;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+API.API_VERSION)
+@RequestMapping(path = "/api/v"+API.API_VERSION+"/account")
 public class AccountController {
 
 
-    // The only GET endpoint with Global Encryption
-    @GetMapping("/account")
+    @GetMapping
     public Map<Character, Object> getAccount(HttpServletRequest request) {
 
-        Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization").substring(7));
+        String IP = API.get_IP(request);
+        if (null == IP) { return null; }
+
+        Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization"));
         if (null == data) { return null; }
 
-        Map<Character, Object> respose_data = new HashMap<>();
+        String key;
+        String sign;
+        long app_session_id;
 
-        String key = null;
-        String sign = null;
-;
         if (data.containsKey("u") && data.containsKey("p")) {
             String user = (String) data.get("u");
             String password = (String) data.get("p");
 
-            long user_id = API.accountManager.getIDbyUser(user, password);
-            key = API.accountManager.getEncryptionUserKeyByID(user_id);
-            sign = API.accountManager.getSignUserKeyByID(user_id);
+            Long user_id = API.accountManager.get_UserID_By_Username_and_Password(user, password);
+            if (null == user_id) { return null; }
+            if (null != API.sessions.get(user_id)) { return null; }
+
+            key = API.accountManager.get_EncryptionKey_By_UserID(user_id);
+            sign = API.accountManager.get_SignKey_By_UserID(user_id);
+            app_session_id = API.accountManager.generate_Session(false);
+            API.sessions.put(user_id, app_session_id);
 
         } else if (data.containsKey("i")) {
             // remember me
             long id = (Long) data.get("i");
+            if (null != API.sessions.get(id)) { return null; }
 
-            key = API.accountManager.getEncryptionUserKeyByID(id);
-            sign = API.accountManager.getSignUserKeyByID(id);
+            key = API.accountManager.get_EncryptionKey_By_UserID(id);
+            sign = API.accountManager.get_SignKey_By_UserID(id);
+            app_session_id = API.accountManager.generate_Session(false);
+            API.sessions.put(id, app_session_id);
 
         } else { return null; }
 
+        Map<Character, Object> respose_data = new HashMap<>();
+
         respose_data.put('k', key);
         respose_data.put('s', sign);
+        respose_data.put('a', app_session_id);
 
         return respose_data;
     }

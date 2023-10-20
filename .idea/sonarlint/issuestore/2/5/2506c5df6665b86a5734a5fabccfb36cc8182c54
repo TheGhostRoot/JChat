@@ -1,6 +1,24 @@
 
-u	java:S116"YRename this field "Encription_Key" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ğËŠé8ä›ãÌ³1
+w
+java:S1192/"UDefine a constant instead of duplicating this literal "AES/ECB/PKCS5Padding" 4 times.(Ü øùÿÿÿÿ8²äœ´1
+~
+java:S2629"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(ıØ‰øÿÿÿÿ8²äœ´1
+t
+java:S2259"RA "NullPointerException" could be thrown; "GlobalEncription_Key" is nullable here.(ıØ‰øÿÿÿÿ8¸²äœ´1
+r
+java:S2259"PA "NullPointerException" could be thrown; "generateSecretKey()" can return null.(Ğß»Êüÿÿÿÿ8¹²äœ´1
+{	java:S116"_Rename this field "GlobalEncription_Key" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(œóã8º²äœ´1
+c
+java:S3457"AFormat specifiers should be used instead of string concatenation.(ıØ‰øÿÿÿÿ8Á²äœ´1
+j	java:S100+"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(´â¦ƒ8Ê²äœ´1
 ;
-java:S5542)"Use a secure cipher mode.(Ü øùÿÿÿÿ8é›ãÌ³1
+java:S5542/"Use a secure cipher mode.(Ü øùÿÿÿÿ8Ë²äœ´1
+o	java:S1005"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(­ô§âüÿÿÿÿ8Í²äœ´1
 ;
-java:S55425"Use a secure cipher mode.(Ü øùÿÿÿÿ8ì›ãÌ³1
+java:S5542:"Use a secure cipher mode.(Ü øùÿÿÿÿ8Ï²äœ´1
+o	java:S100@"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.( Ùğ—üÿÿÿÿ8Ñ²äœ´1
+;
+java:S5542D"Use a secure cipher mode.(Ü øùÿÿÿÿ8Ò²äœ´1
+o	java:S100K"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º®‡¥ÿÿÿÿÿ8Ø²äœ´1
+;
+java:S5542P"Use a secure cipher mode.(Ü øùÿÿÿÿ8Ú²äœ´1

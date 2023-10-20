@@ -1,16 +1,2 @@
 
-~
-java:S2629&"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(›€¡ýûÿÿÿÿ8›©ÙÌ³1
-c
-java:S3457&"AFormat specifiers should be used instead of string concatenation.(›€¡ýûÿÿÿÿ8³©ÙÌ³1
-Ž
-java:S1128
-"lRemove this unused import 'org.springframework.security.authentication.UsernamePasswordAuthenticationToken'.(ÖÆ„Ùüÿÿÿÿ8µ©ÙÌ³1
-l
-java:S1128"ORemove this unused import 'org.springframework.security.core.GrantedAuthority'.(½Á±ÿ8µ©ÙÌ³1
-y
-java:S1128"\Remove this unused import 'org.springframework.security.core.context.SecurityContextHolder'.(ŒÄæë8µ©ÙÌ³1
-ˆ
-java:S1128"kRemove this unused import 'org.springframework.security.web.authentication.WebAuthenticationDetailsSource'.(¨ •À8µ©ÙÌ³1
-M
-java:S1128"0Remove this unused import 'java.util.ArrayList'.(÷‰îƒ8µ©ÙÌ³1
+X	java:S125."<This block of commented-out lines of code should be removed.(¤˜óÝ8±º×Â´1
