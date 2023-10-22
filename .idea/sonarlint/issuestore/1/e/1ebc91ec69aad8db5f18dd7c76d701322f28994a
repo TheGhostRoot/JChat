@@ -1,3 +1,4 @@
 
-e
-java:S5738"HRemove this call to a deprecated method, it has been marked for removal.(ğ‰„£8À×ùÇ³1
+v	java:S116"URename this field "API_PREFIX" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(×Øæªúÿÿÿÿ8€£Íí´1
+C
+java:S1170"!Make this final field static too.(×Øæªúÿÿÿÿ8£Íí´1

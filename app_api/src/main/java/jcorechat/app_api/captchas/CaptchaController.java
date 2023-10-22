@@ -15,60 +15,42 @@ import java.util.*;
 public class CaptchaController {
 
 
-    @GetMapping
-    public Map<Character, Object> getCaptcha(HttpServletRequest request) {
-        final String GlobalEncodedSessID = request.getHeader("SessionID");
-        final String jwt = request.getHeader("Authorization");
-
-        if (null != GlobalEncodedSessID) {
-
-            String sessID_str = API.cription.GlobalDecrypt(GlobalEncodedSessID);
-            if (null == sessID_str) { return null; }
-
-            long appSessID;
-            try {
-                appSessID = Long.valueOf(sessID_str);
-            } catch (Exception e) { return null; }
-
-            if (!API.sessions.containsValue(appSessID)) { return null; }
-
-            Long user_id = API.accountManager.get_UserID_By_AppSessionID(appSessID);
-            if (null == user_id) { return null; }
-
-            Map<String, Object> data = API.jwtService.getData(jwt,
-                    API.accountManager.get_EncryptionKey_By_UserID(user_id),
-                    API.accountManager.get_SignKey_By_UserID(user_id));
-            if (null == data) { return null; }
-
-            return API.captahaManager.get_and_start_Captcha_Session();
-        }
-
-        Map<String, Object> data = API.jwtService.getData(jwt);
-        if (null == data) { return null; }
-
-        if (data.containsKey("u") && data.containsKey("p")) {
-            String user = (String) data.get("u");
-            String password = (String) data.get("p");
-
-            Long user_id = API.accountManager.get_UserID_By_Username_and_Password(user, password);
-            if (null == user_id) { return null; }
-            if (null != API.sessions.get(user_id)) { return null; }
-
-            return API.captahaManager.get_and_start_Captcha_Session();
-
-        } else if (data.containsKey("i")) {
-            long user_id = (Long) data.get("i");
-            if (null != API.sessions.get(user_id)) { return null; }
-
-            return API.captahaManager.get_and_start_Captcha_Session();
-
-        } else { return null; }
-
+    @GetMapping()
+    public String getCaptcha(HttpServletRequest request) {
+        final String auth = request.getHeader("Authorization");
+        if (null == API.jwtService.getData(auth)) { return null; }
+        return CaptahaManager.GlobalEncoded_get_and_start_Captcha_Session();
     }
 
 
-    @PostMapping
-    public void solveCaptcha(HttpServletRequest request) {
+    @GetMapping("/solve")
+    public Character solveCaptcha(HttpServletRequest request) {
+        final String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
+        if (null == GlobalEncodedCaptchaID) { return 'f'; }
+
+        Long captcha_id = null;
+        try {
+            captcha_id = Long.valueOf(API.cription.GlobalDecrypt(GlobalEncodedCaptchaID));
+        } catch (Exception e) { return 'f'; }
+
+        HashSet<String> answers = null;
+        try {
+            answers = API.captcha_results.get(captcha_id);
+        } catch (Exception e) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+
+        if (null == answers) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+
+        final String jwt = request.getHeader("Authorization");
+        if (null == jwt) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+
+        Map<String, Object> data = API.jwtService.getData(jwt);
+
+        if (null == data) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+
+        final HashSet<String> given_answers = new HashSet<>((List<String>) data.get("c"));
+        if (null == given_answers) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+
+        return CaptahaManager.solvedCaptcha(answers, given_answers, captcha_id);
 
     }
 

@@ -6,34 +6,30 @@ import java.util.*;
 
 public class CaptahaManager {
 
-    public HashSet<String> generateCapctcha() {
+    public static HashSet<String> generateCapctcha() {
         return new HashSet<>(Collections.singleton("123"));
     }
 
-    public Long startCaptchaSession(HashSet<String> answer) {
+    public static Long startCaptchaSession(HashSet<String> answer) {
         long captcha_session_id = 0L;
         while (API.captcha_results.containsKey(captcha_session_id)) {
             captcha_session_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
         }
         API.captcha_results.put(captcha_session_id, answer);
+        API.captcha_fails.put(captcha_session_id, (short) 3);
+        API.captcha_expire.put(captcha_session_id, (short) 3);
         return captcha_session_id;
     }
 
-    public boolean solvedCaptcha(Long captcha_session, HashSet<String> answer) {
-        HashSet<String> need_to_answer = API.captcha_results.get(captcha_session);
-        if (null == need_to_answer) { return false; }
-        if (need_to_answer.isEmpty() || need_to_answer.containsAll(answer)) {
+    public static Character solvedCaptcha(HashSet<String> need_to_answer, HashSet<String> given_answer, long captcha_id) {
+        if (need_to_answer.containsAll(given_answer)) {
             need_to_answer.clear();
-            return true;
+            return 't';
         }
-        return false;
+        return handleFaildCaptcha(captcha_id);
     }
 
-    public boolean hasCaptchaSession(Long captcha_session) {
-        return API.captcha_results.containsKey(captcha_session);
-    }
-
-    public static HashMap<Character, Object> get_and_start_Captcha_Session() {
+    public static String GlobalEncoded_get_and_start_Captcha_Session() {
         HashSet<String> captcha = API.captahaManager.generateCapctcha();
 
         HashSet<String> answers = new HashSet<>();
@@ -43,7 +39,18 @@ public class CaptahaManager {
         HashMap<Character, Object> map = new HashMap<>();
         map.put('c', captcha);
         map.put('s', captcha_session_id);
-        return map;
+        return API.cription.GlobalEncrypt(map.toString());
+    }
+
+
+    public static Character handleFaildCaptcha(long captcha_id) {
+        final Short failed = API.captcha_fails.get(captcha_id);
+        if (null == failed || 1 > failed) {
+            API.captcha_results.remove(captcha_id);
+            API.captcha_expire.remove(captcha_id);
+            API.captcha_fails.remove(captcha_id);
+        }
+        return 'f';
     }
 
 }

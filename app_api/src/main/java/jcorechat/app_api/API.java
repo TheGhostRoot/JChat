@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class API {
@@ -57,6 +59,16 @@ public class API {
 
     // captcha ID : Captcha answer
     public static HashMap<Long, HashSet<String>> captcha_results = new HashMap<>();
+
+
+    // captcha ID : 30 seconds expire
+    public static HashMap<Long, Short> captcha_expire = new HashMap<>();
+
+
+    // captcha ID : 3 fails to remove captcha
+    public static HashMap<Long, Short> captcha_fails = new HashMap<>();
+
+    private static HashSet<Long> to_remove_captcha_ids = new HashSet<>();
 
     public static Random random = new Random();
 
@@ -140,6 +152,19 @@ public class API {
         logger.info("User Sign Key: "+sign_key);
         sign_user_keys.put(id, sign_key);
 
+        // The code that will remove 1 visit
+        Runnable captcha_timeout = () -> {
+            for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
+                Short value = entry.getValue();
+                if (value < 1) {
+                    captcha_expire.remove(entry.getKey());
+                } else {
+                    entry.setValue((short) (value - 1));
+                }
+            }
+        };
+
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(captcha_timeout, 0, 1, TimeUnit.SECONDS);
 
         SpringApplication app = new SpringApplication(API.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", configManager.getServerPort()));

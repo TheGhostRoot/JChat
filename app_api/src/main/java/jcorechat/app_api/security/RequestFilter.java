@@ -52,6 +52,8 @@ public class RequestFilter extends OncePerRequestFilter {
                 return;
             }
 
+
+
             final Long user_id = API.accountManager.get_UserID_By_AppSessionID(given_user_session_id);
             if (null == user_id) {
                 response.sendError(403);
@@ -69,6 +71,17 @@ public class RequestFilter extends OncePerRequestFilter {
 
 
         if (null == API.jwtService.getData(authHeader)) {
+            response.sendError(403);
+            return;
+        }
+
+        final String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
+        try {
+            if (GlobalEncodedCaptchaID != null && !API.captcha_results.containsKey(Long.valueOf(API.cription.GlobalDecrypt(GlobalEncodedCaptchaID)))) {
+                response.sendError(403);
+                return;
+            }
+        } catch (Exception e) {
             response.sendError(403);
             return;
         }

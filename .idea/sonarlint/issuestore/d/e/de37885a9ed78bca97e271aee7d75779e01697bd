@@ -11,35 +11,35 @@ java:S1170"!Make this final field static too.(úö„Ï8ò©²œ´1
 c
 java:S3457"AFormat specifiers should be used instead of string concatenation.(±¹Ô²ÿÿÿÿÿ8€ª²œ´1
 A
-java:S1168"$Return an empty map instead of null.(ñÆ†­8†ª²œ´1
+java:S1168!"$Return an empty map instead of null.(ñÆ†­8†ª²œ´1
 N
-java:S1905#",Remove this unnecessary cast to "SecretKey".(µ­¶‡ÿÿÿÿÿ8‰ª²œ´1
+java:S1905%",Remove this unnecessary cast to "SecretKey".(µ­¶‡ÿÿÿÿÿ8‰ª²œ´1
 A
-java:S1168."$Return an empty map instead of null.(ñÆ†­8‹ª²œ´1
+java:S11680"$Return an empty map instead of null.(ñÆ†­8‹ª²œ´1
 M
-java:S1874@"0Remove this use of "signWith"; it is deprecated.(•§8’ª²œ´1
+java:S1874B"0Remove this use of "signWith"; it is deprecated.(•§8’ª²œ´1
 W
-java:S1874@":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8“ª²œ´1
+java:S1874B":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8“ª²œ´1
 W
-java:S1874@":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8Á´³œ´1
+java:S1874B":Remove this use of "SignatureAlgorithm"; it is deprecated.(•§8Á´³œ´1
 R
-java:S1874D"0Remove this use of "signWith"; it is deprecated.(ÁÂœûşÿÿÿÿ8˜ô³œ´1
+java:S1874F"0Remove this use of "signWith"; it is deprecated.(ÁÂœûşÿÿÿÿ8˜ô³œ´1
 \
-java:S1874D":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
+java:S1874F":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
 \
-java:S1874D":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
+java:S1874F":Remove this use of "SignatureAlgorithm"; it is deprecated.(ÁÂœûşÿÿÿÿ8™ô³œ´1
 M
-java:S1874N"0Remove this use of "signWith"; it is deprecated.(äÑ˜8Èœ´œ´1
+java:S1874P"0Remove this use of "signWith"; it is deprecated.(¿€ÌĞ8Èœ´œ´1
 W
-java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8Éœ´œ´1
+java:S1874P":Remove this use of "SignatureAlgorithm"; it is deprecated.(¿€ÌĞ8Éœ´œ´1
 W
-java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8Éœ´œ´1
+java:S1874P":Remove this use of "SignatureAlgorithm"; it is deprecated.(¿€ÌĞ8Éœ´œ´1
 M
-java:S1874R"0Remove this use of "signWith"; it is deprecated.(äÑ˜8´·´œ´1
+java:S1874T"0Remove this use of "signWith"; it is deprecated.(¿€ÌĞ8´·´œ´1
 W
-java:S1874R":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8¶·´œ´1
+java:S1874T":Remove this use of "SignatureAlgorithm"; it is deprecated.(¿€ÌĞ8¶·´œ´1
 W
-java:S1874R":Remove this use of "SignatureAlgorithm"; it is deprecated.(äÑ˜8¸·´œ´1
-X	java:S125\"<This block of commented-out lines of code should be removed.(«øé8›ª²œ´1
+java:S1874T":Remove this use of "SignatureAlgorithm"; it is deprecated.(¿€ÌĞ8¸·´œ´1
+X	java:S125^"<This block of commented-out lines of code should be removed.(«øé8›ª²œ´1
 5
-java:S2140]"Use "nextInt()" instead.(®ŸÓ 8ºúœ´1
+java:S2140_"Use "nextInt()" instead.(®ŸÓ 8ºúœ´1
