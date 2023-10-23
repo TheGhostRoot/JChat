@@ -15,50 +15,73 @@ import java.util.Map;
 public class AccountController {
 
 
-    @GetMapping
-    public Map<Character, Object> getAccount(HttpServletRequest request) {
+    @GetMapping()
+    public String getAccount(HttpServletRequest request) {
 
-        String IP = API.get_IP(request);
-        if (null == IP) { return null; }
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization"));
+        final Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization"));
         if (null == data) { return null; }
 
-        String key;
-        String sign;
-        long app_session_id;
+        final String captcha_id_str = request.getHeader("CapctchaID");
+        Long captch_id = null;
+
+        try {
+            captch_id = Long.parseLong(API.cription.GlobalDecrypt(captcha_id_str));
+        } catch (Exception e) { return null; }
+
+        try {
+            if (!API.captcha_results.get(captch_id).isEmpty()) {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        long id;
 
         if (data.containsKey("u") && data.containsKey("p")) {
-            String user = (String) data.get("u");
-            String password = (String) data.get("p");
+            String user = null;
+            String password = null;
+
+            try {
+                user = (String) data.get("u");
+                password = (String) data.get("p");
+            } catch (Exception e) { return null; }
 
             Long user_id = API.accountManager.get_UserID_By_Username_and_Password(user, password);
-            if (null == user_id) { return null; }
-            if (null != API.sessions.get(user_id)) { return null; }
+            if (null == user_id || null != API.sessions.get(user_id)) { return null; }
 
-            key = API.accountManager.get_EncryptionKey_By_UserID(user_id);
-            sign = API.accountManager.get_SignKey_By_UserID(user_id);
-            app_session_id = API.accountManager.generate_Session(false);
-            API.sessions.put(user_id, app_session_id);
+            id = user_id;
 
         } else if (data.containsKey("i")) {
             // remember me
-            long id = (Long) data.get("i");
-            if (null != API.sessions.get(id)) { return null; }
+            Long user_id = null;
+            try {
+                user_id = Long.parseLong(data.get("i").toString());
+            } catch (Exception e) { return null; }
 
-            key = API.accountManager.get_EncryptionKey_By_UserID(id);
-            sign = API.accountManager.get_SignKey_By_UserID(id);
-            app_session_id = API.accountManager.generate_Session(false);
-            API.sessions.put(id, app_session_id);
+            if (null != API.sessions.get(user_id)) { return null; }
+
+            id = user_id;
 
         } else { return null; }
 
-        Map<Character, Object> respose_data = new HashMap<>();
+        long app_session_id = API.accountManager.generate_Session(false);
 
-        respose_data.put('k', key);
-        respose_data.put('s', sign);
-        respose_data.put('a', app_session_id);
+        API.sessions.put(id, app_session_id);
 
-        return respose_data;
+        Map<String, Object> respose_data = new HashMap<>();
+
+        // encryption key
+        respose_data.put("k", API.accountManager.get_EncryptionKey_By_UserID(id));
+        // sign key
+        respose_data.put("s", API.accountManager.get_SignKey_By_UserID(id));
+        // app session id
+        respose_data.put("a", app_session_id);
+
+        API.captcha_fails.remove(captch_id);
+        API.captcha_results.remove(captch_id);
+        API.captcha_expire.remove(captch_id);
+
+        return API.jwtService.generateGlobalJwt(respose_data, true);
     }
 }

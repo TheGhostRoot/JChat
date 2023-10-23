@@ -23,15 +23,15 @@ public class CaptchaController {
     }
 
 
-    @GetMapping("/solve")
-    public Character solveCaptcha(HttpServletRequest request) {
+    @PostMapping()
+    public String solveCaptcha(HttpServletRequest request) {
         final String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
-        if (null == GlobalEncodedCaptchaID) { return 'f'; }
+        if (null == GlobalEncodedCaptchaID) { return null; }
 
         Long captcha_id = null;
         try {
             captcha_id = Long.valueOf(API.cription.GlobalDecrypt(GlobalEncodedCaptchaID));
-        } catch (Exception e) { return 'f'; }
+        } catch (Exception e) { return null; }
 
         HashSet<String> answers = null;
         try {
@@ -48,8 +48,6 @@ public class CaptchaController {
         if (null == data) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
 
         final HashSet<String> given_answers = new HashSet<>((List<String>) data.get("c"));
-        if (null == given_answers) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
-
         return CaptahaManager.solvedCaptcha(answers, given_answers, captcha_id);
 
     }

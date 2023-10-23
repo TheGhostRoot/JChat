@@ -147,17 +147,19 @@ public class API {
         logger.info("User Encryption Key: "+encryption_key);
         encryption_user_keys.put(id, encryption_key);
 
-        String sign_key = jwtService.generateRandomUserSign();
+        String sign_key = jwtService.generateRandomUserKey();
 
         logger.info("User Sign Key: "+sign_key);
         sign_user_keys.put(id, sign_key);
 
-        // The code that will remove 1 visit
         Runnable captcha_timeout = () -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
                 Short value = entry.getValue();
                 if (value < 1) {
-                    captcha_expire.remove(entry.getKey());
+                    Long key = entry.getKey();
+                    captcha_expire.remove(key);
+                    captcha_fails.remove(key);
+                    captcha_results.remove(key);
                 } else {
                     entry.setValue((short) (value - 1));
                 }
@@ -172,11 +174,7 @@ public class API {
     }
 
     public static String get_IP(HttpServletRequest request) {
-        String IP;
-        try {
-            IP = request.getRemoteAddr();
-        } catch (Exception e) { return null; }
-
+        String IP = request.getRemoteAddr();
         return "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
     }
 }

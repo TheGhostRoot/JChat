@@ -17,6 +17,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/jcorechat.app.JCoreChat.App.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App/jcorechat.app.JCoreChat.App.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/jcorechat.app_api.JCoreChat.App_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/jcorechat.app_api.JCoreChat.App_API.main.iml" />
     </modules>
   </component>

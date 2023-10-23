@@ -1,28 +1,17 @@
-package jcorechat.app_api.security;
-
-import jcorechat.app_api.API;
-import org.springframework.stereotype.Service;
+package jcorechat.app.security;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
 
-@Service
 public class Cription {
 
     private SecretKey GlobalEncription_Key = null;
 
     public Cription() {
-        // GlobalEncription_Key = generateSecretKey();
         GlobalEncription_Key = getKeyFromString("P918nfQtYhbUzJVbmSQfZw==");
-        API.logger.info("Global Encryption Key: "+Base64.getEncoder().encodeToString(GlobalEncription_Key.getEncoded()));
-    }
-
-    public String generateUserKey() {
-        return Base64.getEncoder().encodeToString(generateSecretKey().getEncoded());
     }
 
     public SecretKey getKeyFromString(String key) {
@@ -30,15 +19,6 @@ public class Cription {
         try {
             return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
         } catch (Exception e) { return null; }
-    }
-
-    private SecretKey generateSecretKey() {
-        KeyGenerator keyGenerator = null;
-        try {
-            keyGenerator = KeyGenerator.getInstance("AES");
-        } catch (Exception e) { return null; }
-        keyGenerator.init(128); // You can use 128, 192, or 256 bits key size
-        return keyGenerator.generateKey();
     }
 
     public String GlobalEncrypt(String input) {

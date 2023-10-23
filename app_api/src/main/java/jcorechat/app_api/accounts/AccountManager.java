@@ -42,14 +42,8 @@ public class AccountManager {
 
     public Long generate_Session(boolean captcha) {
         long session_id = 0L;
-        if (captcha) {
-            while (API.captcha_results.containsKey(session_id)) {
-                session_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
-            }
-        } else {
-            while (API.sessions.containsValue(session_id)) {
-                session_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
-            }
+        while (captcha ? API.captcha_results.containsKey(session_id) : API.sessions.containsValue(session_id)) {
+            session_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
         }
         return session_id;
     }
