@@ -29,12 +29,6 @@ public class RequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        String IP = API.get_IP(request);
-        if (null == IP) {
-            response.sendError(403);
-            return;
-        }
-
         final String GlobalEncodedSessID = request.getHeader("SessionID");
 
         if (null != GlobalEncodedSessID) {

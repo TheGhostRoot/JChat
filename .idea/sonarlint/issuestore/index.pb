@@ -3025,3 +3025,9 @@ t
 Dapp_api/src/main/java/jcorechat/app_api/captchas/CaptahaManager.java,b\3\b3036c2e4672d9ca05d7bd620cf957d55ddc8932
 w
 Gapp_api/src/main/java/jcorechat/app_api/captchas/CaptchaController.java,e\5\e50052ad0e29902340e2284eb22920fd9d198537
+f
+6app/src/main/java/jcorechat/app/security/Cription.java,8\c\8cbcac303369e0da79e295b77670f8c8afc76005
+i
+9app/src/main/java/jcorechat/app/security/JwtSecurity.java,b\0\b02f789f994871261591abb2ee265b60fedee8c8
+d
+4app/src/main/java/jcorechat/app/RequestsHandler.java,c\9\c9d67acc14b7486c40b90dcc9b8c526f09442cb6

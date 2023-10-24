@@ -1,7 +1,10 @@
 
-v	java:S116"URename this field "API_PREFIX" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(×Øæªúÿÿÿÿ8ğ¥û¸µ1
+v	java:S116"URename this field "API_PREFIX" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(×Øæªúÿÿÿÿ8èë–ïµ1
 C
-java:S1170"!Make this final field static too.(×Øæªúÿÿÿÿ8ñ¥û¸µ1
+java:S1170"!Make this final field static too.(×Øæªúÿÿÿÿ8èë–ïµ1
+b
+java:S1128"@Remove this unused import 'org.springframework.http.HttpMethod'.(Ê¨Ä¡øÿÿÿÿ8ğë–ïµ1
+s
+java:S1128"VRemove this unused import 'org.springframework.security.web.csrf.CsrfTokenRepository'.(¡ºĞ 8ğë–ïµ1
 ~
-java:S1128
-"aRemove this unused import 'org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository'.(çìÄ8ñ€ü¸µ1
+java:S1128"aRemove this unused import 'org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository'.(çìÄ8ğë–ïµ1

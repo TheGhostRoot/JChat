@@ -21,8 +21,16 @@ public class Cription {
         API.logger.info("Global Encryption Key: "+Base64.getEncoder().encodeToString(GlobalEncription_Key.getEncoded()));
     }
 
-    public String generateUserKey() {
+    public String generateKey() {
         return Base64.getEncoder().encodeToString(generateSecretKey().getEncoded());
+    }
+
+    public String generateUserKey() {
+        String key = generateKey();
+        while (API.encryption_user_keys.containsValue(key)) {
+            key = generateKey();
+        }
+        return key;
     }
 
     public SecretKey getKeyFromString(String key) {

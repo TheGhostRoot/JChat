@@ -84,7 +84,7 @@ public class JwtService {
     }
 
 
-    public String generateRandomUserKey() {
+    private String generateKey() {
         StringBuilder sb = new StringBuilder(50);
 
         for (int i = 0; i < 50; i++) {
@@ -93,6 +93,14 @@ public class JwtService {
         }
 
         return sb.toString();
+    }
+
+    public String generateRandomUserKey() {
+        String key = generateKey();
+        while (API.sign_user_keys.containsValue(key)) {
+            key = generateKey();
+        }
+        return key;
     }
 
 }

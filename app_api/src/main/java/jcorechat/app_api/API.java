@@ -68,7 +68,8 @@ public class API {
     // captcha ID : 3 fails to remove captcha
     public static HashMap<Long, Short> captcha_fails = new HashMap<>();
 
-    private static HashSet<Long> to_remove_captcha_ids = new HashSet<>();
+    // session ID : expiration time
+    private static HashMap<Long, Short> session_expire = new HashMap<>();
 
     public static Random random = new Random();
 
@@ -111,48 +112,7 @@ public class API {
         accountManager = new AccountManager();
         captahaManager = new CaptahaManager();
 
-
-        /*
-        URL url = new URL ("https://reqres.in/api/users");
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("POST");
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setDoOutput(true);
-        String jsonInputString = "{"name": "Upendra", "job": "Programmer"}";
-
-        try(OutputStream os = con.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes("utf-8");
-            os.write(input, 0, input.length);
-        }
-
-        try(BufferedReader br = new BufferedReader(
-          new InputStreamReader(con.getInputStream(), "utf-8"))) {
-            StringBuilder response = new StringBuilder();
-            String responseLine = null;
-            while ((responseLine = br.readLine()) != null) {
-                response.append(responseLine.trim());
-            }
-            System.out.println(response.toString());
-        }
-
-         */
-
-        long id = 1;
-
-        emails.put(id, "test@email.smth");
-        names.put(id, "My name is");
-        passwords.put(id, "123");
-
-        String encryption_key = cription.generateUserKey();
-        logger.info("User Encryption Key: "+encryption_key);
-        encryption_user_keys.put(id, encryption_key);
-
-        String sign_key = jwtService.generateRandomUserKey();
-
-        logger.info("User Sign Key: "+sign_key);
-        sign_user_keys.put(id, sign_key);
-
-        Runnable captcha_timeout = () -> {
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
                 Short value = entry.getValue();
                 if (value < 1) {
@@ -164,9 +124,17 @@ public class API {
                     entry.setValue((short) (value - 1));
                 }
             }
-        };
-
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(captcha_timeout, 0, 1, TimeUnit.SECONDS);
+            for (Map.Entry<Long, Short> entry : session_expire.entrySet()) {
+                Short value = entry.getValue();
+                if (value < 1) {
+                    Long key = entry.getKey();
+                    sessions.remove(key);
+                    session_expire.remove(key);
+                } else {
+                    entry.setValue((short) (value - 1));
+                }
+            }
+        }, 0, 1, TimeUnit.SECONDS);
 
         SpringApplication app = new SpringApplication(API.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", configManager.getServerPort()));

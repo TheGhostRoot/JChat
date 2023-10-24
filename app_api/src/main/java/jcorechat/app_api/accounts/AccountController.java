@@ -4,6 +4,7 @@ package jcorechat.app_api.accounts;
 import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.API;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,6 +14,59 @@ import java.util.Map;
 @RestController()
 @RequestMapping(path = "/api/v"+API.API_VERSION+"/account")
 public class AccountController {
+
+
+
+    @PostMapping()
+    private String createAccount(HttpServletRequest request) {
+        final Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization"));
+        if (null == data) { return null; }
+
+        final String captcha_id_str = request.getHeader("CapctchaID");
+        Long captch_id = null;
+
+        try {
+            captch_id = Long.parseLong(API.cription.GlobalDecrypt(captcha_id_str));
+        } catch (Exception e) { return null; }
+
+        try {
+            if (!API.captcha_results.get(captch_id).isEmpty()) {
+                return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+
+        if (data.containsKey("u") && data.containsKey("p") && data.containsKey("e")) {
+            String user = null;
+            String password = null;
+            String email = null;
+
+            try {
+                user = (String) data.get("u");
+                password = (String) data.get("p");
+                email = (String) data.get("e");
+            } catch (Exception e) { return null; }
+
+            if (null == user || null == password || null == email) { return null; }
+
+            long user_id = API.accountManager.generate_UserID();
+            API.names.put(user_id, user);
+            API.passwords.put(user_id, password);
+            API.emails.put(user_id, email);
+            API.sign_user_keys.put(user_id, API.jwtService.generateRandomUserKey());
+            API.encryption_user_keys.put(user_id, API.cription.generateUserKey());
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("i", user_id);
+            return API.jwtService.generateGlobalJwt(map, true);
+
+
+        } else {
+            return null;
+        }
+
+    }
 
 
     @GetMapping()

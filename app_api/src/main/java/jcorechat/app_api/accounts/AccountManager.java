@@ -40,12 +40,20 @@ public class AccountManager {
 
     public String get_Email_By_UserID(Long id) { return API.emails.get(id); }
 
-    public Long generate_Session(boolean captcha) {
+    public long generate_Session(boolean captcha) {
         long session_id = 0L;
         while (captcha ? API.captcha_results.containsKey(session_id) : API.sessions.containsValue(session_id)) {
             session_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
         }
         return session_id;
+    }
+
+    public long generate_UserID() {
+        long user_id = 0L;
+        while (API.names.containsKey(user_id)) {
+            user_id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
+        }
+        return user_id;
     }
 
 }

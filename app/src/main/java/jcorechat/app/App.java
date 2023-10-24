@@ -10,13 +10,20 @@ import java.util.Map;
 
 public class App {
 
-    public static Cription cription = new Cription();
-    public static JwtSecurity jwtSecurity = new JwtSecurity();
+    public static Cription cription;
+
+    public static JwtSecurity jwtSecurity;
+
     public static void main(String[] args) {
+
+        cription = new Cription();
+        jwtSecurity = new JwtSecurity();
+
 
         Map<String, Object> user_data = new HashMap<>();
         user_data.put("u", "My name is");
         user_data.put("p", "123");
+        user_data.put("e", "test@mail.example");
 
         jwtSecurity.generateGlobalJwt(user_data, true);
 
@@ -45,18 +52,24 @@ public class App {
         System.out.println("Captcha solve responce Data: "+data_solve);
 
         headers.clear();
-        user_data.clear();
-        user_data.put("i", 1);
         headers.put("Authorization", jwtSecurity.generateGlobalJwt(user_data, true));
         headers.put("CapctchaID", cription.GlobalEncrypt(data.get("s").toString()));
 
+        String account_create_res = RequestsHandler.post("http://localhost:25533/api/v1/account", headers);
+        System.out.println("Account Create responce: "+account_create_res);
+
+        data.clear();
+        data = jwtSecurity.getData(account_create_res);
+        System.out.println("Account Create responce Data: "+data);
+
 
         String account_res = RequestsHandler.get("http://localhost:25533/api/v1/account", headers);
-        System.out.println("Account responce: "+account_res);
+        System.out.println("Account Get responce: "+account_res);
 
         data.clear();
         data = jwtSecurity.getData(account_res);
-        System.out.println("Account responce Data: "+data);
+        System.out.println("Account Get responce Data: "+data);
 
     }
 }
+
