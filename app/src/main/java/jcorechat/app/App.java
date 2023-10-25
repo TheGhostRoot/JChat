@@ -25,8 +25,6 @@ public class App {
         user_data.put("p", "123");
         user_data.put("e", "test@mail.example");
 
-        jwtSecurity.generateGlobalJwt(user_data, true);
-
         Map<String, Object> headers = new HashMap<>();
         headers.put("Authorization", jwtSecurity.generateGlobalJwt(user_data, true));
 

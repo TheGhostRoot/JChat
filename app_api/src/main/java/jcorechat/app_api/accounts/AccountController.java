@@ -3,10 +3,7 @@ package jcorechat.app_api.accounts;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.API;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +47,17 @@ public class AccountController {
 
             if (null == user || null == password || null == email) { return null; }
 
+            Map<String, Object> map = new HashMap<>();
+
+            if (API.names.containsValue(user)) {
+                map.put("e", "n");
+                return API.jwtService.generateGlobalJwt(map, true);
+
+            } else if (API.emails.containsValue(password)) {
+                map.put("e", "e");
+                return API.jwtService.generateGlobalJwt(map, true);
+            }
+
             long user_id = API.accountManager.generate_UserID();
             API.names.put(user_id, user);
             API.passwords.put(user_id, password);
@@ -57,7 +65,6 @@ public class AccountController {
             API.sign_user_keys.put(user_id, API.jwtService.generateRandomUserKey());
             API.encryption_user_keys.put(user_id, API.cription.generateUserKey());
 
-            Map<String, Object> map = new HashMap<>();
             map.put("i", user_id);
             return API.jwtService.generateGlobalJwt(map, true);
 
@@ -135,6 +142,7 @@ public class AccountController {
         API.captcha_fails.remove(captch_id);
         API.captcha_results.remove(captch_id);
         API.captcha_expire.remove(captch_id);
+        API.session_expire.put(app_session_id, (short) 3);
 
         return API.jwtService.generateGlobalJwt(respose_data, true);
     }

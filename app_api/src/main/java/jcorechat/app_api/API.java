@@ -69,7 +69,7 @@ public class API {
     public static HashMap<Long, Short> captcha_fails = new HashMap<>();
 
     // session ID : expiration time
-    private static HashMap<Long, Short> session_expire = new HashMap<>();
+    public static HashMap<Long, Short> session_expire = new HashMap<>();
 
     public static Random random = new Random();
 
