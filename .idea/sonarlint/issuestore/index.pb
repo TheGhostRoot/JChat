@@ -3031,3 +3031,7 @@ i
 9app/src/main/java/jcorechat/app/security/JwtSecurity.java,b\0\b02f789f994871261591abb2ee265b60fedee8c8
 d
 4app/src/main/java/jcorechat/app/RequestsHandler.java,c\9\c9d67acc14b7486c40b90dcc9b8c526f09442cb6
+u
+Eapp_api/src/main/java/jcorechat/app_api/updates/UpdateController.java,3\4\342040b9d7b09e2cc94b3dc4cb4d9086a6bb8f64
+r
+Bapp_api/src/main/java/jcorechat/app_api/updates/UpdateManager.java,7\6\765ab344fc92fb77f4aead51e9e50ef9804c138e

@@ -47,6 +47,11 @@ dependencies {
 
     implementation 'com.github.vladimir-bukhtoyarov:bucket4j-core:7.6.0'
 
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    implementation 'org.postgresql:postgresql:42.6.0'
+
+
+
 }
 
 application {

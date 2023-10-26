@@ -4,6 +4,7 @@ package jcorechat.app_api;
 import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.accounts.AccountManager;
 import jcorechat.app_api.captchas.CaptahaManager;
+import jcorechat.app_api.database.DatabaseManager;
 import jcorechat.app_api.security.Cription;
 import jcorechat.app_api.security.JwtService;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +34,8 @@ public class API {
     public static AccountManager accountManager;
 
     public static CaptahaManager captahaManager;
+
+    public static DatabaseManager databaseManager;
 
     // user id : email
     public static HashMap<Long, String> emails = new HashMap<>();
@@ -111,6 +114,8 @@ public class API {
         cription = new Cription();
         accountManager = new AccountManager();
         captahaManager = new CaptahaManager();
+        databaseManager = new DatabaseManager();
+        databaseManager.createUser();
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
