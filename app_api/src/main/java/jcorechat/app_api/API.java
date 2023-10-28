@@ -115,7 +115,6 @@ public class API {
         accountManager = new AccountManager();
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
-        databaseManager.createUser();
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
