@@ -3,6 +3,10 @@ package jcorechat.app_api.database;
 import jcorechat.app_api.API;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DatabaseManager {
 
@@ -16,7 +20,6 @@ public class DatabaseManager {
 
     private final String sql_username = "jcorechat";
     private final String sql_password = "app_api";
-
 
 
     private Connection sql_connection = null;
@@ -107,106 +110,186 @@ CREATE TABLE profiles (
 
      */
 
-    public void createUser(String name, String email, String password, String encryption_key, String sign_key) {
-        if (null == sql_connection) { return; }
-
-
-        try {
-            PreparedStatement account_statement = sql_connection.prepareStatement(INSERT_USER);
-            account_statement.setString(1, name);
-            account_statement.setString(2, email);
-            account_statement.setString(3, password);
-            account_statement.setString(4, encryption_key);
-            account_statement.setString(5, sign_key);
-
-            readOutput(account_statement.executeQuery());
-            readOutput(sql_connection.prepareStatement(INSER_PROFILE).executeQuery());
-        } catch (Exception e) {
-            e.printStackTrace();
+    public boolean createUser(String name, String email, String password, String encryption_key, String sign_key) {
+        if (null == sql_connection) {
+            return false;
         }
+
+        List<Object> account_data = new ArrayList<>();
+        account_data.add(name);
+        account_data.add(email);
+        account_data.add(password);
+        account_data.add(encryption_key);
+        account_data.add(sign_key);
+
+        return addData("accounts", account_data);
 
     }
 
-    public void editData(long id, String table, String to_change, Object the_change) {
-        if (null == sql_connection) { return; }
+    private boolean editData(String table, Map<String, Object> changes, String condition, Map<String, Object> conditionData) {
+        if (null == sql_connection) {
+            return false;
+        }
+
+        StringBuilder updateQuery = new StringBuilder("UPDATE ");
+        updateQuery.append(table).append(" SET ");
+
+        for (Map.Entry<String, Object> entry : changes.entrySet()) {
+            updateQuery.append(entry.getKey()).append(" = ?, ");
+        }
+
+        updateQuery.setLength(updateQuery.length() - 2);
+        updateQuery.append(" WHERE ").append(condition);
 
         try {
-            PreparedStatement account_statement = sql_connection.prepareStatement("UPDATE " + table + " SET " + to_change + " = ? WHERE id = ?;");
-            switch (the_change.getClass().getSimpleName()) {
+            List<Object> data = setData(1, changes, sql_connection.prepareStatement(updateQuery.toString()));
+
+            ((PreparedStatement) setData((int) data.get(0), conditionData, (PreparedStatement) data.get(1)).get(1)).executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<Object> setData(int parameterIndex, Map<String, Object> changes, PreparedStatement preparedStatement)
+            throws SQLException {
+        List<Object> list = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : changes.entrySet()) {
+            Object value = entry.getValue();
+
+            switch (value.getClass().getSimpleName()) {
                 case "String":
-                    account_statement.setString(1, (String) the_change);
+                    preparedStatement.setString(parameterIndex, (String) value);
                     break;
                 case "Integer":
-                    account_statement.setInt(1, (int) the_change);
+                    preparedStatement.setInt(parameterIndex, (Integer) value);
                     break;
                 case "Long":
-                    account_statement.setLong(1, (long) the_change);
+                    preparedStatement.setLong(parameterIndex, (Long) value);
                     break;
                 case "Short":
-                    account_statement.setShort(1, (short) the_change);
+                    preparedStatement.setShort(parameterIndex, (Short) value);
                     break;
-                case "LocalDateTime":
-                    account_statement.setObject(1, the_change);
+                case "LocalDateTime", "LocalDate":
+                    preparedStatement.setObject(parameterIndex, value);
                     break;
                 default:
-                    return;
+                    return null;
             }
-            account_statement.setLong(2, id);
-            readOutput(account_statement.executeQuery());
+
+            parameterIndex++;
+        }
+        list.add(parameterIndex);
+        list.add(preparedStatement);
+
+        return list;
+    }
+
+    private boolean deleteData(String table, String condition, Map<String, Object> conditionData) {
+        if (null == sql_connection) {
+            return false;
+        }
+
+        StringBuilder stringBuilder = new StringBuilder("DELETE FROM ").append(table).append(" WHERE ").append(condition);
+        try {
+            ((PreparedStatement) setData(1, conditionData, sql_connection.prepareStatement(stringBuilder.toString())).get(1)).executeQuery();
+            return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            return false;
         }
     }
 
-    public void deleteUser(long id) {
-        if (null == sql_connection) { return; }
+    private boolean addData(String table, List<Object> data) {
+        // "INSERT INTO accounts (name, email, password, encryption_key, sign_key, session_id, session_expire, friends, groups) VALUES (?, ?, ?, ?, ?, NULL, NULL, '', '');
+
+        if (null == sql_connection) { return false; }
 
         try {
-            PreparedStatement account = sql_connection.prepareStatement("DELETE FROM accounts WHERE id = ?;");
-            account.setLong(1, id);
 
-            PreparedStatement profile = sql_connection.prepareStatement("DELETE FROM profiles WHERE id = ?;");
-            profile.setLong(1, id);
+            PreparedStatement preparedStatement = sql_connection.prepareStatement("INSERT INTO " + table +
+                    " (name, email, password, encryption_key, sign_key, session_id, session_expire, friends, groups) VALUES (?, ?, ?, ?, ?, NULL, NULL, '', '');");
 
-            PreparedStatement posts = sql_connection.prepareStatement("DELETE FROM posts WHERE sender_id = ?;");
-            posts.setLong(1, id);
+            for (int i = 0; i < data.size(); i++) {
+                Object value = data.get(i);
 
-            PreparedStatement chat = sql_connection.prepareStatement("DELETE FROM chats WHERE id = ? OR id2 = ?;");
-            chat.setLong(1, id);
-            chat.setLong(2, id);
+                switch (value.getClass().getSimpleName()) {
+                    case "String":
+                        preparedStatement.setString(i + 1, (String) value);
+                        break;
+                    case "Integer":
+                        preparedStatement.setInt(i + 1, (Integer) value);
+                        break;
+                    case "Long":
+                        preparedStatement.setLong(i + 1, (Long) value);
+                        break;
+                    case "Short":
+                        preparedStatement.setShort(i + 1, (Short) value);
+                        break;
+                    case "LocalDateTime", "LocalDate":
+                        preparedStatement.setObject(i + 1, value);
+                        break;
+                    default:
+                        return false;
+                }
+            }
 
-            readOutput(profile.executeQuery());
-            readOutput(posts.executeQuery());
-            readOutput(chat.executeQuery());
-            readOutput(account.executeQuery());
+            preparedStatement.executeQuery();
+            return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            return false;
         }
+
+    }
+
+    public boolean deleteUser(long id) {
+        if (null == sql_connection) {
+            return false;
+        }
+
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("id", id);
+
+        if (!deleteData("accounts", "id = ?", data)) { return false; }
+        if (!deleteData("profiles", "id = ?", data)) { return false; }
+
+        data.clear();
+        data.put("sender_id", id);
+
+        if (!deleteData("posts", "sender_id = ?", data)) { return false; }
+
+        data.clear();
+        data.put("id", id);
+        data.put("id2", id);
+        return deleteData("chats", "id = ? OR id2 = ?", data);
+
     }
 
     public void readOutput(ResultSet resultSet) {
-        if (null == resultSet) { return; }
+        if (null == resultSet) {
+            return;
+        }
 
         try {
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
 
             for (int i = 1; i <= columnCount; i++) {
-                API.logger.info("Column Name: "+metaData.getColumnName(i));
+                API.logger.info("Column Name: " + metaData.getColumnName(i));
             }
 
             while (resultSet.next()) {
                 for (int i = 1; i <= columnCount; i++) {
                     String value = resultSet.getString(i);
-                    API.logger.info("Row: "+value);
+                    API.logger.info("Row: " + value);
                 }
                 API.logger.info("\n");
             }
-        } catch (Exception e ) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
 
 }

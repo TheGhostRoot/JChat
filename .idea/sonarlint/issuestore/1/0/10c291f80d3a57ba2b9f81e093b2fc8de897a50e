@@ -143,4 +143,4 @@ T
 java:S1135a"2Complete the task associated to this TODO comment.(õâÁ„ÿÿÿÿÿ8Š·‘¶1
 K
 java:S2440t".Remove this instantiation of "CaptahaManager".(‚¶ˆš8’Š·‘¶1
-p	java:S100•"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°şÿÿÿÿ8¬Š·‘¶1
+p	java:S100”"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°şÿÿÿÿ8¬Š·‘¶1
