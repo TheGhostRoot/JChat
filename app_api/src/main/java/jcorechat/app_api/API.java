@@ -97,6 +97,8 @@ public class API {
         // TODO handle DDoS/brute force
 
 
+        // It needs Java 17 or newer
+
         //  /api/v{VERSION}/friends
 
         //  /api/v{VERSION}/groups
@@ -115,6 +117,66 @@ public class API {
         accountManager = new AccountManager();
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
+
+
+        List<String> accounts_table = new ArrayList<>();
+        accounts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+        accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
+        accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
+        accounts_table.add("password VARCHAR(100) NOT NULL, ");
+        accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
+        accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
+        accounts_table.add("session_id BIGINT UNIQUE, ");
+        accounts_table.add("session_expire smallint, ");
+        accounts_table.add("created_at DATE NOT NULL, ");
+        accounts_table.add("friends TEXT NOT NULL, ");
+        accounts_table.add("groups TEXT NOT NULL ");
+
+
+        List<String> chats_table = new ArrayList<>();
+        chats_table.add("id BIGINT NOT NULL, ");
+        chats_table.add("id2 BIGINT NOT NULL, ");
+        chats_table.add("msg TEXT NOT NULL, ");
+        chats_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
+        chats_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+
+        List<String> captchas_table = new ArrayList<>();
+        captchas_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+        captchas_table.add("answer TEXT NOT NULL, ");
+        captchas_table.add("time smallint NOT NULL");
+
+
+        List<String> posts_table = new ArrayList<>();
+        posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+        posts_table.add("sender_id BIGINT NOT NULL, ");
+        posts_table.add("msg VARCHAR(200) NOT NULL, ");
+        posts_table.add("tags TEXT NOT NULL, ");
+        posts_table.add("send_at DATE NOT NULL, ");
+        posts_table.add("background TEXT, ");
+        posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
+
+        List<String> profiles_table = new ArrayList<>();
+        profiles_table.add("id BIGINT NOT NULL, ");
+        profiles_table.add("pfp TEXT NOT NULL, ");
+        profiles_table.add("banner TEXT NOT NULL, ");
+        profiles_table.add("pets TEXT, ");
+        profiles_table.add("coins INT NOT NULL, ");
+        profiles_table.add("badges TEXT NOT NULL, ");
+        profiles_table.add("animations TEXT, ");
+        profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+
+        databaseManager.deleteTable("profiles");
+        databaseManager.deleteTable("posts");
+        databaseManager.deleteTable("chats");
+        databaseManager.deleteTable("captchas");
+        databaseManager.deleteTable("accounts");
+
+        databaseManager.createTable("accounts", accounts_table);
+        databaseManager.createTable("captchas", captchas_table);
+        databaseManager.createTable("profiles", profiles_table);
+        databaseManager.createTable("posts", posts_table);
+        databaseManager.createTable("chats", chats_table);
+
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
@@ -139,6 +201,10 @@ public class API {
                 }
             }
         }, 0, 1, TimeUnit.SECONDS);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            databaseManager.shutDown();
+        }, "Shutdown-thread"));
 
         SpringApplication app = new SpringApplication(API.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", configManager.getServerPort()));

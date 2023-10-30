@@ -1,63 +1,55 @@
 
-z
-java:S2629Ã"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(¨‹ø‹8Šž¡­·1
-Z
-java:S2629É"7Use the built-in formatting to construct this argument.(ÅÆýíùÿÿÿÿ8Šž¡­·1
-m
-java:S2095†"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ù÷Œ„8ôŸ¢­·1
-m
-java:S2095¥"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(þÛä8Ãž¡­·1
-m
-java:S2095«"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(êŠ°Æ8Ãž¡­·1
-l
-java:S2095s"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ïíðê8Ãž¡­·1
-m
-java:S2095¨"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ˆÈÈª8Ãž¡­·1
-l
-java:S2095{"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ä…æÉ8Ãž¡­·1
-m
-java:S2095®"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ø¤ˆû8Ãž¡­·1
-u	java:S116
-"TRename this field "nosql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®àÏýÿÿÿÿ8Äž¡­·1
-z	java:S116"YRename this field "nosql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÃØƒýÿÿÿÿ8Äž¡­·1
-u	java:S116"YRename this field "nosql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ž£Ð”8Äž¡­·1
-n	java:S116"RRename this field "sql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†²«‰8Äž¡­·1
-x	java:S116"WRename this field "sql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÒŸˆ°ÿÿÿÿÿ8Äž¡­·1
-s	java:S116"WRename this field "sql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¢¤ Ê8Äž¡­·1
-z	java:S116"YRename this field "sql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›™ÐÛøÿÿÿÿ8Äž¡­·1
-|	java:S116"[Rename this field "nosql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(˜½Ÿ§øÿÿÿÿ8Äž¡­·1
-w	java:S116"VRename this field "INSERT_USER" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶åµºûÿÿÿÿ8Äž¡­·1
-y	java:S116"XRename this field "INSER_PROFILE" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(”±ôßþÿÿÿÿ8Äž¡­·1
+e
+java:S2259Œ"BA "NullPointerException" could be thrown; "data" is nullable here.(›Ñò‚þÿÿÿÿ8…€Ïû·1
+i
+java:S2259»"FA "NullPointerException" could be thrown; "setData()" can return null.(”¯Ðôüÿÿÿÿ8ÂâÑû·1
+i
+java:S2259Œ"FA "NullPointerException" could be thrown; "setData()" can return null.(›Ñò‚þÿÿÿÿ8†€Ïû·1
+r
+java:S2095Ê"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãôüûÿÿÿÿ8†€Ïû·1
+u	java:S116"TRename this field "nosql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®àÏýÿÿÿÿ8 ‘Ïâ·1
+z	java:S116"YRename this field "nosql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÃØƒýÿÿÿÿ8 ‘Ïâ·1
+u	java:S116"YRename this field "nosql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ž£Ð”8 ‘Ïâ·1
+n	java:S116"RRename this field "sql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†²«‰8 ‘Ïâ·1
+x	java:S116"WRename this field "sql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÒŸˆ°ÿÿÿÿÿ8 ‘Ïâ·1
+s	java:S116"WRename this field "sql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¢¤ Ê8 ‘Ïâ·1
+z	java:S116"YRename this field "sql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›™ÐÛøÿÿÿÿ8 ‘Ïâ·1
+|	java:S116"[Rename this field "nosql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(˜½Ÿ§øÿÿÿÿ8 ‘Ïâ·1
+w	java:S116"VRename this field "INSERT_USER" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶åµºûÿÿÿÿ8 ‘Ïâ·1
+y	java:S116"XRename this field "INSER_PROFILE" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(”±ôßþÿÿÿÿ8 ‘Ïâ·1
 C
-java:S1170
-"!Make this final field static too.(®àÏýÿÿÿÿ8Äž¡­·1
+java:S1170"!Make this final field static too.(®àÏýÿÿÿÿ8 ‘Ïâ·1
 C
-java:S1170"!Make this final field static too.(ÖÃØƒýÿÿÿÿ8Äž¡­·1
+java:S1170"!Make this final field static too.(ÖÃØƒýÿÿÿÿ8 ‘Ïâ·1
 >
-java:S1170"!Make this final field static too.(Ž£Ð”8Äž¡­·1
+java:S1170"!Make this final field static too.(Ž£Ð”8 ‘Ïâ·1
 >
-java:S1170"!Make this final field static too.(†²«‰8Äž¡­·1
+java:S1170"!Make this final field static too.(†²«‰8 ‘Ïâ·1
 C
-java:S1170"!Make this final field static too.(ÒŸˆ°ÿÿÿÿÿ8Äž¡­·1
+java:S1170"!Make this final field static too.(ÒŸˆ°ÿÿÿÿÿ8 ‘Ïâ·1
 >
-java:S1170"!Make this final field static too.(¢¤ Ê8Äž¡­·1
+java:S1170"!Make this final field static too.(¢¤ Ê8 ‘Ïâ·1
 C
-java:S1170"!Make this final field static too.(¶åµºûÿÿÿÿ8Äž¡­·1
+java:S1170"!Make this final field static too.(¶åµºûÿÿÿÿ8 ‘Ïâ·1
 C
-java:S1170"!Make this final field static too.(”±ôßþÿÿÿÿ8Äž¡­·1
+java:S1170"!Make this final field static too.(”±ôßþÿÿÿÿ8 ‘Ïâ·1
 S
-java:S6437 "6Revoke and change this password, as it is compromised.(Ž³ í8Êž¡­·1
-]	java:S125;"<This block of commented-out lines of code should be removed.(Š¤”Öþÿÿÿÿ8Íž¡­·1
-_
-java:S3457Ã"AFormat specifiers should be used instead of string concatenation.(¨‹ø‹8èž¡­·1
-d
-java:S3457É"AFormat specifiers should be used instead of string concatenation.(ÅÆýíùÿÿÿÿ8ìž¡­·1
+java:S6437#"6Revoke and change this password, as it is compromised.(Ž³ í8§‘Ïâ·1
+]	java:S125>"<This block of commented-out lines of code should be removed.(Š¤”Öþÿÿÿÿ8¬‘Ïâ·1
+I
+java:S1168©"+Return an empty collection instead of null.(¥¹ï8¦€Ïû·1
+Y	java:S125Ä"<This block of commented-out lines of code should be removed.(’‰­Ÿ8«€Ïû·1
 O
-java:S1068
-"-Remove this unused "nosql_url" private field.(®àÏýÿÿÿÿ8îž¡­·1
+java:S1068"-Remove this unused "nosql_url" private field.(®àÏýÿÿÿÿ8Ý‘Ïâ·1
 T
-java:S1068"2Remove this unused "nosql_username" private field.(ÖÃØƒýÿÿÿÿ8îž¡­·1
+java:S1068"2Remove this unused "nosql_username" private field.(ÖÃØƒýÿÿÿÿ8Ý‘Ïâ·1
 O
-java:S1068"2Remove this unused "nosql_password" private field.(Ž£Ð”8îž¡­·1
+java:S1068"2Remove this unused "nosql_password" private field.(Ž£Ð”8Ý‘Ïâ·1
 V
-java:S1068"4Remove this unused "nosql_connection" private field.(˜½Ÿ§øÿÿÿÿ8îž¡­·1
+java:S1068"4Remove this unused "nosql_connection" private field.(˜½Ÿ§øÿÿÿÿ8Ý‘Ïâ·1
+Q
+java:S1068"/Remove this unused "INSERT_USER" private field.(¶åµºûÿÿÿÿ8ºôÏâ·1
+S
+java:S1068"1Remove this unused "INSER_PROFILE" private field.(”±ôßþÿÿÿÿ8ºôÏâ·1
+K
+java:S1144"-Remove this unused private "editData" method.(ä²Ì¥8Þ‘Ïâ·1
