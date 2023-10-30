@@ -3,10 +3,15 @@ package jcorechat.app_api.database;
 import jcorechat.app_api.API;
 
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DatabaseManager {
 
@@ -24,6 +29,13 @@ public class DatabaseManager {
 
     private Connection sql_connection = null;
     private Connection nosql_connection = null;
+
+
+    private final String table_accounts = "accounts";
+    private final String table_chats = "chats";
+    private final String table_captchas = "captchas";
+    private final String table_posts = "posts";
+    private final String table_profiles = "profiles";
 
     public DatabaseManager() {
         try {
@@ -59,7 +71,9 @@ CREATE TABLE accounts (
 CREATE TABLE chats (
     id BIGINT NOT NULL,
     id2 BIGINT NOT NULL,
-    msg TEXT NOT NULL,
+    msg VARCHAR(2000) NOT NULL,
+    sent_at timestamp NOT NULL,
+    sent_by BIGINT NOT NULL,
     FOREIGN KEY (id) REFERENCES accounts(id),
     FOREIGN KEY (id2) REFERENCES accounts(id)
 );
@@ -102,23 +116,206 @@ CREATE TABLE profiles (
 
      */
 
-
-
     public boolean createUser(String name, String email, String password, String encryption_key, String sign_key) {
         if (null == sql_connection) {
             return false;
         }
 
-        List<Object> account_data = new ArrayList<>();
-        account_data.add(name);
-        account_data.add(email);
-        account_data.add(password);
-        account_data.add(encryption_key);
-        account_data.add(sign_key);
+        List<Object> account_details = new ArrayList<>();
+        account_details.add(name);
+        account_details.add(email);
+        account_details.add(password);
+        account_details.add(encryption_key);
+        account_details.add(sign_key);
+        account_details.add(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
 
-        return addData("accounts", account_data);
+
+        if (!addData(table_accounts,
+                "name, email, password, encryption_key, sign_key, session_id, session_expire, created_at, friends, groups",
+                "?, ?, ?, ?, ?, NULL, NULL, ?, '', ''", account_details)) { return false; }
+
+
+        List<Object> search_condition = new ArrayList<>();
+        search_condition.add(email);
+
+        Map<String, List<Object>> account_data = getData(table_accounts, "id",
+                "email = ?", search_condition, null, "", 0);
+
+        if (account_data == null || account_data.isEmpty()) { return false; }
+
+        List<Object> profile_details = new ArrayList<>();
+        profile_details.add((long) account_data.get("id").get(0));
+
+        if (!addData(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
+                "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) { return false; }
+
+        return true;
 
     }
+
+    public boolean changeUserEmail(long id, String new_email) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(new_email);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "email = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean changeUserPassword(long id, String new_password) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(new_password);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "password = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean changeUserEncryptionKey(long id, String new_encryptino_key) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(new_encryptino_key);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "encryption_key = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean changeUserSignKey(long id, String new_sign_key) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(new_sign_key);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "sign_key = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean changeUserSessionID(long id, Long session_id) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(session_id);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "session_id = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean changeUserSessionExpire(long id, short session_expire) {
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(session_expire);
+
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        return editData(table_accounts, "session_expire = ?", account_set, "id = ?", account_where);
+    }
+
+    public boolean addUserFriend(long id, long friend_id) {
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        List<Object> account_friends = new ArrayList<>();
+        account_friends.add("," + friend_id);
+
+        return editData(table_accounts, "friends = friends || ?", account_friends, "id = ?",
+                account_where);
+    }
+
+    public boolean removeUserFriend(long id, long friend_id) {
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        List<Object> account_friends = new ArrayList<>();
+        account_friends.add("," + friend_id);
+
+        return editData(table_accounts, "friends = REPLACE(friends, ?, '')", account_friends,
+                "id = ?", account_where);
+    }
+
+    public boolean addUserGroup(long id, long group_id) {
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        List<Object> account_friends = new ArrayList<>();
+        account_friends.add("," + group_id);
+
+        return editData(table_accounts, "groups = groups || ?", account_friends, "id = ?",
+                account_where);
+    }
+
+    public boolean removeUserGroup(long id, long group_id) {
+        List<Object> account_where = new ArrayList<>();
+        account_where.add(id);
+
+        List<Object> account_friends = new ArrayList<>();
+        account_friends.add("," + group_id);
+
+        return editData(table_accounts, "groups = REPLACE(groups, ?, '')", account_friends,
+                "id = ?", account_where);
+    }
+
+
+
+
+
+    public boolean addMessage(long sender_id, long resiver_id, String message) {
+
+        List<Object> where_values = new ArrayList<>();
+        where_values.add(sender_id);
+        where_values.add(resiver_id);
+        where_values.add(resiver_id);
+        where_values.add(sender_id);
+
+        Map<String, List<Object>> chat_data = getData(table_chats, "id, id2",
+                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null, "", 0);
+
+        if (chat_data == null || chat_data.values().stream().allMatch(List::isEmpty)) {
+            // create the chat
+            List<Object> values = new ArrayList<>();
+            values.add(sender_id);
+            values.add(resiver_id);
+            values.add(message);
+            values.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            values.add(sender_id);
+
+            if (!addData(table_chats, "id, id2, msg, sent_at, sent_by", "?, ?, ?, ?, ?", values)) {
+                return false;
+            }
+        }
+
+        List<Object> set_data = new ArrayList<>();
+        set_data.add(message);
+
+        return editData(table_chats, "msg = msg || ?", set_data,
+                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values);
+    }
+
+    public List<String> getMessages(long sender_id, long resiver_id, int amount) {
+        // index 0 -> message
+        // index 1 -> sender_id
+        List<Object> where_values = new ArrayList<>();
+        where_values.add(sender_id);
+        where_values.add(resiver_id);
+        where_values.add(resiver_id);
+        where_values.add(sender_id);
+
+        Map<String, List<Object>> data = getData(table_chats, "msg",
+                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null,
+                "sent_at DESC", amount);
+
+        return data == null ? null : data.get("msg").stream().map(String::valueOf).collect(Collectors.toList());
+    }
+
+
+
+
+
+
+
+
 
     @Deprecated
     public boolean deleteUser(long id) {
@@ -130,18 +327,18 @@ CREATE TABLE profiles (
 
         data.add(id);
 
-        if (!deleteData("accounts", "id = ?", data)) { return false; }
-        if (!deleteData("profiles", "id = ?", data)) { return false; }
+        if (!deleteData(table_accounts, "id = ?", data)) { return false; }
+        if (!deleteData(table_profiles, "id = ?", data)) { return false; }
 
         data.clear();
         data.add(id);
 
-        if (!deleteData("posts", "sender_id = ?", data)) { return false; }
+        if (!deleteData(table_posts, "sender_id = ?", data)) { return false; }
 
         data.clear();
         data.add(id);
         data.add(id);
-        return deleteData("chats", "id = ? OR id2 = ?", data);
+        return deleteData(table_chats, "id = ? OR id2 = ?", data);
 
     }
 
@@ -189,48 +386,24 @@ CREATE TABLE profiles (
         StringBuilder stringBuilder = new StringBuilder("DELETE FROM ").append(table).append(" WHERE ").append(condition);
         try {
             ((PreparedStatement) setData((short) 1, conditionData,
-                    sql_connection.prepareStatement(stringBuilder.toString())).get(1)).executeQuery();
+                    sql_connection.prepareStatement(stringBuilder.toString())).get(1)).executeUpdate();
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean addData(String table, List<Object> data) {
+    private boolean addData(String table, String fields, String values, List<Object> data) {
         // "INSERT INTO accounts (name, email, password, encryption_key, sign_key, session_id, session_expire, friends, groups) VALUES (?, ?, ?, ?, ?, NULL, NULL, '', '');
 
         if (null == sql_connection) { return false; }
 
         try {
 
-            PreparedStatement preparedStatement = sql_connection.prepareStatement("INSERT INTO " + table +
-                    " (name, email, password, encryption_key, sign_key, session_id, session_expire, friends, groups) VALUES (?, ?, ?, ?, ?, NULL, NULL, '', '');");
+            ( (PreparedStatement) setData((short) 1, data, sql_connection.prepareStatement(new StringBuilder("INSERT INTO ")
+                    .append(table).append(" (").append(fields).append(") VALUES (").append(values).append(");")
+                    .toString())).get(1) ).executeUpdate();
 
-            for (int i = 0; i < data.size(); i++) {
-                Object value = data.get(i);
-
-                switch (value.getClass().getSimpleName()) {
-                    case "String":
-                        preparedStatement.setString(i + 1, (String) value);
-                        break;
-                    case "Integer":
-                        preparedStatement.setInt(i + 1, (Integer) value);
-                        break;
-                    case "Long":
-                        preparedStatement.setLong(i + 1, (Long) value);
-                        break;
-                    case "Short":
-                        preparedStatement.setShort(i + 1, (Short) value);
-                        break;
-                    case "LocalDateTime", "LocalDate":
-                        preparedStatement.setObject(i + 1, value);
-                        break;
-                    default:
-                        return false;
-                }
-            }
-
-            preparedStatement.executeQuery();
             return true;
         } catch (Exception e) {
             return false;
@@ -238,27 +411,30 @@ CREATE TABLE profiles (
 
     }
 
-    private boolean editData(String table, String change_text, List<Object> changes, String condition,
+    private boolean editData(String table, String set_expression, List<Object> set_data, String condition,
                              List<Object> conditionData) {
         if (null == sql_connection) {
             return false;
         }
 
-        StringBuilder updateQuery = new StringBuilder("UPDATE ").append(table).append(" SET ").append(change_text)
-                .append(" WHERE ").append(condition);
+        StringBuilder updateQuery = new StringBuilder("UPDATE ").append(table).append(" SET ").append(set_expression)
+                .append(" WHERE ").append(condition).append(";");
 
         try {
-            List<Object> data = setData((short) 1, changes, sql_connection.prepareStatement(updateQuery.toString()));
+            List<Object> data = setData((short) 1, set_data, sql_connection.prepareStatement(updateQuery.toString()));
 
-            ((PreparedStatement) setData((short) data.get(0), conditionData, (PreparedStatement) data.get(1)).get(1)).executeUpdate();
+            ((PreparedStatement) setData((short) data.get(0), conditionData, (PreparedStatement) data.get(1)).get(1))
+                    .executeUpdate();
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
 
-    private Map<String, List<Object>> getData(String table, String data_to_get, String condition, List<Object> conditionData, Map<String,
-            List<Object>> join_data) {
+    private Map<String, List<Object>> getData(String table, String data_to_get, String condition,
+                                              List<Object> conditionData, Map<String, List<Object>> join_data,
+                                              String order, int limit) {
         // conditionData can be null if there is no condition
         if (null == sql_connection) {
             return null;
@@ -279,6 +455,10 @@ CREATE TABLE profiles (
 
         if (!condition.isBlank()) { select_query.append(" WHERE ").append(condition); }
 
+        if (!order.isBlank()) { select_query.append(" ORDER BY ").append(order); }
+
+        if (0 < limit) { select_query.append("LIMIT ").append(limit); }
+
         try {
 
             // We use Java 17 so the hashmap is ordered, and we assume that it is.
@@ -294,7 +474,6 @@ CREATE TABLE profiles (
                     preparedStatement = (PreparedStatement) data_list.get(1);
                 }
             }
-            //preparedStatement = ((PreparedStatement) setData(i, conditionData, preparedStatement).get(1));
 
             return readOutput(((PreparedStatement) setData(i, conditionData, preparedStatement).get(1)).executeQuery());
         } catch (Exception e) {

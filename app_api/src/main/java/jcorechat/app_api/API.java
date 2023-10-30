@@ -97,6 +97,8 @@ public class API {
         // TODO handle DDoS/brute force
 
 
+        // The client will handle all the hashing
+
         // It needs Java 17 or newer
 
         //  /api/v{VERSION}/friends
@@ -128,7 +130,7 @@ public class API {
         accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
         accounts_table.add("session_id BIGINT UNIQUE, ");
         accounts_table.add("session_expire smallint, ");
-        accounts_table.add("created_at DATE NOT NULL, ");
+        accounts_table.add("created_at timestamp NOT NULL, ");
         accounts_table.add("friends TEXT NOT NULL, ");
         accounts_table.add("groups TEXT NOT NULL ");
 
@@ -136,7 +138,9 @@ public class API {
         List<String> chats_table = new ArrayList<>();
         chats_table.add("id BIGINT NOT NULL, ");
         chats_table.add("id2 BIGINT NOT NULL, ");
-        chats_table.add("msg TEXT NOT NULL, ");
+        chats_table.add("msg VARCHAR(2000) NOT NULL, ");
+        chats_table.add("sent_at timestamp NOT NULL, ");
+        chats_table.add("sent_by BIGINT NOT NULL, ");
         chats_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
         chats_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
 
