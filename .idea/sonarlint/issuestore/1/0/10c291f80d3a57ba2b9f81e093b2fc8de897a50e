@@ -1,6 +1,4 @@
 
-
-java:S1192}"dDefine a constant instead of duplicating this literal "id bigserial PRIMARY KEY NOT NULL, " 3 times.(ÌÔÚ§8üß Œ¸1
 €
 java:S1319)"cThe type of "emails" should be an interface such as "Map" rather than the implementation "HashMap".(×ò€¿8ıß Œ¸1
 
@@ -146,25 +144,29 @@ java:S1135a"2Complete the task associated to this TODO comment.(õâÁ„ÿÿÿÿÿ8§à Œ
 K
 java:S2440x".Remove this instantiation of "CaptahaManager".(‚¶ˆš8¨à Œ¸1
 Q
-java:S1874¬"3Remove this use of "deleteTable"; it is deprecated.(¦¢üÓ8Íà Œ¸1
+java:S1874¶"3Remove this use of "deleteTable"; it is deprecated.(¦¢üÓ8Íà Œ¸1
 P
-java:S1874­"3Remove this use of "deleteTable"; it is deprecated.(€Ö›^8Íà Œ¸1
+java:S1874·"3Remove this use of "deleteTable"; it is deprecated.(€Ö›^8Íà Œ¸1
 Q
-java:S1874®"3Remove this use of "deleteTable"; it is deprecated.(¼ËÒ8Îà Œ¸1
+java:S1874¸"3Remove this use of "deleteTable"; it is deprecated.(¼ËÒ8Îà Œ¸1
 P
-java:S1874¯"3Remove this use of "deleteTable"; it is deprecated.(Üä28Îà Œ¸1
+java:S1874¹"3Remove this use of "deleteTable"; it is deprecated.(Üä28Îà Œ¸1
+P
+java:S1874º"3Remove this use of "deleteTable"; it is deprecated.(“íœU8Öúû¬¸1
 Q
-java:S1874°"3Remove this use of "deleteTable"; it is deprecated.(ÎÄË¦8Îà Œ¸1
+java:S1874»"3Remove this use of "deleteTable"; it is deprecated.(ÎÄË¦8Îà Œ¸1
 V
-java:S1874²"3Remove this use of "createTable"; it is deprecated.(±š­Ûùÿÿÿÿ8Ğà Œ¸1
-Q
-java:S1874³"3Remove this use of "createTable"; it is deprecated.(ÕÀŒ8Ñà Œ¸1
-Q
-java:S1874´"3Remove this use of "createTable"; it is deprecated.(¶ê±š8Ñà Œ¸1
+java:S1874½"3Remove this use of "createTable"; it is deprecated.(±š­Ûùÿÿÿÿ8Ğà Œ¸1
 V
-java:S1874µ"3Remove this use of "createTable"; it is deprecated.(‰¸íÓùÿÿÿÿ8Ñà Œ¸1
+java:S1874¾"3Remove this use of "createTable"; it is deprecated.(‚áï•üÿÿÿÿ8Üúû¬¸1
 Q
-java:S1874¶"3Remove this use of "createTable"; it is deprecated.(ÌÆÌŠ8Ñà Œ¸1
+java:S1874¿"3Remove this use of "createTable"; it is deprecated.(ÕÀŒ8Ñà Œ¸1
+Q
+java:S1874À"3Remove this use of "createTable"; it is deprecated.(¶ê±š8Ñà Œ¸1
+V
+java:S1874Á"3Remove this use of "createTable"; it is deprecated.(‰¸íÓùÿÿÿÿ8Ñà Œ¸1
+Q
+java:S1874Â"3Remove this use of "createTable"; it is deprecated.(ÌÆÌŠ8Ñà Œ¸1
 J
-java:S1602Ñ",Remove useless curly braces around statement(è¶…Ğ8ëà Œ¸1
-p	java:S100Ú"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°şÿÿÿÿ8€á Œ¸1
+java:S1602İ",Remove useless curly braces around statement(è¶…Ğ8ëà Œ¸1
+p	java:S100æ"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°şÿÿÿÿ8€á Œ¸1

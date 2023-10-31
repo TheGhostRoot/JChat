@@ -194,6 +194,10 @@ public class API {
         databaseManager.createTable("chats", chats_table);
 
 
+
+
+
+
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             for (Map.Entry<Long, Short> entry : captcha_expire.entrySet()) {
                 Short value = entry.getValue();

@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class DatabaseManager {
 
@@ -123,15 +120,17 @@ CREATE TABLE profiles (
         friends: "accountID,accountID,..."
         groups: "groupID,groupID,..."
 
-        chats -> msgs: "[msg]{accountID},[msg]{accountID},..."
+        last_edit_time: "yyyy-MM-dd HH:mm:ss"
+
+
         
-        answer: "[ans1],[ans2]..."
+        answer: "...."
 
      */
 
-    public boolean createUser(String name, String email, String password, String encryption_key, String sign_key) {
+    public Long createUser(String name, String email, String password, String encryption_key, String sign_key) {
         if (null == sql_connection) {
-            return false;
+            return null;
         }
 
         List<Object> account_details = new ArrayList<>();
@@ -145,7 +144,7 @@ CREATE TABLE profiles (
 
         if (!addData(table_accounts,
                 "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, session_suspended, created_at, friends, groups",
-                "?, ?, ?, ?, ?, NULL, NULL, NULL, 'f', ?, '', ''", account_details)) { return false; }
+                "?, ?, ?, ?, ?, NULL, NULL, NULL, 'f', ?, '', ''", account_details)) { return null; }
 
 
         List<Object> search_condition = new ArrayList<>();
@@ -154,13 +153,18 @@ CREATE TABLE profiles (
         Map<String, List<Object>> account_data = getData(table_accounts, "id",
                 "email = ?", search_condition, null, "", 0);
 
-        if (account_data == null || account_data.isEmpty()) { return false; }
+        if (account_data == null || account_data.isEmpty()) { return null; }
 
         List<Object> profile_details = new ArrayList<>();
-        profile_details.add((long) account_data.get("id").get(0));
+        long id = (long) account_data.get("id").get(0);
+        profile_details.add(id);
 
-        return addData(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
-                "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details);
+        if (!addData(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
+                "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) {
+            return null;
+        }
+
+        return id;
 
     }
 
@@ -317,27 +321,76 @@ CREATE TABLE profiles (
 
 
 
+    public Long createConvID(long party_id, long party_id2) {
+        List<Object> set_data = new ArrayList<>();
+        set_data.add(party_id);
+        set_data.add(party_id2);
 
-    public boolean addMessage(long conv_id, long sender_id, String message) {
-        return false;
+        Map<String, List<Object>> conv_data = getData(table_conversations, "conv_id", "",
+                null, null, "", 0);
+
+        if (conv_data == null) { return null; }
+
+        long id = generateID(conv_data.get("conv_id"));
+
+        set_data.add(id);
+
+        return addData(table_conversations, "party_id, party_id2, conv_id", "?, ?, ?", set_data) ?
+                id : null;
     }
 
-    public Map<String, List<Object>> getMessages(long sender_id, long resiver_id, int amount) {
-        List<Object> where_values = new ArrayList<>();
-        where_values.add(sender_id);
-        where_values.add(resiver_id);
-        where_values.add(resiver_id);
-        where_values.add(sender_id);
 
-        return getData(table_chats, "msg, sent_at, sent_by",
-                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null,
+
+
+    public boolean addMessage(long conv_id, long sender_id, String message) {
+
+
+        List<Object> edit_condition_data = new ArrayList<>();
+        edit_condition_data.add(conv_id);
+
+        Map<String, List<Object>> current_chat_data = getData(table_chats, "msg, msg_id", "conv_id = ?",
+                edit_condition_data, null, "", 0);
+
+        if (current_chat_data == null) { return false; }
+
+        List<Object> chat_data = new ArrayList<>();
+        chat_data.add(conv_id);
+        chat_data.add(message);
+        chat_data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        chat_data.add(sender_id);
+        chat_data.add(generateID(current_chat_data.get("msg_id")));
+
+        List<Object> set_data = new ArrayList<>();
+        set_data.add(message);
+
+        if ((current_chat_data.get("msg").isEmpty()) ||
+                (!editData(table_chats, "msg = msg || ?" , set_data,
+                        "conv_id = ?", edit_condition_data))) {
+            return addData(table_chats, "conv_id, msg, sent_at, sent_by, msg_id",
+                    "?, ?, ?, ?, ?", chat_data);
+
+        } else {
+            return true;
+        }
+
+    }
+
+    public Map<String, List<Object>> getMessages(long sender_id, long conv_id, int amount) {
+        List<Object> where_values = new ArrayList<>();
+        where_values.add(conv_id);
+
+        return getData(table_chats, "*", "conv_id = ?", where_values, null,
                 "sent_at DESC", amount);
     }
 
-    public boolean deleteMessage(long sender_id, long resiver_id, long message_id) {
-        return false;
-    }
+    public boolean deleteMessage(long sender_id, long conv_id, long message_id) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(conv_id);
+        condition_data.add(message_id);
+        condition_data.add(sender_id);
 
+        return deleteData(table_chats, "conv_id = ? AND msg_id = ? AND sent_by = ?", condition_data);
+    }
 
 
 
@@ -346,13 +399,11 @@ CREATE TABLE profiles (
         Map<String, List<Object>> data = getData(table_captchas, "id", "",
                 null, null, "", 0);
 
-        long id = 1L;
 
-        if (data != null) {
-            while (data.get("id").contains(id)) {
-               id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
-            }
-        }
+        if (data == null) { return null; }
+
+
+        long id = generateID(data.get("id"));
 
         List<Object> values = new ArrayList<>();
         values.add(id);
@@ -390,9 +441,10 @@ CREATE TABLE profiles (
         } else {
             // the captcha was not solved and the user has more time and didn't failed 3 times
 
-            editData(table_captchas, "failed = failed + 1", null, "id = ?",
-                    condition_data);
-
+            if (!(captcha_data.get("time").isEmpty() || captcha_data.get("failed").isEmpty())) {
+                editData(table_captchas, "failed = failed + 1", null, "id = ?",
+                        condition_data);
+            }
             return false;
         }
     }
@@ -458,6 +510,13 @@ CREATE TABLE profiles (
 
     }
 
+    private long generateID(List<Object> toContain) {
+        long id = 1L;
+        while (toContain.contains(id)) {
+            id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
+        }
+        return id;
+    }
 
     private List<Object> setData(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
             throws SQLException {
@@ -537,13 +596,13 @@ CREATE TABLE profiles (
                 .append(" WHERE ").append(condition).append(";");
 
         try {
-            List<Object> data = setData((short) 1, set_data, sql_connection.prepareStatement(updateQuery.toString()));
+            List<Object> data = setData((short) 1, set_data, sql_connection.prepareStatement(new StringBuilder("UPDATE ").append(table).append(" SET ").append(set_expression)
+                    .append(" WHERE ").append(condition).append(";").toString()));
 
             ((PreparedStatement) setData((short) data.get(0), conditionData, (PreparedStatement) data.get(1)).get(1))
                     .executeUpdate();
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
