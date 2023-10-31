@@ -4,6 +4,7 @@ import jcorechat.app_api.API;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public class DatabaseManager {
     private final String table_captchas = "captchas";
     private final String table_posts = "posts";
     private final String table_profiles = "profiles";
+    private final String table_conversations = "conversations";
 
     public DatabaseManager() {
         try {
@@ -63,25 +65,36 @@ CREATE TABLE accounts (
     sign_key VARCHAR(100) UNIQUE NOT NULL,
     session_id BIGINT UNIQUE,
     session_expire smallint,
+    last_edit_time TEXT,
+    session_suspended VARCHAR(1) NOT NULL,
     created_at DATE NOT NULL,
     friends TEXT NOT NULL,
     groups TEXT NOT NULL
 );
 
 CREATE TABLE chats (
-    id BIGINT NOT NULL,
-    id2 BIGINT NOT NULL,
+    conv_id BIGINT NOT NULL,
     msg VARCHAR(2000) NOT NULL,
     sent_at timestamp NOT NULL,
     sent_by BIGINT NOT NULL,
-    FOREIGN KEY (id) REFERENCES accounts(id),
-    FOREIGN KEY (id2) REFERENCES accounts(id)
+    msg_id BIGINT NOT NULL,
+    FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)
+);
+
+CREATE TABLE conversations (
+    party_id BIGINT NOT NULL,
+    party_id2 BIGINT NOT NULL,
+    conv_id BIGINT PRIMARY KEY NOT NULL,
+    FOREIGN KEY (party_id) REFERENCES accounts(id),
+    FOREIGN KEY (party_id2) REFERENCES accounts(id)
 );
 
 CREATE TABLE captchas (
-    id bigserial PRIMARY KEY NOT NULL,
+    id BIGINT PRIMARY KEY NOT NULL,
     answer TEXT NOT NULL,
-    time smallint NOT NULL
+    time smallint NOT NULL,
+    last_edit_time TEXT NOT NULL,
+    failed smallint NOT NUL
 );
 
 CREATE TABLE posts (
@@ -131,8 +144,8 @@ CREATE TABLE profiles (
 
 
         if (!addData(table_accounts,
-                "name, email, password, encryption_key, sign_key, session_id, session_expire, created_at, friends, groups",
-                "?, ?, ?, ?, ?, NULL, NULL, ?, '', ''", account_details)) { return false; }
+                "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, session_suspended, created_at, friends, groups",
+                "?, ?, ?, ?, ?, NULL, NULL, NULL, 'f', ?, '', ''", account_details)) { return false; }
 
 
         List<Object> search_condition = new ArrayList<>();
@@ -146,10 +159,8 @@ CREATE TABLE profiles (
         List<Object> profile_details = new ArrayList<>();
         profile_details.add((long) account_data.get("id").get(0));
 
-        if (!addData(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
-                "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) { return false; }
-
-        return true;
+        return addData(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
+                "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details);
 
     }
 
@@ -203,14 +214,60 @@ CREATE TABLE profiles (
         return editData(table_accounts, "session_id = ?", account_set, "id = ?", account_where);
     }
 
-    public boolean changeUserSessionExpire(long id, short session_expire) {
-        List<Object> account_set = new ArrayList<>();
-        account_set.add(session_expire);
+    public boolean changeUserSessionExpire(long id, short session_expire)  {
+        if (isUserSessionSuspended(id)) { return false; }
 
         List<Object> account_where = new ArrayList<>();
         account_where.add(id);
 
+        Map<String, List<Object>> sess_data = getData(table_accounts, "last_edit_time",
+                "id = ?", account_where, null, "", 0);
+
+        if ((sess_data == null || sess_data.get("last_edit_time").isEmpty()) ||
+                !isOneSecondAgo(String.valueOf(sess_data.get("last_edit_time").get(0)))) {
+            return false;
+        }
+
+        List<Object> account_set = new ArrayList<>();
+        account_set.add(session_expire);
+
         return editData(table_accounts, "session_expire = ?", account_set, "id = ?", account_where);
+    }
+
+    private boolean isOneSecondAgo(String last_edit_time) {
+        try {
+
+            if (ChronoUnit.SECONDS.between(LocalDateTime.parse((last_edit_time),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), LocalDateTime.now()) > 1) {
+                return true;
+            }
+
+        } catch (Exception e) { return false; }
+        return false;
+    }
+
+    public boolean changeUserSessionSuspended(long id, String stats) {
+        List<Object> set_data = new ArrayList<>();
+        set_data.add(stats);
+
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        return editData(table_accounts, "session_suspended = ?", set_data,
+                "id = ?", condition_data);
+    }
+
+    public boolean isUserSessionSuspended(long id) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+        // session_suspended
+
+        Map<String, List<Object>> data = getData(table_accounts, "session_suspended",
+                "id = ?", condition_data, null, "", 0);
+
+
+        return data != null && !data.get("session_suspended").isEmpty() &&
+                data.get("session_suspended").get(0).equals("t");
     }
 
     public boolean addUserFriend(long id, long friend_id) {
@@ -261,56 +318,115 @@ CREATE TABLE profiles (
 
 
 
-    public boolean addMessage(long sender_id, long resiver_id, String message) {
+    public boolean addMessage(long conv_id, long sender_id, String message) {
+        return false;
+    }
 
+    public Map<String, List<Object>> getMessages(long sender_id, long resiver_id, int amount) {
         List<Object> where_values = new ArrayList<>();
         where_values.add(sender_id);
         where_values.add(resiver_id);
         where_values.add(resiver_id);
         where_values.add(sender_id);
 
-        Map<String, List<Object>> chat_data = getData(table_chats, "id, id2",
-                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null, "", 0);
+        return getData(table_chats, "msg, sent_at, sent_by",
+                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null,
+                "sent_at DESC", amount);
+    }
 
-        if (chat_data == null || chat_data.values().stream().allMatch(List::isEmpty)) {
-            // create the chat
-            List<Object> values = new ArrayList<>();
-            values.add(sender_id);
-            values.add(resiver_id);
-            values.add(message);
-            values.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-            values.add(sender_id);
+    public boolean deleteMessage(long sender_id, long resiver_id, long message_id) {
+        return false;
+    }
 
-            if (!addData(table_chats, "id, id2, msg, sent_at, sent_by", "?, ?, ?, ?, ?", values)) {
-                return false;
+
+
+
+
+    public Long startCaptcha(String answer) {
+        Map<String, List<Object>> data = getData(table_captchas, "id", "",
+                null, null, "", 0);
+
+        long id = 1L;
+
+        if (data != null) {
+            while (data.get("id").contains(id)) {
+               id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
             }
         }
 
-        List<Object> set_data = new ArrayList<>();
-        set_data.add(message);
+        List<Object> values = new ArrayList<>();
+        values.add(id);
+        values.add(answer);
+        values.add(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        return editData(table_chats, "msg = msg || ?", set_data,
-                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values);
+        if (!addData(table_captchas, "id, answer, time, last_edit_time, failed", "?, ?, 10, ?, 0", values))
+        { return null; }
+
+        return id;
     }
 
-    public List<String> getMessages(long sender_id, long resiver_id, int amount) {
-        // index 0 -> message
-        // index 1 -> sender_id
-        List<Object> where_values = new ArrayList<>();
-        where_values.add(sender_id);
-        where_values.add(resiver_id);
-        where_values.add(resiver_id);
-        where_values.add(sender_id);
+    public boolean verifyCaptcha(long id, String given_answer) {
+        // TODO when captcha is ready then update this
 
-        Map<String, List<Object>> data = getData(table_chats, "msg",
-                "(id = ? AND id2 = ?) OR (id = ? AND id2 = ?)", where_values, null,
-                "sent_at DESC", amount);
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
 
-        return data == null ? null : data.get("msg").stream().map(String::valueOf).collect(Collectors.toList());
+        Map<String, List<Object>> captcha_data = getData(table_captchas, "answer, time, failed",
+                "id = ?", condition_data, null, "", 0);
+
+        if (captcha_data == null) { return false; }
+
+        if (captcha_data.get("answer").contains(given_answer)) {
+            // solved!
+            return deleteData(table_captchas, "id = ?", condition_data);
+
+        } else if ((3 <= (short) captcha_data.get("failed").get(0)) ||
+                (0 >= (short) captcha_data.get("time").get(0))) {
+            // extended fails or time
+
+            deleteData(table_captchas, "id = ?", condition_data);
+
+            return false;
+        } else {
+            // the captcha was not solved and the user has more time and didn't failed 3 times
+
+            editData(table_captchas, "failed = failed + 1", null, "id = ?",
+                    condition_data);
+
+            return false;
+        }
+    }
+
+    public boolean updateCaptchaTime(long id) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        Map<String, List<Object>> sess_data = getData(table_captchas, "last_edit_time",
+                "id = ?", condition_data, null, "", 0);
+
+        if ((sess_data == null || sess_data.get("last_edit_time").isEmpty()) ||
+                !isOneSecondAgo(String.valueOf(sess_data.get("last_edit_time").get(0)))) {
+            return false;
+        }
+
+        return editData(table_captchas, "time = time - 1", null, "id = ?", condition_data);
     }
 
 
 
+
+
+    public boolean createPost(long sender_id, String msg, String tags, String background) {
+        // there is no custom background if empty
+        List<Object> data = new ArrayList<>();
+        data.add(sender_id);
+        data.add(msg);
+        data.add(tags);
+        data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        data.add(background);
+
+        return addData(table_posts, "sender_id, msg, tags, send_at, background", "?, ?, ?, ?, ?", data);
+    }
 
 
 

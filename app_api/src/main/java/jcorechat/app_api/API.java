@@ -130,24 +130,34 @@ public class API {
         accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
         accounts_table.add("session_id BIGINT UNIQUE, ");
         accounts_table.add("session_expire smallint, ");
+        accounts_table.add("last_edit_time TEXT, ");
+        accounts_table.add("session_suspended VARCHAR(1) NOT NULL, ");
         accounts_table.add("created_at timestamp NOT NULL, ");
         accounts_table.add("friends TEXT NOT NULL, ");
         accounts_table.add("groups TEXT NOT NULL ");
 
+        List<String> conversations_table = new ArrayList<>();
+        conversations_table.add("party_id BIGINT NOT NULL, ");
+        conversations_table.add("party_id2 BIGINT NOT NULL, ");
+        conversations_table.add("conv_id BIGINT PRIMARY KEY NOT NULL, ");
+        conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
+        conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
+
 
         List<String> chats_table = new ArrayList<>();
-        chats_table.add("id BIGINT NOT NULL, ");
-        chats_table.add("id2 BIGINT NOT NULL, ");
+        chats_table.add("conv_id BIGINT NOT NULL, ");
         chats_table.add("msg VARCHAR(2000) NOT NULL, ");
         chats_table.add("sent_at timestamp NOT NULL, ");
         chats_table.add("sent_by BIGINT NOT NULL, ");
-        chats_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
-        chats_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+        chats_table.add("msg_id BIGINT NOT NULL, ");
+        chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
 
         List<String> captchas_table = new ArrayList<>();
-        captchas_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+        captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
         captchas_table.add("answer TEXT NOT NULL, ");
-        captchas_table.add("time smallint NOT NULL");
+        captchas_table.add("time smallint NOT NULL, ");
+        captchas_table.add("last_edit_time TEXT NOT NULL, ");
+        captchas_table.add("failed smallint NOT NULL");
 
 
         List<String> posts_table = new ArrayList<>();
@@ -173,9 +183,11 @@ public class API {
         databaseManager.deleteTable("posts");
         databaseManager.deleteTable("chats");
         databaseManager.deleteTable("captchas");
+        databaseManager.deleteTable("conversations");
         databaseManager.deleteTable("accounts");
 
         databaseManager.createTable("accounts", accounts_table);
+        databaseManager.createTable("conversations", conversations_table);
         databaseManager.createTable("captchas", captchas_table);
         databaseManager.createTable("profiles", profiles_table);
         databaseManager.createTable("posts", posts_table);
