@@ -10,7 +10,7 @@ Open-source social media application with customazation and everything you need 
 
 ### Plans
 
-* It can use **SQL** and **NoSQL** for database
+* It can use **SQL** and **NoSQL** for database. Tested databases: ScyllaDB, PostgresSQL, MongoDB, Cassandra
 * Dockerfiles for easier and faster deployment
 * .drawio files to explain how everything was planned with drawings ONLY for the network part
 * Make sure every single feature can be custom in the config
