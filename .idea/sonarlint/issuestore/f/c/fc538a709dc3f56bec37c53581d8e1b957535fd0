@@ -1,0 +1,115 @@
+
+k
+java:S1192"HDefine a constant instead of duplicating this literal " WHERE " 4 times.(©Ë¼­úÿÿÿÿ8¸Ÿ§Ñ¸1
+k
+java:S1192²"HDefine a constant instead of duplicating this literal "id = ?" 27 times.(–ß‘õıÿÿÿÿ8ŞŸ§Ñ¸1
+j
+java:S1192Ú"LDefine a constant instead of duplicating this literal "conv_id = ?" 3 times.(ßœĞ²8äŸ§Ñ¸1
+u
+java:S1192"RDefine a constant instead of duplicating this literal "session_suspended" 3 times.(‰›§ÿÿÿÿÿ8ëŸ§Ñ¸1
+r
+java:S1192ã"ODefine a constant instead of duplicating this literal "last_edit_time" 6 times.(ëæÏŞüÿÿÿÿ8ñŸ§Ñ¸1
+j
+java:S2259Ø"GA "NullPointerException" could be thrown; "data_list" is nullable here.(ïµ”°ÿÿÿÿÿ8Ÿ£§Ñ¸1
+i
+java:S2259’"FA "NullPointerException" could be thrown; "setData()" can return null.(ô™å¬ÿÿÿÿÿ8Ÿ£§Ñ¸1
+d
+java:S2259ª"FA "NullPointerException" could be thrown; "setData()" can return null.(Ôõíı8Ÿ£§Ñ¸1
+d
+java:S2259İ"FA "NullPointerException" could be thrown; "setData()" can return null.(ÌÄÖ…8Ÿ£§Ñ¸1
+i
+java:S2259ƒ"FA "NullPointerException" could be thrown; "setData()" can return null.(öË ¹üÿÿÿÿ8Ÿ£§Ñ¸1
+`
+java:S2259ª"BA "NullPointerException" could be thrown; "data" is nullable here.(Ôõíı8Ÿ£§Ñ¸1
+m
+java:S2095ş"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ø£±£8Ÿ£§Ñ¸1
+r
+java:S2095Ó"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(½×¦áøÿÿÿÿ8Ÿ£§Ñ¸1
+m
+java:S2095ğ"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(øşÂÍ8Ÿ£§Ñ¸1
+u	java:S116"TRename this field "nosql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®àÏıÿÿÿÿ8 £§Ñ¸1
+z	java:S116"YRename this field "nosql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÃØƒıÿÿÿÿ8 £§Ñ¸1
+u	java:S116"YRename this field "nosql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(£Ğ”8 £§Ñ¸1
+s	java:S116"RRename this field "sql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(³À¨‡ûÿÿÿÿ8¡£§Ñ¸1
+x	java:S116"WRename this field "sql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÒŸˆ°ÿÿÿÿÿ8¡£§Ñ¸1
+s	java:S116"WRename this field "sql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¢¤ Ê8¡£§Ñ¸1
+z	java:S116"YRename this field "sql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›™ĞÛøÿÿÿÿ8¡£§Ñ¸1
+|	java:S116"[Rename this field "nosql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(˜½Ÿ§øÿÿÿÿ8¡£§Ñ¸1
+z	java:S116 "YRename this field "table_accounts" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ƒ“‚úÿÿÿÿ8¡£§Ñ¸1
+w	java:S116!"VRename this field "table_chats" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ù±¤‡şÿÿÿÿ8¡£§Ñ¸1
+z	java:S116""YRename this field "table_captchas" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Æ İµøÿÿÿÿ8¡£§Ñ¸1
+r	java:S116#"VRename this field "table_posts" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¡“İ8¡£§Ñ¸1
+z	java:S116$"YRename this field "table_profiles" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ñÇÍşÿÿÿÿ8¡£§Ñ¸1
+	java:S116%"^Rename this field "table_conversations" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ıÄ”¥ÿÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170"!Make this final field static too.(®àÏıÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170"!Make this final field static too.(ÖÃØƒıÿÿÿÿ8¡£§Ñ¸1
+>
+java:S1170"!Make this final field static too.(£Ğ”8¡£§Ñ¸1
+C
+java:S1170"!Make this final field static too.(³À¨‡ûÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170"!Make this final field static too.(ÒŸˆ°ÿÿÿÿÿ8¡£§Ñ¸1
+>
+java:S1170"!Make this final field static too.(¢¤ Ê8¡£§Ñ¸1
+C
+java:S1170 "!Make this final field static too.(ƒ“‚úÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170!"!Make this final field static too.(Ù±¤‡şÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170""!Make this final field static too.(Æ İµøÿÿÿÿ8¡£§Ñ¸1
+>
+java:S1170#"!Make this final field static too.(¡“İ8¡£§Ñ¸1
+C
+java:S1170$"!Make this final field static too.(ñÇÍşÿÿÿÿ8¡£§Ñ¸1
+C
+java:S1170%"!Make this final field static too.(ıÄ”¥ÿÿÿÿÿ8¡£§Ñ¸1
+S
+java:S6437)"6Revoke and change this password, as it is compromised.(³ í8©£§Ñ¸1
+]	java:S125F"<This block of commented-out lines of code should be removed.(Š¤”Öşÿÿÿÿ8¬£§Ñ¸1
+M
+java:S1172õ"0Remove this unused method parameter "sender_id".(ÔâêO8Ï£§Ñ¸1
+U
+java:S1135Ÿ"2Complete the task associated to this TODO comment.(ŸÎ‡¨ùÿÿÿÿ8Õ£§Ñ¸1
+f
+java:S6355¸"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8ó½»Ñ¸1
+S
+java:S1133¹"5Do not forget to remove this deprecated code someday.(•âœŒ8ó½»Ñ¸1
+F
+java:S1123¹"(Add the missing @deprecated Javadoc tag.(•âœŒ8‡¾»Ñ¸1
+I
+java:S1168ğ"+Return an empty collection instead of null.(¥¹ï8•¾»Ñ¸1
+Y	java:S125Œ"<This block of commented-out lines of code should be removed.(’‰­Ÿ8¢¾»Ñ¸1
+b
+java:S1854£"?Remove this useless assignment to local variable "updateQuery".(õø®³øÿÿÿÿ8©¾»Ñ¸1
+S
+java:S1481£"0Remove this unused "updateQuery" local variable.(õø®³øÿÿÿÿ8¶¾»Ñ¸1
+B
+java:S1168·"$Return an empty map instead of null.(¥¹ï8Å¾»Ñ¸1
+B
+java:S1168ß"$Return an empty map instead of null.(¥¹ï8ò¾»Ñ¸1
+f
+java:S6355ä"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8ó¾»Ñ¸1
+S
+java:S1133å"5Do not forget to remove this deprecated code someday.(å×À–8ó¾»Ñ¸1
+F
+java:S1123å"(Add the missing @deprecated Javadoc tag.(å×À–8ó¾»Ñ¸1
+f
+java:S6355÷"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8ú¾»Ñ¸1
+S
+java:S1133ø"5Do not forget to remove this deprecated code someday.(×¦Øú8ú¾»Ñ¸1
+F
+java:S1123ø"(Add the missing @deprecated Javadoc tag.(×¦Øú8û¾»Ñ¸1
+B
+java:S1168‰"$Return an empty map instead of null.(¥¹ï8„¿»Ñ¸1
+B
+java:S1168œ"$Return an empty map instead of null.(¥¹ï8¿»Ñ¸1
+O
+java:S1068"-Remove this unused "nosql_url" private field.(®àÏıÿÿÿÿ8Â¥§Ñ¸1
+T
+java:S1068"2Remove this unused "nosql_username" private field.(ÖÃØƒıÿÿÿÿ8Ã¥§Ñ¸1
+O
+java:S1068"2Remove this unused "nosql_password" private field.(£Ğ”8Ã¥§Ñ¸1
+V
+java:S1068"4Remove this unused "nosql_connection" private field.(˜½Ÿ§øÿÿÿÿ8É¥§Ñ¸1

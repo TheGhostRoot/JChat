@@ -321,6 +321,7 @@ CREATE TABLE profiles (
 
 
 
+
     public Long createConvID(long party_id, long party_id2) {
         List<Object> set_data = new ArrayList<>();
         set_data.add(party_id);
@@ -338,13 +339,7 @@ CREATE TABLE profiles (
         return addData(table_conversations, "party_id, party_id2, conv_id", "?, ?, ?", set_data) ?
                 id : null;
     }
-
-
-
-
     public boolean addMessage(long conv_id, long sender_id, String message) {
-
-
         List<Object> edit_condition_data = new ArrayList<>();
         edit_condition_data.add(conv_id);
 
@@ -480,6 +475,91 @@ CREATE TABLE profiles (
         return addData(table_posts, "sender_id, msg, tags, send_at, background", "?, ?, ?, ?, ?", data);
     }
 
+    public boolean deletePost(long sender_id, long post_id) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(post_id);
+        condition_data.add(sender_id);
+
+        return deleteData(table_posts, "id = ? AND sender_id = ?", condition_data);
+    }
+
+    public boolean editPost(long sender_id, long post_id, String edited_tags,
+                            String edited_msg, String given_background) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(post_id);
+        condition_data.add(sender_id);
+
+        List<Object> set_data = new ArrayList<>();
+        set_data.add(edited_msg);
+        set_data.add(edited_tags);
+        set_data.add(given_background);
+
+        return editData(table_posts, "msg = ?, tags = ?, background = ?", set_data,
+                "id = ? AND sender_id = ?", condition_data);
+    }
+
+
+
+
+    public boolean updateProfilePfp(long id, String given_pfp) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_pfp);
+
+        return editData(table_profiles, "pfp = ?", profile_data, "id = ?", condition_data);
+    }
+
+    public boolean updateProfileBanner(long id, String given_banner) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_banner);
+
+        return editData(table_profiles, "banner = ?", profile_data, "id = ?", condition_data);
+    }
+
+    public boolean updateProfilePets(long id, String given_pets) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_pets);
+
+        return editData(table_profiles, "pets = ?", profile_data, "id = ?", condition_data);
+    }
+
+    public boolean updateProfileCoins(long id, int given_coins) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_coins);
+
+        return editData(table_profiles, "coins = ?", profile_data, "id = ?", condition_data);
+    }
+
+    public boolean updateProfileBadges(long id, String given_badges) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_badges);
+
+        return editData(table_profiles, "badges = ?", profile_data, "id = ?", condition_data);
+    }
+
+    public boolean updateProfileAnimations(long id, String given_animations) {
+        List<Object> condition_data = new ArrayList<>();
+        condition_data.add(id);
+
+        List<Object> profile_data = new ArrayList<>();
+        profile_data.add(given_animations);
+
+        return editData(table_profiles, "animations = ?", profile_data, "id = ?", condition_data);
+    }
 
 
 
