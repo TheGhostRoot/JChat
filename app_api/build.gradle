@@ -50,6 +50,15 @@ dependencies {
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     implementation 'org.postgresql:postgresql:42.6.0'
 
+    implementation 'com.datastax.oss:java-driver-core:4.17.0'
+
+    // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
+    implementation 'org.mongodb:mongodb-driver-sync:4.11.0'
+    // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-core
+    // it has 3 vulnerabilities
+    implementation 'org.mongodb:mongodb-driver-core:4.11.0'
+
+
 
 
 }

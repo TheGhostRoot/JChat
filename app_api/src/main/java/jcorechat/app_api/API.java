@@ -121,81 +121,6 @@ public class API {
         databaseManager = new DatabaseManager();
 
 
-        List<String> accounts_table = new ArrayList<>();
-        accounts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
-        accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
-        accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
-        accounts_table.add("password VARCHAR(100) NOT NULL, ");
-        accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
-        accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
-        accounts_table.add("session_id BIGINT UNIQUE, ");
-        accounts_table.add("session_expire smallint, ");
-        accounts_table.add("last_edit_time TEXT, ");
-        accounts_table.add("session_suspended VARCHAR(1) NOT NULL, ");
-        accounts_table.add("created_at timestamp NOT NULL, ");
-        accounts_table.add("friends TEXT NOT NULL, ");
-        accounts_table.add("groups TEXT NOT NULL ");
-
-        List<String> conversations_table = new ArrayList<>();
-        conversations_table.add("party_id BIGINT NOT NULL, ");
-        conversations_table.add("party_id2 BIGINT NOT NULL, ");
-        conversations_table.add("conv_id BIGINT PRIMARY KEY NOT NULL, ");
-        conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
-        conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
-
-
-        List<String> chats_table = new ArrayList<>();
-        chats_table.add("conv_id BIGINT NOT NULL, ");
-        chats_table.add("msg VARCHAR(2000) NOT NULL, ");
-        chats_table.add("sent_at timestamp NOT NULL, ");
-        chats_table.add("sent_by BIGINT NOT NULL, ");
-        chats_table.add("msg_id BIGINT NOT NULL, ");
-        chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
-
-        List<String> captchas_table = new ArrayList<>();
-        captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
-        captchas_table.add("answer TEXT NOT NULL, ");
-        captchas_table.add("time smallint NOT NULL, ");
-        captchas_table.add("last_edit_time TEXT NOT NULL, ");
-        captchas_table.add("failed smallint NOT NULL");
-
-
-        List<String> posts_table = new ArrayList<>();
-        posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
-        posts_table.add("sender_id BIGINT NOT NULL, ");
-        posts_table.add("msg VARCHAR(200) NOT NULL, ");
-        posts_table.add("tags TEXT NOT NULL, ");
-        posts_table.add("send_at DATE NOT NULL, ");
-        posts_table.add("background TEXT, ");
-        posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
-
-        List<String> profiles_table = new ArrayList<>();
-        profiles_table.add("id BIGINT NOT NULL, ");
-        profiles_table.add("pfp TEXT NOT NULL, ");
-        profiles_table.add("banner TEXT NOT NULL, ");
-        profiles_table.add("pets TEXT, ");
-        profiles_table.add("coins INT NOT NULL, ");
-        profiles_table.add("badges TEXT NOT NULL, ");
-        profiles_table.add("animations TEXT, ");
-        profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-        databaseManager.deleteTable("profiles");
-        databaseManager.deleteTable("posts");
-        databaseManager.deleteTable("chats");
-        databaseManager.deleteTable("captchas");
-        databaseManager.deleteTable("conversations");
-        databaseManager.deleteTable("accounts");
-
-        databaseManager.createTable("accounts", accounts_table);
-        databaseManager.createTable("conversations", conversations_table);
-        databaseManager.createTable("captchas", captchas_table);
-        databaseManager.createTable("profiles", profiles_table);
-        databaseManager.createTable("posts", posts_table);
-        databaseManager.createTable("chats", chats_table);
-
-
-
-
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
@@ -235,4 +160,5 @@ public class API {
         String IP = request.getRemoteAddr();
         return "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
     }
+
 }
