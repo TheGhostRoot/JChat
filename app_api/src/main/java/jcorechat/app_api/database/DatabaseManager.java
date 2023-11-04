@@ -341,7 +341,8 @@ public class DatabaseManager {
             return false;
         }
     }
-    private List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, String... filters) {
+    private List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
+                                                               String... filters) {
         if (mongoDatabase == null) {
             return null;
         }
@@ -354,16 +355,17 @@ public class DatabaseManager {
             MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
 
             while (cursor.hasNext()) {
+                Document next = cursor.next();
                 if (filters.length > 0) {
-                    for (Map.Entry<String, Object> entry : cursor.next().entrySet()) {
+                    for (Map.Entry<String, Object> entry : next.entrySet()) {
                         if (filter_list.contains(entry.getKey())) {
                             Map<String, Object> map = new HashMap<>();
                             map.put(entry.getKey(), entry.getValue());
-                            result.add(map);
+                            result = conditionFilter(condition, result, next);
                         }
                     }
                 } else {
-                    result.add(new HashMap<>(cursor.next()));
+                    result = conditionFilter(condition, result, next);
                 }
             }
 
@@ -373,6 +375,30 @@ public class DatabaseManager {
             return null;
         }
     }
+
+    private List<Map<String, Object>> conditionFilter(Document condition, List<Map<String, Object>> result, Document next) {
+        if (condition != null) {
+            boolean contains = false;
+            for (Map.Entry<String, Object> entry2 : condition.entrySet()) {
+                String key = entry2.getKey();
+                if (!next.containsKey(key) ||
+                        !next.get(key).equals(entry2.getValue())) {
+                    contains = true;
+                } else {
+                    contains = false;
+                }
+            }
+
+            if (contains) {
+                result.add(new HashMap<>(next));
+            }
+        } else {
+            result.add(new HashMap<>(next));
+        }
+
+        return result;
+    }
+
     private boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document) {
         if (mongoDatabase == null) {
             return false;
@@ -380,7 +406,6 @@ public class DatabaseManager {
 
         try {
             mongoDatabase.getCollection(collectionName).insertOne(document);
-            mongoClient.close();
             return true;
         } catch (Exception e) {
             return false;
@@ -392,26 +417,18 @@ public class DatabaseManager {
         }
 
         try {
-
             mongoDatabase.getCollection(collectionName).updateOne(filter, new Document("$set", updatedDoc));
-            mongoClient.close();
-
             return true;
         } catch (Exception e) {
             return false;
         }
     }
-    private boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, List<String> keysToDelete) {
+    private boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, Document filter) {
         if (mongoDatabase == null) {
             return false;
         }
 
         try {
-            Document filter = new Document();
-            for (String key : keysToDelete) {
-                filter.append(key, new Document("$exists", true));
-            }
-
             mongoDatabase.getCollection(collectionName).deleteMany(filter);
             return true;
         } catch (Exception e) {
@@ -624,7 +641,6 @@ public class DatabaseManager {
 
     public Long createUser(String name, String email, String password, String encryption_key, String sign_key) {
         if (postgressql_connection != null || mysql_connection != null) {
-
             List<Object> account_details = new ArrayList<>();
             account_details.add(name);
             account_details.add(email);
@@ -657,17 +673,28 @@ public class DatabaseManager {
 
             if (!addDataSQL(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
                     "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) {
+
+                deleteDataSQL(table_accounts, "id = ?", profile_details);
                 return null;
             }
 
             return id;
 
         } else if (mongoClient != null && mongoDatabase != null) {
+            List<Object> all_ids = new ArrayList<>();
 
-            MongoReadCollectionNoSQL(table_accounts, "id");
+            List<Map<String, Object>> accounts_id_data = MongoReadCollectionNoSQL(table_accounts, null, "id");
+            if (accounts_id_data == null) {
+                return null;
+            }
 
+            for (Map<String, Object> map : accounts_id_data) {
+                all_ids.addAll(map.values());
+            }
 
-            if (!MongoAddDataToCollectionNoSQL(table_accounts, new Document("name", name)
+            long account_ID = generateID(all_ids);
+
+            if (!MongoAddDataToCollectionNoSQL(table_accounts, new Document("id", account_ID).append("name", name)
                     .append("email", email).append("password", password)
                     .append("encryption_key", encryption_key).append("sign_key", sign_key)
                     .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
@@ -678,8 +705,14 @@ public class DatabaseManager {
                 return null;
             }
 
+            if (!MongoAddDataToCollectionNoSQL(table_profiles, new Document())) {
 
-            return null;
+                MongoDeleteDataFromCollectionNoSQL(table_accounts, new Document("id", account_ID));
+                return null;
+            }
+
+
+            return account_ID;
 
         } else if (scylladb_session != null) {
             return null;
@@ -698,8 +731,10 @@ public class DatabaseManager {
             return editDataSQL(table_accounts, "email = ?", account_set,
                     "id = ?", account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("email", new_email));
 
         } else if (scylladb_session != null) {
             return false;
@@ -718,8 +753,10 @@ public class DatabaseManager {
             return editDataSQL(table_accounts, "password = ?", account_set,
                     "id = ?", account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("password", new_password));
 
         } else if (scylladb_session != null) {
             return false;
@@ -737,8 +774,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_accounts, "encryption_key = ?", account_set,
                     "id = ?", account_where);
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("encryption_key", new_encryptino_key));
 
         } else if (scylladb_session != null) {
             return false;
@@ -756,8 +795,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_accounts, "sign_key = ?", account_set,
                     "id = ?", account_where);
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("sign_key", new_sign_key));
 
         } else if (scylladb_session != null) {
             return false;
@@ -765,7 +806,7 @@ public class DatabaseManager {
         }
         return false;
     }
-    public boolean changeUserSessionID(long id, Long session_id) {
+    public boolean changeUserSessionID(long id, long session_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
             account_set.add(session_id);
@@ -776,8 +817,10 @@ public class DatabaseManager {
             return editDataSQL(table_accounts, "session_id = ?", account_set,
                     "id = ?", account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("session_id", session_id));
 
         } else if (scylladb_session != null) {
             return false;
@@ -789,22 +832,18 @@ public class DatabaseManager {
         if (isUserSessionSuspended(id)) { return false; }
 
         if (postgressql_connection != null || mysql_connection != null) {
-
             List<Object> account_where = new ArrayList<>();
             account_where.add(id);
 
             Map<String, List<Object>> sess_data = getDataSQL(table_accounts, "last_edit_time, session_expire",
                     "id = ?", account_where, null, "", 0);
 
-            if (sess_data == null || sess_data.get("last_edit_time").isEmpty() || (sess_data.get("session_expire").isEmpty() ||
-                    Objects.equals(String.valueOf(sess_data.get("session_expire").get(0)), "null"))) {
+            if (sess_data == null || (sess_data.get("last_edit_time").isEmpty() ||
+                    Objects.equals(String.valueOf(sess_data.get("last_edit_time").get(0)), "null")) ||
+                    (sess_data.get("session_expire").isEmpty() ||
+                    Objects.equals(String.valueOf(sess_data.get("session_expire").get(0)), "null")) ||
+                    !isOneSecondAgo(Timestamp.valueOf(String.valueOf(sess_data.get("last_edit_time").get(0))))) {
 
-                return false;
-            }
-
-            String editTime = String.valueOf(sess_data.get("last_edit_time").get(0));
-
-            if (!Objects.equals(editTime, "null") && !isOneSecondAgo(Timestamp.valueOf(editTime))) {
                 return false;
             }
 
@@ -822,8 +861,36 @@ public class DatabaseManager {
                     "last_edit_time = ?, session_expire = session_expire - 1", account_set,
                     "id = ?", account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            Document filter = new Document("id", id);
+
+            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts, filter,
+                    "last_edit_time", "session_expire");
+
+            if (account_data == null || account_data.get(0).get("last_edit_time") == null ||
+                    account_data.get(0).get("session_expire") == null ||
+                    !isOneSecondAgo(Timestamp.valueOf(String.valueOf(account_data.get(0).get("last_edit_time"))))) {
+
+                return false;
+            }
+
+            Map<String, Object> data = account_data.get(0);
+
+            short sessionExpire = Short.valueOf(String.valueOf(data.get("session_expire")));
+
+            if (sessionExpire <= 0) {
+                // remove the session
+                return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
+                        new Document("session_expire", null).append("last_edit_time", null)
+                                .append("session_id", null));
+            }
+
+            sessionExpire--;
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
+                    new Document("session_expire", sessionExpire)
+                            .append("last_edit_time",
+                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))));
 
         } else if (scylladb_session != null) {
             return false;
