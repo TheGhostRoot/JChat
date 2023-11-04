@@ -58,6 +58,10 @@ dependencies {
     // it has 3 vulnerabilities
     implementation 'org.mongodb:mongodb-driver-core:4.11.0'
 
+    // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    implementation 'com.mysql:mysql-connector-j:8.2.0'
+
+
 
 
 

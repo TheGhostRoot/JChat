@@ -3035,11 +3035,5 @@ u
 Eapp_api/src/main/java/jcorechat/app_api/updates/UpdateController.java,3\4\342040b9d7b09e2cc94b3dc4cb4d9086a6bb8f64
 r
 Bapp_api/src/main/java/jcorechat/app_api/updates/UpdateManager.java,7\6\765ab344fc92fb77f4aead51e9e50ef9804c138e
-s
-Capp_api/src/main/java/jcorechat/app_api/database/PostgresSQLDB.java,8\f\8f1541e6bf92ad931ee249dc69ccdf85df780be3
 n
 >app_api/src/main/java/jcorechat/app_api/database/ScyllaDB.java,e\2\e2c4998443c3e4946c591244fea02eb4ca86264a
-m
-=app_api/src/main/java/jcorechat/app_api/database/MongoDB.java,0\b\0bfe4fb302b1361fe8b36179c28a812bf59f4e5d
-m
-=app_api/src/main/java/jcorechat/app_api/database/MySQLDB.java,c\7\c766b38bfedc877db6765c6a2ad1824526010cab
