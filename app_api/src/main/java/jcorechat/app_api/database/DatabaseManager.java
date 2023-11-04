@@ -2,10 +2,9 @@ package jcorechat.app_api.database;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 import jcorechat.app_api.API;
+import org.bson.Document;
 
 import java.net.InetSocketAddress;
 import java.sql.*;
@@ -41,6 +40,7 @@ public class DatabaseManager {
 
     private final String mongo_database = "jcorechat";
     private final String mongo_url = "mongodb://localhost:27017";
+    private MongoDatabase mongoDatabase = null;
     private MongoClient mongoClient = null;
 
 
@@ -215,11 +215,22 @@ public class DatabaseManager {
     public void setupMongoDB() {
         try {
             mongoClient = MongoClients.create(mongo_url);
-            // Access a specific database
-            MongoDatabase database = mongoClient.getDatabase(mongo_database);
+            mongoDatabase = mongoClient.getDatabase(mongo_database);
 
-            // Now you can perform operations on the database
-            API.logger.info("Mongo DB Connected to database: " + database.getName());
+            MongoDeleteCollectionNoSQL(table_accounts);
+            MongoDeleteCollectionNoSQL(table_conversations);
+            MongoDeleteCollectionNoSQL(table_profiles);
+            MongoDeleteCollectionNoSQL(table_captchas);
+            MongoDeleteCollectionNoSQL(table_chats);
+            MongoDeleteCollectionNoSQL(table_posts);
+
+            MongoCreateCollectionNoSQL(table_accounts);
+            MongoCreateCollectionNoSQL(table_conversations);
+            MongoCreateCollectionNoSQL(table_profiles);
+            MongoCreateCollectionNoSQL(table_captchas);
+            MongoCreateCollectionNoSQL(table_chats);
+            MongoCreateCollectionNoSQL(table_posts);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -284,7 +295,6 @@ public class DatabaseManager {
             return false;
         }
     }
-
     @Deprecated
     private boolean deleteTableSQL(String table) {
         if (postgressql_connection == null && mysql_connection == null) {
@@ -300,6 +310,119 @@ public class DatabaseManager {
             return false;
         }
     }
+
+
+
+
+    @Deprecated
+    private boolean MongoCreateCollectionNoSQL(String collectionName) {
+        if (mongoDatabase == null) {
+            return false;
+        }
+
+        try {
+            mongoDatabase.createCollection(collectionName);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    @Deprecated
+    private boolean MongoDeleteCollectionNoSQL(String collectionName) {
+        if (mongoDatabase == null) {
+            return false;
+        }
+
+        try {
+
+            mongoDatabase.getCollection(collectionName).drop();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    private List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, String... filters) {
+        if (mongoDatabase == null) {
+            return null;
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        List<String> filter_list = Arrays.stream(filters).toList();
+
+        try {
+            MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
+
+            while (cursor.hasNext()) {
+                if (filters.length > 0) {
+                    for (Map.Entry<String, Object> entry : cursor.next().entrySet()) {
+                        if (filter_list.contains(entry.getKey())) {
+                            Map<String, Object> map = new HashMap<>();
+                            map.put(entry.getKey(), entry.getValue());
+                            result.add(map);
+                        }
+                    }
+                } else {
+                    result.add(new HashMap<>(cursor.next()));
+                }
+            }
+
+            cursor.close();
+            return result;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    private boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document) {
+        if (mongoDatabase == null) {
+            return false;
+        }
+
+        try {
+            mongoDatabase.getCollection(collectionName).insertOne(document);
+            mongoClient.close();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    private boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc) {
+        if (mongoDatabase == null) {
+            return false;
+        }
+
+        try {
+
+            mongoDatabase.getCollection(collectionName).updateOne(filter, new Document("$set", updatedDoc));
+            mongoClient.close();
+
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    private boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, List<String> keysToDelete) {
+        if (mongoDatabase == null) {
+            return false;
+        }
+
+        try {
+            Document filter = new Document();
+            for (String key : keysToDelete) {
+                filter.append(key, new Document("$exists", true));
+            }
+
+            mongoDatabase.getCollection(collectionName).deleteMany(filter);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
+
+
+
 
     private Map<String, List<Object>> readOutputSQL(ResultSet resultSet) {
         Map<String, List<Object>> result = new HashMap<>();
@@ -327,7 +450,6 @@ public class DatabaseManager {
             return null;
         }
     }
-
     private List<Object> setDataSQL(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
             throws SQLException {
         List<Object> list = new ArrayList<>();
@@ -363,7 +485,6 @@ public class DatabaseManager {
 
         return list;
     }
-
     private boolean deleteDataSQL(String table, String condition, List<Object> conditionData) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
@@ -467,6 +588,9 @@ public class DatabaseManager {
 
     }
 
+
+
+
     private long generateID(List<Object> toContain) {
         long id = 1L;
         while (toContain.contains(id)) {
@@ -489,8 +613,6 @@ public class DatabaseManager {
         return postgressql_connection != null ? postgressql_connection :
                 mysql_connection;
     }
-
-
 
 
 
@@ -540,7 +662,23 @@ public class DatabaseManager {
 
             return id;
 
-        } else if (mongoClient != null) {
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            MongoReadCollectionNoSQL(table_accounts, "id");
+
+
+            if (!MongoAddDataToCollectionNoSQL(table_accounts, new Document("name", name)
+                    .append("email", email).append("password", password)
+                    .append("encryption_key", encryption_key).append("sign_key", sign_key)
+                    .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
+                    .append("session_suspended", "f")
+                    .append("created_at", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                    .append("friends", "").append("chat_groups", ""))) {
+
+                return null;
+            }
+
+
             return null;
 
         } else if (scylladb_session != null) {
