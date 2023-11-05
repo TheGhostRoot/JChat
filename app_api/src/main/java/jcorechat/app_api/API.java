@@ -120,7 +120,8 @@ public class API {
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
 
-        databaseManager.setupMySQL();
+        databaseManager.setupMongoDB();
+
 
 
 
