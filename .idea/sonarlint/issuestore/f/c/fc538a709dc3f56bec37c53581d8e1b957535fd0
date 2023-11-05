@@ -62,10 +62,10 @@ z
 java:S2629ύ"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(©β™ψ8°ό€‚Ί1
 Z
 java:S4973"<Strings and Boxed types should be compared using "equals()".(ΖΛ¦Μ8»ό€‚Ί1
-m
-java:S2095§"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ΌτΊ΄8ί‡‚Ί1
 l
 java:S2095¶"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ϋ¥8ί‡‚Ί1
+m
+java:S2095§"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ΌτΊ΄8ί‡‚Ί1
 m
 java:S2095ή"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Γª8ί‡‚Ί1
 
