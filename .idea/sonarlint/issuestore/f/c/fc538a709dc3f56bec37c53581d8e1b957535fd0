@@ -1,239 +1,299 @@
 
+e
+java:S1192×"GDefine a constant instead of duplicating this literal "String" 3 times.(¤ğ¿ê8™ü€‚º1
 k
-java:S1192ş"HDefine a constant instead of duplicating this literal " WHERE " 3 times.(©Ë¼­úÿÿÿÿ8¶¯¥ß¹1
+java:S1192"HDefine a constant instead of duplicating this literal " WHERE " 3 times.(©Ë¼­úÿÿÿÿ8šü€‚º1
 n
-java:S1192¾"QDefine a constant instead of duplicating this literal "yyyy-MM-dd HH:mm" 3 times.(˜Æ¢\8Å×¨ß¹1
+java:S1192Ó"QDefine a constant instead of duplicating this literal "yyyy-MM-dd HH:mm" 4 times.(˜Æ¢\8šü€‚º1
+e
+java:S1192
+"GDefine a constant instead of duplicating this literal "msg_id" 9 times.(‚‡¶¾8šü€‚º1
 k
-java:S1192¥"HDefine a constant instead of duplicating this literal "id = ?" 30 times.(îñÏ¶øÿÿÿÿ8¶¯¥ß¹1
+java:S1192³"HDefine a constant instead of duplicating this literal "id = ?" 30 times.(îñÏ¶øÿÿÿÿ8šü€‚º1
 p
-java:S1192z"TUse already-defined constant 'table_captchas' instead of duplicating its value here.(Èœø.8¶¯¥ß¹1
+java:S1192}"TUse already-defined constant 'table_captchas' instead of duplicating its value here.(Èœø.8šü€‚º1
 o
-java:S1192½"RDefine a constant instead of duplicating this literal "session_suspended" 4 times.(¯Úÿ.8¶¯¥ß¹1
-g
-java:S1192"JDefine a constant instead of duplicating this literal "jcorechat" 3 times.(³”éÖ8¶¯¥ß¹1
+java:S1192Ò"RDefine a constant instead of duplicating this literal "session_suspended" 8 times.(¯Úÿ.8šü€‚º1
+k
+java:S1192­
+"HDefine a constant instead of duplicating this literal "sent_by" 4 times.(³î«×üÿÿÿÿ8šü€‚º1
 i
-java:S1192¼"KDefine a constant instead of duplicating this literal "session_id" 3 times.(«Šû8¶¯¥ß¹1
-v
-java:S1192|"TUse already-defined constant 'table_accounts' instead of duplicating its value here.(Û°Ğûÿÿÿÿ8¶¯¥ß¹1
-s
-java:S1192x"QUse already-defined constant 'table_posts' instead of duplicating its value here.(ğ­•öüÿÿÿÿ8¶¯¥ß¹1
-p
-java:S1192w"TUse already-defined constant 'table_profiles' instead of duplicating its value here.(±ü™8·¯¥ß¹1
+java:S1192»"FDefine a constant instead of duplicating this literal "email" 4 times.(­ƒèÃüÿÿÿÿ8šü€‚º1
+g
+java:S1192"JDefine a constant instead of duplicating this literal "jcorechat" 3 times.(³”éÖ8šü€‚º1
+i
+java:S1192Ñ"KDefine a constant instead of duplicating this literal "session_id" 3 times.(«Šû8šü€‚º1
 o
-java:S1192Á"LDefine a constant instead of duplicating this literal "conv_id = ?" 3 times.(¨ìïªûÿÿÿÿ8·¯¥ß¹1
+java:S1192Ô"LDefine a constant instead of duplicating this literal "chat_groups" 3 times.(Ä‡¥Äüÿÿÿÿ8›ü€‚º1
+e
+java:S1192«"GDefine a constant instead of duplicating this literal "answer" 4 times.(‡¿®¯8›ü€‚º1
+v
+java:S1192"TUse already-defined constant 'table_accounts' instead of duplicating its value here.(Û°Ğûÿÿÿÿ8›ü€‚º1
+s
+java:S1192{"QUse already-defined constant 'table_posts' instead of duplicating its value here.(ğ­•öüÿÿÿÿ8›ü€‚º1
+h
+java:S1192á
+"JDefine a constant instead of duplicating this literal "sender_id" 4 times.(ö¹¶8›ü€‚º1
+i
+java:S1192Ş"FDefine a constant instead of duplicating this literal "Short" 3 times.(ÆØĞÜıÿÿÿÿ8›ü€‚º1
+p
+java:S1192z"TUse already-defined constant 'table_profiles' instead of duplicating its value here.(±ü™8›ü€‚º1
+j
+java:S1192¬"GDefine a constant instead of duplicating this literal "failed" 5 times.(Îı¾‰şÿÿÿÿ8›ü€‚º1
+k
+java:S1192Ô"HDefine a constant instead of duplicating this literal "friends" 3 times.(Ä‡¥Äüÿÿÿÿ8œü€‚º1
 n
-java:S1192y"QUse already-defined constant 'table_chats' instead of duplicating its value here.(â¸Àò8·¯¥ß¹1
-{
-java:S1192{"YUse already-defined constant 'table_conversations' instead of duplicating its value here.(”ĞšŒøÿÿÿÿ8·¯¥ß¹1
-n
-java:S1192¼"PDefine a constant instead of duplicating this literal "last_edit_time" 11 times.(«Šû8·¯¥ß¹1
-m
-java:S1192¼"ODefine a constant instead of duplicating this literal "session_expire" 9 times.(«Šû8·¯¥ß¹1
-Š
-java:S1192"gDefine a constant instead of duplicating this literal "id BIGINT AUTO_INCREMENT PRIMARY KEY, " 3 times.(Œöÿôûÿÿÿÿ8·¯¥ß¹1
-y
-java:S1104$"\Make mysql_connection a static final constant or non-public and provide accessors if needed.(Ìø¤8½¯¥ß¹1
-z
-java:S2629ú"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(©â™ø8¿¯¥ß¹1
-Z
-java:S4973à	"<Strings and Boxed types should be compared using "equals()".(ÆË¦Ì8Ã¯¥ß¹1
-m
-java:S2095¤"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(¼ôº´8‡³¥ß¹1
+java:S1192|"QUse already-defined constant 'table_chats' instead of duplicating its value here.(â¸Àò8œü€‚º1
 l
-java:S2095³"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ûŠ¥8‡³¥ß¹1
+java:S1192Ù	"IDefine a constant instead of duplicating this literal "conv_id" 10 times.(Ş³å úÿÿÿÿ8œü€‚º1
+{
+java:S1192~"YUse already-defined constant 'table_conversations' instead of duplicating its value here.(”ĞšŒøÿÿÿÿ8œü€‚º1
+n
+java:S1192Ñ"PDefine a constant instead of duplicating this literal "last_edit_time" 15 times.(«Šû8œü€‚º1
 m
-java:S2095Î"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãª8‡³¥ß¹1
-v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(½©´8ˆ³¥ß¹1
-v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(õÊ¢ó8ˆ³¥ß¹1
-v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(´ÅîÁ8ˆ³¥ß¹1
-v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(‚¶¡›8ˆ³¥ß¹1
-v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(€êØ¡8ˆ³¥ß¹1
-{	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(©‡‡íÿÿÿÿÿ8ˆ³¥ß¹1
-{	java:S116"ZRename this field "postgressql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÒÍœåùÿÿÿÿ8ˆ³¥ß¹1
-{	java:S116"_Rename this field "postgressql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(³”éÖ8ˆ³¥ß¹1
-z	java:S116"_Rename this field "postgressql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ì†Í8ˆ³¥ß¹1
-}	java:S116"aRename this field "postgressql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(œº¢Ş8ˆ³¥ß¹1
-u	java:S116!"TRename this field "mysql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›È¤«şÿÿÿÿ8ˆ³¥ß¹1
-z	java:S116""YRename this field "mysql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(±ß„üÿÿÿÿ8ˆ³¥ß¹1
-t	java:S116#"YRename this field "mysql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†…À8ˆ³¥ß¹1
-w	java:S116$"[Rename this field "mysql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ìø¤8ˆ³¥ß¹1
-z	java:S116)"YRename this field "mongo_database" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ê©ıÿÿÿÿ8ˆ³¥ß¹1
-p	java:S116*"TRename this field "mongo_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Å¢Êõ8ˆ³¥ß¹1
-y	java:S1161"XRename this field "scylladb_host" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÜäúÏÿÿÿÿÿ8ˆ³¥ß¹1
-t	java:S1163"XRename this field "scylladb_port" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¹‡¢Ú8ˆ³¥ß¹1
-y	java:S1165"^Rename this field "scylladb_datacenter" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†šn8ˆ³¥ß¹1
-w	java:S1167"[Rename this field "scylladb_session" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Å½¿8ˆ³¥ß¹1
+java:S1192Ñ"ODefine a constant instead of duplicating this literal "session_expire" 9 times.(«Šû8œü€‚º1
+Š
+java:S1192‘"gDefine a constant instead of duplicating this literal "id BIGINT AUTO_INCREMENT PRIMARY KEY, " 3 times.(Œöÿôûÿÿÿÿ8ü€‚º1
+f
+java:S1192Ú"HDefine a constant instead of duplicating this literal "Integer" 3 times.(í´¹•8ü€‚º1
+y
+java:S1104'"\Make mysql_connection a static final constant or non-public and provide accessors if needed.(Ìø¤8«ü€‚º1
+z
+java:S2629ı"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(©â™ø8°ü€‚º1
+Z
+java:S4973"<Strings and Boxed types should be compared using "equals()".(ÆË¦Ì8»ü€‚º1
+m
+java:S2095§"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(¼ôº´8ß‡‚º1
+l
+java:S2095¶"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ûŠ¥8ß‡‚º1
+m
+java:S2095Ş"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãª8ß‡‚º1
+Œ
+java:S4165‹"iRemove this useless assignment; "data_to_add" already holds the assigned value along all execution paths.(¼ë±àÿÿÿÿÿ8ù»×‚º1
+Œ
+java:S4165"iRemove this useless assignment; "data_to_add" already holds the assigned value along all execution paths.(¼ë±àÿÿÿÿÿ8÷»×‚º1
+v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(½©´8â‡‚º1
+v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(õÊ¢ó8â‡‚º1
+v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(´ÅîÁ8â‡‚º1
+v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(‚¶¡›8â‡‚º1
+v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(€êØ¡8â‡‚º1
+{	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(©‡‡íÿÿÿÿÿ8â‡‚º1
+{	java:S116"ZRename this field "postgressql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÒÍœåùÿÿÿÿ8â‡‚º1
+{	java:S116"_Rename this field "postgressql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(³”éÖ8â‡‚º1
+z	java:S116 "_Rename this field "postgressql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ì†Í8â‡‚º1
+}	java:S116!"aRename this field "postgressql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(œº¢Ş8â‡‚º1
+u	java:S116$"TRename this field "mysql_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(›È¤«şÿÿÿÿ8â‡‚º1
+z	java:S116%"YRename this field "mysql_username" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(±ß„üÿÿÿÿ8â‡‚º1
+t	java:S116&"YRename this field "mysql_password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†…À8â‡‚º1
+w	java:S116'"[Rename this field "mysql_connection" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ìø¤8ã‡‚º1
+z	java:S116,"YRename this field "mongo_database" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ê©ıÿÿÿÿ8ã‡‚º1
+p	java:S116-"TRename this field "mongo_url" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Å¢Êõ8ã‡‚º1
+y	java:S1164"XRename this field "scylladb_host" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÜäúÏÿÿÿÿÿ8ã‡‚º1
+t	java:S1166"XRename this field "scylladb_port" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¹‡¢Ú8ã‡‚º1
+y	java:S1168"^Rename this field "scylladb_datacenter" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†šn8ã‡‚º1
+w	java:S116:"[Rename this field "scylladb_session" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Å½¿8ã‡‚º1
 C
-java:S1170"!Make this final field static too.(ÒÍœåùÿÿÿÿ8ˆ³¥ß¹1
+java:S1170"!Make this final field static too.(ÒÍœåùÿÿÿÿ8ã‡‚º1
 >
-java:S1170"!Make this final field static too.(³”éÖ8ˆ³¥ß¹1
+java:S1170"!Make this final field static too.(³”éÖ8ã‡‚º1
 =
-java:S1170"!Make this final field static too.(ì†Í8ˆ³¥ß¹1
+java:S1170 "!Make this final field static too.(ì†Í8ã‡‚º1
 C
-java:S1170!"!Make this final field static too.(›È¤«şÿÿÿÿ8ˆ³¥ß¹1
+java:S1170$"!Make this final field static too.(›È¤«şÿÿÿÿ8ã‡‚º1
 C
-java:S1170""!Make this final field static too.(±ß„üÿÿÿÿ8ˆ³¥ß¹1
+java:S1170%"!Make this final field static too.(±ß„üÿÿÿÿ8ã‡‚º1
 =
-java:S1170#"!Make this final field static too.(†…À8ˆ³¥ß¹1
+java:S1170&"!Make this final field static too.(†…À8ã‡‚º1
 C
-java:S1170)"!Make this final field static too.(ê©ıÿÿÿÿ8ˆ³¥ß¹1
+java:S1170,"!Make this final field static too.(ê©ıÿÿÿÿ8ã‡‚º1
 >
-java:S1170*"!Make this final field static too.(Å¢Êõ8‰³¥ß¹1
+java:S1170-"!Make this final field static too.(Å¢Êõ8ã‡‚º1
 C
-java:S11701"!Make this final field static too.(ÜäúÏÿÿÿÿÿ8‰³¥ß¹1
+java:S11704"!Make this final field static too.(ÜäúÏÿÿÿÿÿ8ã‡‚º1
 >
-java:S11703"!Make this final field static too.(¹‡¢Ú8‰³¥ß¹1
+java:S11706"!Make this final field static too.(¹‡¢Ú8ã‡‚º1
 =
-java:S11705"!Make this final field static too.(†šn8‰³¥ß¹1
+java:S11708"!Make this final field static too.(†šn8ã‡‚º1
 R
-java:S6437="6Revoke and change this password, as it is compromised.(î „8“³¥ß¹1
+java:S6437@"6Revoke and change this password, as it is compromised.(î „8ö‡‚º1
 R
-java:S1874w"6Remove this use of "deleteTableSQL"; it is deprecated.(±ü™8›³¥ß¹1
+java:S1874z"6Remove this use of "deleteTableSQL"; it is deprecated.(±ü™8“ˆ‚º1
 X
-java:S1874x"6Remove this use of "deleteTableSQL"; it is deprecated.(ğ­•öüÿÿÿÿ8›³¥ß¹1
+java:S1874{"6Remove this use of "deleteTableSQL"; it is deprecated.(ğ­•öüÿÿÿÿ8”ˆ‚º1
 S
-java:S1874y"6Remove this use of "deleteTableSQL"; it is deprecated.(â¸Àò8›³¥ß¹1
+java:S1874|"6Remove this use of "deleteTableSQL"; it is deprecated.(â¸Àò8”ˆ‚º1
 R
-java:S1874z"6Remove this use of "deleteTableSQL"; it is deprecated.(Èœø.8›³¥ß¹1
+java:S1874}"6Remove this use of "deleteTableSQL"; it is deprecated.(Èœø.8”ˆ‚º1
 X
-java:S1874{"6Remove this use of "deleteTableSQL"; it is deprecated.(”ĞšŒøÿÿÿÿ8œ³¥ß¹1
+java:S1874~"6Remove this use of "deleteTableSQL"; it is deprecated.(”ĞšŒøÿÿÿÿ8”ˆ‚º1
 X
-java:S1874|"6Remove this use of "deleteTableSQL"; it is deprecated.(Û°Ğûÿÿÿÿ8œ³¥ß¹1
-X
-java:S1874~"6Remove this use of "createTableSQL"; it is deprecated.(—Ü˜Îıÿÿÿÿ8³¥ß¹1
+java:S1874"6Remove this use of "deleteTableSQL"; it is deprecated.(Û°Ğûÿÿÿÿ8•ˆ‚º1
+Y
+java:S1874"6Remove this use of "createTableSQL"; it is deprecated.(—Ü˜Îıÿÿÿÿ8•ˆ‚º1
+T
+java:S1874‚"6Remove this use of "createTableSQL"; it is deprecated.(¡ëù•8•ˆ‚º1
+Y
+java:S1874ƒ"6Remove this use of "createTableSQL"; it is deprecated.(çÀæ¼úÿÿÿÿ8•ˆ‚º1
+Y
+java:S1874„"6Remove this use of "createTableSQL"; it is deprecated.(¥æ¶áÿÿÿÿÿ8–ˆ‚º1
+Y
+java:S1874…"6Remove this use of "createTableSQL"; it is deprecated.(¿¡·éúÿÿÿÿ8–ˆ‚º1
+T
+java:S1874†"6Remove this use of "createTableSQL"; it is deprecated.(¯Êâù8–ˆ‚º1
+T
+java:S6437"6Revoke and change this password, as it is compromised.(¸ÇøÁ8˜ˆ‚º1
 S
-java:S1874"6Remove this use of "createTableSQL"; it is deprecated.(¡ëù•8³¥ß¹1
+java:S1874Ç"6Remove this use of "deleteTableSQL"; it is deprecated.(±ü™8¢ˆ‚º1
 Y
-java:S1874€"6Remove this use of "createTableSQL"; it is deprecated.(çÀæ¼úÿÿÿÿ8³¥ß¹1
-Y
-java:S1874"6Remove this use of "createTableSQL"; it is deprecated.(¥æ¶áÿÿÿÿÿ8³¥ß¹1
-Y
-java:S1874‚"6Remove this use of "createTableSQL"; it is deprecated.(¿¡·éúÿÿÿÿ8³¥ß¹1
+java:S1874È"6Remove this use of "deleteTableSQL"; it is deprecated.(ğ­•öüÿÿÿÿ8£ˆ‚º1
 T
-java:S1874ƒ"6Remove this use of "createTableSQL"; it is deprecated.(¯Êâù8³¥ß¹1
-T
-java:S6437‹"6Revoke and change this password, as it is compromised.(¸ÇøÁ8 ³¥ß¹1
+java:S1874É"6Remove this use of "deleteTableSQL"; it is deprecated.(â¸Àò8£ˆ‚º1
 S
-java:S1874Ä"6Remove this use of "deleteTableSQL"; it is deprecated.(±ü™8¨³¥ß¹1
+java:S1874Ê"6Remove this use of "deleteTableSQL"; it is deprecated.(Èœø.8£ˆ‚º1
 Y
-java:S1874Å"6Remove this use of "deleteTableSQL"; it is deprecated.(ğ­•öüÿÿÿÿ8¨³¥ß¹1
+java:S1874Ë"6Remove this use of "deleteTableSQL"; it is deprecated.(”ĞšŒøÿÿÿÿ8£ˆ‚º1
+Y
+java:S1874Ì"6Remove this use of "deleteTableSQL"; it is deprecated.(Û°Ğûÿÿÿÿ8¤ˆ‚º1
+Y
+java:S1874Î"6Remove this use of "createTableSQL"; it is deprecated.(—Ü˜Îıÿÿÿÿ8¤ˆ‚º1
 T
-java:S1874Æ"6Remove this use of "deleteTableSQL"; it is deprecated.(â¸Àò8¨³¥ß¹1
-S
-java:S1874Ç"6Remove this use of "deleteTableSQL"; it is deprecated.(Èœø.8¨³¥ß¹1
+java:S1874Ï"6Remove this use of "createTableSQL"; it is deprecated.(¡ëù•8¤ˆ‚º1
 Y
-java:S1874È"6Remove this use of "deleteTableSQL"; it is deprecated.(”ĞšŒøÿÿÿÿ8¨³¥ß¹1
+java:S1874Ğ"6Remove this use of "createTableSQL"; it is deprecated.(çÀæ¼úÿÿÿÿ8¥ˆ‚º1
 Y
-java:S1874É"6Remove this use of "deleteTableSQL"; it is deprecated.(Û°Ğûÿÿÿÿ8¨³¥ß¹1
+java:S1874Ñ"6Remove this use of "createTableSQL"; it is deprecated.(¥æ¶áÿÿÿÿÿ8¥ˆ‚º1
 Y
-java:S1874Ë"6Remove this use of "createTableSQL"; it is deprecated.(—Ü˜Îıÿÿÿÿ8¨³¥ß¹1
+java:S1874Ò"6Remove this use of "createTableSQL"; it is deprecated.(¿¡·éúÿÿÿÿ8¥ˆ‚º1
 T
-java:S1874Ì"6Remove this use of "createTableSQL"; it is deprecated.(¡ëù•8©³¥ß¹1
-Y
-java:S1874Í"6Remove this use of "createTableSQL"; it is deprecated.(çÀæ¼úÿÿÿÿ8©³¥ß¹1
-Y
-java:S1874Î"6Remove this use of "createTableSQL"; it is deprecated.(¥æ¶áÿÿÿÿÿ8©³¥ß¹1
-Y
-java:S1874Ï"6Remove this use of "createTableSQL"; it is deprecated.(¿¡·éúÿÿÿÿ8©³¥ß¹1
-T
-java:S1874Ğ"6Remove this use of "createTableSQL"; it is deprecated.(¯Êâù8©³¥ß¹1
+java:S1874Ó"6Remove this use of "createTableSQL"; it is deprecated.(¯Êâù8¥ˆ‚º1
 `
-java:S1874Ü"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(±æóÎ8ª³¥ß¹1
+java:S1874ß"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(±æóÎ8§ˆ‚º1
 `
-java:S1874İ"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(Õƒœ8ª³¥ß¹1
+java:S1874à"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(Õƒœ8§ˆ‚º1
 e
-java:S1874Ş"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(Ô±ã¤üÿÿÿÿ8ª³¥ß¹1
+java:S1874á"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(Ô±ã¤üÿÿÿÿ8¨ˆ‚º1
 e
-java:S1874ß"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(ôî…ùşÿÿÿÿ8«³¥ß¹1
+java:S1874â"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(ôî…ùşÿÿÿÿ8¨ˆ‚º1
 `
-java:S1874à"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(è¨°Ã8«³¥ß¹1
+java:S1874ã"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(è¨°Ã8¨ˆ‚º1
 e
-java:S1874á"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(®’À³üÿÿÿÿ8«³¥ß¹1
+java:S1874ä"BRemove this use of "MongoDeleteCollectionNoSQL"; it is deprecated.(®’À³üÿÿÿÿ8¨ˆ‚º1
 `
-java:S1874ã"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(äŞ­8«³¥ß¹1
+java:S1874æ"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(äŞ­8¨ˆ‚º1
 e
-java:S1874ä"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÏŠ¹üÿÿÿÿ8«³¥ß¹1
+java:S1874ç"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÏŠ¹üÿÿÿÿ8©ˆ‚º1
 e
-java:S1874å"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ˆµ‰ûÿÿÿÿ8«³¥ß¹1
+java:S1874è"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ˆµ‰ûÿÿÿÿ8©ˆ‚º1
 `
-java:S1874æ"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ö’ÒÊ8«³¥ß¹1
+java:S1874é"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ö’ÒÊ8©ˆ‚º1
 `
-java:S1874ç"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÙàÓ†8«³¥ß¹1
+java:S1874ê"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÙàÓ†8ªˆ‚º1
 e
-java:S1874è"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÌÏèêûÿÿÿÿ8¬³¥ß¹1
+java:S1874ë"BRemove this use of "MongoCreateCollectionNoSQL"; it is deprecated.(ÌÏèêûÿÿÿÿ8ªˆ‚º1
 _
-java:S3457ú"AFormat specifiers should be used instead of string concatenation.(©â™ø8¯³¥ß¹1
-K	java:S108’")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8°³¥ß¹1
+java:S3457ı"AFormat specifiers should be used instead of string concatenation.(©â™ø8¯ˆ‚º1
+K	java:S108•")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8²ˆ‚º1
 f
-java:S6355–"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8±³¥ß¹1
+java:S6355™"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8²ˆ‚º1
 S
-java:S1133—"5Do not forget to remove this deprecated code someday.(–ú İ8±³¥ß¹1
+java:S1133š"5Do not forget to remove this deprecated code someday.(–ú İ8²ˆ‚º1
 F
-java:S1123—"(Add the missing @deprecated Javadoc tag.(–ú İ8±³¥ß¹1
+java:S1123š"(Add the missing @deprecated Javadoc tag.(–ú İ8²ˆ‚º1
 f
-java:S6355ª"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8²³¥ß¹1
+java:S6355­"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8µˆ‚º1
 X
-java:S1133«"5Do not forget to remove this deprecated code someday.(µÙ«Áùÿÿÿÿ8²³¥ß¹1
+java:S1133®"5Do not forget to remove this deprecated code someday.(µÙ«Áùÿÿÿÿ8µˆ‚º1
 K
-java:S1123«"(Add the missing @deprecated Javadoc tag.(µÙ«Áùÿÿÿÿ8²³¥ß¹1
-p	java:S100¾"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶á·øÿÿÿÿ8³³¥ß¹1
+java:S1123®"(Add the missing @deprecated Javadoc tag.(µÙ«Áùÿÿÿÿ8µˆ‚º1
+p	java:S100Á"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶á·øÿÿÿÿ8¶ˆ‚º1
 f
-java:S6355½"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8³³¥ß¹1
+java:S6355À"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8¶ˆ‚º1
 X
-java:S1133¾"5Do not forget to remove this deprecated code someday.(¶á·øÿÿÿÿ8³³¥ß¹1
+java:S1133Á"5Do not forget to remove this deprecated code someday.(¶á·øÿÿÿÿ8¶ˆ‚º1
 K
-java:S1123¾"(Add the missing @deprecated Javadoc tag.(¶á·øÿÿÿÿ8³³¥ß¹1
-k	java:S100Ë"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(—‚²Ş8´³¥ß¹1
+java:S1123Á"(Add the missing @deprecated Javadoc tag.(¶á·øÿÿÿÿ8¶ˆ‚º1
+k	java:S100Î"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(—‚²Ş8·ˆ‚º1
 f
-java:S6355Ê"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8´³¥ß¹1
+java:S6355Í"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8·ˆ‚º1
 S
-java:S1133Ë"5Do not forget to remove this deprecated code someday.(—‚²Ş8´³¥ß¹1
+java:S1133Î"5Do not forget to remove this deprecated code someday.(—‚²Ş8·ˆ‚º1
 F
-java:S1123Ë"(Add the missing @deprecated Javadoc tag.(—‚²Ş8´³¥ß¹1
-p	java:S100Ø"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¨ç ˜øÿÿÿÿ8´³¥ß¹1
+java:S1123Î"(Add the missing @deprecated Javadoc tag.(—‚²Ş8·ˆ‚º1
+p	java:S100Û"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¨ç ˜øÿÿÿÿ8¸ˆ‚º1
 I
-java:S1168Û"+Return an empty collection instead of null.(¥¹ï8µ³¥ß¹1
+java:S1168Ş"+Return an empty collection instead of null.(¥¹ï8¸ˆ‚º1
+\
+java:S1155ê">Use isEmpty() to check whether the collection is empty or not.(»·û¼8ºˆ‚º1
 I
-java:S1168÷"+Return an empty collection instead of null.(¥¹ï8¸³¥ß¹1
-k	java:S100’"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®ßêÖ8º³¥ß¹1
-p	java:S100"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(€£“Éúÿÿÿÿ8º³¥ß¹1
-p	java:S100ª"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(á®çëúÿÿÿÿ8¼³¥ß¹1
-B
-java:S1168À"$Return an empty map instead of null.(¥¹ï8¾³¥ß¹1
-B
-java:S1168Ó"$Return an empty map instead of null.(¥¹ï8À³¥ß¹1
-B
-java:S1168²"$Return an empty map instead of null.(¥¹ï8Ó³¥ß¹1
-B
-java:S1168Û"$Return an empty map instead of null.(¥¹ï8Ù³¥ß¹1
+java:S1168ñ"+Return an empty collection instead of null.(¥¹ï8½ˆ‚º1
 u
-java:S3776‚"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(šæÌ½øÿÿÿÿ8Û³¥ß¹1
+java:S3776õ"RRefactor this method to reduce its Cognitive Complexity from 22 to the 15 allowed.( å‘óûÿÿÿÿ8½ˆ‚º1
+p	java:S100›"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ˆÍí²øÿÿÿÿ8Áˆ‚º1
+k	java:S100¤"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¤ñûê8Ãˆ‚º1
+p	java:S100¹"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ï¤âéøÿÿÿÿ8Çˆ‚º1
 u
-java:S3776¿"RRefactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.(¼ÄÅïøÿÿÿÿ8è³¥ß¹1
+java:S3776¹"RRefactor this method to reduce its Cognitive Complexity from 42 to the 15 allowed.(Ï¤âéøÿÿÿÿ8Èˆ‚º1
+>	java:S131Ò""Add a default case to this switch.(ôß–m8Îˆ‚º1
+>	java:S131„""Add a default case to this switch.(ôß–m8Õˆ‚º1
+p	java:S100°"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(á®çëúÿÿÿÿ8Ùˆ‚º1
+k	java:S100½"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(‚ºÕ8Úˆ‚º1
+B
+java:S1168Ğ"$Return an empty map instead of null.(¥¹ï8Üˆ‚º1
+B
+java:S1168ã"$Return an empty map instead of null.(¥¹ï8ßˆ‚º1
+B
+java:S1168Â"$Return an empty map instead of null.(¥¹ï8ìˆ‚º1
+B
+java:S1168ë"$Return an empty map instead of null.(¥¹ï8óˆ‚º1
+u
+java:S3776"RRefactor this method to reduce its Cognitive Complexity from 27 to the 15 allowed.(šæÌ½øÿÿÿÿ8öˆ‚º1
+u
+java:S3776Ø"RRefactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.(¼ÄÅïøÿÿÿÿ8²‰‚º1
 ^
-java:S2130ï";Use "Short.parseShort" for this string-to-short conversion.(®Ó‚ øÿÿÿÿ8í³¥ß¹1
-K	java:S108")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8ö³¥ß¹1
-K	java:S108‘")Either remove or fill this block of code.(ÊÓûÿÿÿÿ8ö³¥ß¹1
-F	java:S108”")Either remove or fill this block of code.(¤ŞÇ8ö³¥ß¹1
-M
-java:S1172ã"0Remove this unused method parameter "sender_id".(ÔâêO8ÿ³¥ß¹1
+java:S2130ˆ";Use "Short.parseShort" for this string-to-short conversion.(®Ó‚ øÿÿÿÿ8»‰‚º1
+p
+java:S3776ª	"RRefactor this method to reduce its Cognitive Complexity from 19 to the 15 allowed.(úâõª8É‰‚º1
+K	java:S108¶	")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8Ë‰‚º1
+K	java:S108Æ	")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8Ì‰‚º1
+F	java:S108É	")Either remove or fill this block of code.(¤ŞÇ8Ì‰‚º1
+p
+java:S3776ú	"RRefactor this method to reduce its Cognitive Complexity from 30 to the 15 allowed.(¨±Á8Ñ‰‚º1
 B
-java:S1168ë"$Return an empty map instead of null.(¥¹ï8´¥ß¹1
+java:S1168í
+"$Return an empty map instead of null.(¥¹ï8ß‰‚º1
 B
-java:S1168î"$Return an empty map instead of null.(¥¹ï8‚´¥ß¹1
-B
-java:S1168ñ"$Return an empty map instead of null.(¥¹ï8‚´¥ß¹1
+java:S1168ğ
+"$Return an empty map instead of null.(¥¹ï8ß‰‚º1
+p
+java:S3776µ"RRefactor this method to reduce its Cognitive Complexity from 24 to the 15 allowed.(±å·„8é‰‚º1
 U
-java:S1135¨	"2Complete the task associated to this TODO comment.(ŸÎ‡¨ùÿÿÿÿ8‡´¥ß¹1
-K	java:S108„
-")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8´¥ß¹1
-K	java:S108ˆ
-")Either remove or fill this block of code.(ÊÓûÿÿÿÿ8´¥ß¹1
-F	java:S108‹
-")Either remove or fill this block of code.(¤ŞÇ8´¥ß¹1
+java:S1135¶"2Complete the task associated to this TODO comment.(ŸÎ‡¨ùÿÿÿÿ8é‰‚º1
+t
+java:S2159Ã"VRemove this call to "equals"; comparisons between unrelated types always return false.(è²ˆ•8ë‰‚º1
+Y
+java:S2130ã";Use "Short.parseShort" for this string-to-short conversion.(Áéİä8î‰‚º1
+u
+java:S3776ÿ"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(•Ù‚ãÿÿÿÿÿ8ñ‰‚º1
+^
+java:S2130©";Use "Short.parseShort" for this string-to-short conversion.(±ùé¢ÿÿÿÿÿ8ø‰‚º1
+p
+java:S3776½"RRefactor this method to reduce its Cognitive Complexity from 19 to the 15 allowed.(«ù‡í8û‰‚º1
+K	java:S108É")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8ı‰‚º1
+K	java:S108×")Either remove or fill this block of code.(¬Àáªøÿÿÿÿ8ş‰‚º1
+F	java:S108Ú")Either remove or fill this block of code.(¤ŞÇ8ş‰‚º1
 f
-java:S6355Ñ"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8Ï´¥ß¹1
+java:S6355¾"HAdd 'since' and/or 'forRemoval' arguments to the @Deprecated annotation.(õˆúš8¥Š‚º1
 S
-java:S1133Ò"5Do not forget to remove this deprecated code someday.(•âœŒ8Ğ´¥ß¹1
+java:S1133¿"5Do not forget to remove this deprecated code someday.(•âœŒ8¥Š‚º1
 F
-java:S1123Ò"(Add the missing @deprecated Javadoc tag.(•âœŒ8Ğ´¥ß¹1
+java:S1123¿"(Add the missing @deprecated Javadoc tag.(•âœŒ8¥Š‚º1
+b
+java:S1128"@Remove this unused import 'com.mongodb.client.model.Filters.ne'.(ÀšûÀøÿÿÿÿ8Ü¾×‚º1
+e
+java:S1128"CRemove this unused import 'com.mongodb.client.model.Filters.regex'.(ñÃŞ€üÿÿÿÿ8Ü¾×‚º1
+é
+java:S6541¹"ÅA "Brain Method" was detected. Refactor it to reduce at least one of the following metrics: LOC from 97 to 64, Complexity from 24 to 14, Nesting Level from 5 to 2, Number of Variables from 25 to 6.(Ï¤âéøÿÿÿÿ8ªŠ‚º1
+é
+java:S6541"ÅA "Brain Method" was detected. Refactor it to reduce at least one of the following metrics: LOC from 69 to 64, Complexity from 17 to 14, Nesting Level from 3 to 2, Number of Variables from 14 to 6.(šæÌ½øÿÿÿÿ8ªŠ‚º1
+ä
+java:S6541ú	"ÅA "Brain Method" was detected. Refactor it to reduce at least one of the following metrics: LOC from 66 to 64, Complexity from 16 to 14, Nesting Level from 4 to 2, Number of Variables from 14 to 6.(¨±Á8ªŠ‚º1

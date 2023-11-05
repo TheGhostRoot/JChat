@@ -14,6 +14,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static com.mongodb.client.model.Filters.ne;
+import static com.mongodb.client.model.Filters.regex;
+
 public class DatabaseManager {
 
     protected static final String table_accounts = "accounts";
@@ -355,18 +358,9 @@ public class DatabaseManager {
             MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
 
             while (cursor.hasNext()) {
-                Document next = cursor.next();
-                if (filters.length > 0) {
-                    for (Map.Entry<String, Object> entry : next.entrySet()) {
-                        if (filter_list.contains(entry.getKey())) {
-                            Map<String, Object> map = new HashMap<>();
-                            map.put(entry.getKey(), entry.getValue());
-                            result = conditionFilter(condition, result, next);
-                        }
-                    }
-                } else {
-                    result = conditionFilter(condition, result, next);
-                }
+                result = conditionFilter(condition, result, cursor.next(),
+                        filter_list.size() > 0 ? filter_list : null, new HashMap<>());
+
             }
 
             cursor.close();
@@ -376,49 +370,189 @@ public class DatabaseManager {
         }
     }
 
-    private List<Map<String, Object>> conditionFilter(Document condition, List<Map<String, Object>> result, Document next) {
+    private List<Map<String, Object>> conditionFilter(Document condition, List<Map<String, Object>> result,
+                                                      Document next, List<String> filter_list,
+                                                      HashMap<String, Object> data_to_add) {
         if (condition != null) {
             boolean contains = false;
             for (Map.Entry<String, Object> entry2 : condition.entrySet()) {
                 String key = entry2.getKey();
-                if (!next.containsKey(key) ||
-                        !next.get(key).equals(entry2.getValue())) {
-                    contains = true;
-                } else {
-                    contains = false;
-                }
+                contains = next.containsKey(key) && next.get(key).equals(entry2.getValue());
             }
 
             if (contains) {
-                result.add(new HashMap<>(next));
+                if (filter_list != null) {
+                    data_to_add = FilterHandler(data_to_add, next, filter_list);
+
+                } else if (!result.contains(next)) {
+                    for (Map.Entry<String, Object> entry : next.entrySet()) {
+                        data_to_add.put(entry.getKey(), entry.getValue());
+                    }
+                }
             }
         } else {
-            result.add(new HashMap<>(next));
+            if (filter_list != null) {
+                data_to_add = FilterHandler(data_to_add, next, filter_list);
+
+            } else if (!result.contains(next)) {
+
+                for (Map.Entry<String, Object> entry : next.entrySet()) {
+                    data_to_add.put(entry.getKey(), entry.getValue());
+                }
+            }
         }
 
+        if (!data_to_add.isEmpty()) {
+            result.add(data_to_add);
+        }
         return result;
     }
 
-    private boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document) {
-        if (mongoDatabase == null) {
-            return false;
+    private HashMap<String, Object> FilterHandler(HashMap<String, Object> data_to_add, Document next, List<String> filter_list) {
+        for (Map.Entry<String, Object> entry : next.entrySet()) {
+            if (filter_list.contains(entry.getKey())) {
+                data_to_add.put(entry.getKey(), entry.getValue());
+            }
         }
+        return data_to_add;
+    }
 
+    private boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document, Document condition) {
         try {
-            mongoDatabase.getCollection(collectionName).insertOne(document);
+            MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+
+            if (condition != null) {
+                Document existingDocument = collection.find(condition).first();
+                if (existingDocument == null) {
+                    return false;
+                }
+
+                Document update = new Document("$set", document);
+                collection.updateOne(existingDocument, update);
+
+            } else {
+                collection.insertOne(document);
+            }
             return true;
         } catch (Exception e) {
             return false;
         }
     }
-    private boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc) {
+    private boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc,
+                                                         boolean toConcat, boolean toRemove) {
         if (mongoDatabase == null) {
             return false;
         }
 
         try {
-            mongoDatabase.getCollection(collectionName).updateOne(filter, new Document("$set", updatedDoc));
+
+            Document update = new Document("$set", updatedDoc);
+
+            if (toConcat) {
+                List<Document> docs = new ArrayList<>();
+                for (Map.Entry<String, Object> entry: updatedDoc.entrySet()) {
+                    String key = entry.getKey();
+                    List<Map<String, Object>> original_data = MongoReadCollectionNoSQL(collectionName, filter,
+                            key);
+
+                    if (original_data == null) {
+                        return false;
+                    }
+
+                    if (!original_data.isEmpty() && !original_data.get(0).isEmpty()) {
+                        Object original_value = original_data.get(0).get(key);
+                        Object value = entry.getValue();
+                        Object updated_value = null;
+                        switch (original_value.getClass().getSimpleName()) {
+                            case "Long":
+                                updated_value = Long.valueOf(String.valueOf(original_value)) +
+                                        Long.valueOf(String.valueOf(value));
+                                break;
+                            case "String":
+                                updated_value = String.valueOf(original_value) + String.valueOf(value);
+                                break;
+                            case "Integer":
+                                updated_value = Integer.valueOf(String.valueOf(original_value)) +
+                                        Integer.valueOf(String.valueOf(value));
+                                break;
+                            case "Short":
+                                updated_value = Short.valueOf(String.valueOf(original_value)) +
+                                        Short.valueOf(String.valueOf(value));
+                                break;
+                        }
+
+                        if (updated_value == null) {
+                            return false;
+                        }
+
+                        docs.add(new Document(entry.getKey(), updated_value));
+                    }
+
+                }
+
+                Document whole_doc = new Document();
+                for (Document document : docs) {
+                    whole_doc.append("$set", document);
+                }
+
+                mongoDatabase.getCollection(collectionName).updateMany(filter, whole_doc);
+                return true;
+
+            } else if (toRemove) {
+                List<Document> docs = new ArrayList<>();
+                for (Map.Entry<String, Object> entry: updatedDoc.entrySet()) {
+                    String key = entry.getKey();
+                    List<Map<String, Object>> original_data = MongoReadCollectionNoSQL(collectionName, filter,
+                            key);
+
+                    if (original_data == null) {
+                        return false;
+                    }
+
+                    if (!original_data.isEmpty() && !original_data.get(0).isEmpty()) {
+                        Object original_value = original_data.get(0).get(key);
+                        Object value = entry.getValue();
+                        Object updated_value = null;
+                        switch (original_value.getClass().getSimpleName()) {
+                            case "Long":
+                                updated_value = Long.valueOf(String.valueOf(original_value)) -
+                                        Long.valueOf(String.valueOf(value));
+                                break;
+                            case "String":
+                                updated_value = String.valueOf(original_value).replace(String.valueOf(value), "");
+                                break;
+                            case "Integer":
+                                updated_value = Integer.valueOf(String.valueOf(original_value)) -
+                                        Integer.valueOf(String.valueOf(value));
+                                break;
+                            case "Short":
+                                updated_value = Short.valueOf(String.valueOf(original_value)) -
+                                        Short.valueOf(String.valueOf(value));
+                                break;
+                        }
+
+                        if (updated_value == null) {
+                            return false;
+                        }
+
+                        docs.add(new Document(entry.getKey(), updated_value));
+                    }
+
+                }
+
+                Document whole_doc = new Document();
+                for (Document document : docs) {
+                    whole_doc.append("$set", document);
+                }
+
+                mongoDatabase.getCollection(collectionName).updateMany(filter, whole_doc);
+                return true;
+
+            }
+
+            mongoDatabase.getCollection(collectionName).updateMany(filter, update);
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -434,6 +568,16 @@ public class DatabaseManager {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private long MongoGenerateID(List<Map<String, Object>> post_data) {
+        List<Object> all_posts = new ArrayList<>();
+
+        for (Map<String, Object> data : post_data) {
+            all_posts.addAll(data.values());
+        }
+
+        return generateID(all_posts);
     }
 
 
@@ -637,8 +781,6 @@ public class DatabaseManager {
 
 
 
-
-
     public Long createUser(String name, String email, String password, String encryption_key, String sign_key) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_details = new ArrayList<>();
@@ -681,15 +823,22 @@ public class DatabaseManager {
             return id;
 
         } else if (mongoClient != null && mongoDatabase != null) {
-            List<Object> all_ids = new ArrayList<>();
+            List<Map<String, Object>> accounts_id_data = MongoReadCollectionNoSQL(table_accounts, null,
+                    "id", "name", "email");
 
-            List<Map<String, Object>> accounts_id_data = MongoReadCollectionNoSQL(table_accounts, null, "id");
             if (accounts_id_data == null) {
                 return null;
             }
 
+            List<Object> all_ids = new ArrayList<>();
+
             for (Map<String, Object> map : accounts_id_data) {
-                all_ids.addAll(map.values());
+                if (map.get("name").equals(name) || map.get("email").equals(email)) {
+                    return null;
+                }
+                if (map.containsKey("id")) {
+                    all_ids.add(map.get("id"));
+                }
             }
 
             long account_ID = generateID(all_ids);
@@ -700,12 +849,16 @@ public class DatabaseManager {
                     .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
                     .append("session_suspended", "f")
                     .append("created_at", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                    .append("friends", "").append("chat_groups", ""))) {
+                    .append("friends", "").append("chat_groups", ""), null)) {
 
                 return null;
             }
 
-            if (!MongoAddDataToCollectionNoSQL(table_profiles, new Document())) {
+            if (!MongoAddDataToCollectionNoSQL(table_profiles, new Document("id", account_ID)
+                    .append("pfp", "Default Pic").append("banner", "Default Banner")
+                    .append("pets", null).append("coins", 0).append("badges", "No badges")
+                            .append("animations", null), null)) {
+
 
                 MongoDeleteDataFromCollectionNoSQL(table_accounts, new Document("id", account_ID));
                 return null;
@@ -734,7 +887,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("email", new_email));
+                    new Document("email", new_email), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -756,7 +909,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("password", new_password));
+                    new Document("password", new_password), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -777,7 +930,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("encryption_key", new_encryptino_key));
+                    new Document("encryption_key", new_encryptino_key), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -798,7 +951,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("sign_key", new_sign_key));
+                    new Document("sign_key", new_sign_key), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -820,7 +973,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("session_id", session_id));
+                    new Document("session_id", session_id), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -882,7 +1035,7 @@ public class DatabaseManager {
                 // remove the session
                 return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
                         new Document("session_expire", null).append("last_edit_time", null)
-                                .append("session_id", null));
+                                .append("session_id", null), false, false);
             }
 
             sessionExpire--;
@@ -890,7 +1043,8 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
                     new Document("session_expire", sessionExpire)
                             .append("last_edit_time",
-                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))));
+                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))),
+                    false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -910,8 +1064,10 @@ public class DatabaseManager {
                     "session_suspended = ?", set_data,
                     "id = ?", condition_data);
 
-        }  else if (mongoClient != null) {
-            return false;
+        }  else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts,
+                    new Document("id", id), new Document("session_suspended", stats), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -928,11 +1084,16 @@ public class DatabaseManager {
             Map<String, List<Object>> data = getDataSQL(table_accounts, "session_suspended",
                     "id = ?", condition_data, null, "", 0);
 
-
             return data != null && !data.get("session_suspended").isEmpty() &&
                     data.get("session_suspended").get(0).equals("t");
-        }  else if (mongoClient != null) {
-            return false;
+
+        }  else if (mongoClient != null && mongoDatabase != null) {
+
+            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_accounts, new Document("id", id),
+                    "session_suspended");
+
+            return data != null && data.get(0).get("session_suspended") != null &&
+                    data.get(0).get("session_suspended").equals("t");
 
         } else if (scylladb_session != null) {
             return false;
@@ -952,8 +1113,10 @@ public class DatabaseManager {
                     postgressql_connection != null ? "friends = friends || ?" : "friends = CONCAT(friends, ?)",
                     account_friends, "id = ?", account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("friends", "," + friend_id), true, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -973,8 +1136,10 @@ public class DatabaseManager {
                     "friends = REPLACE(friends, ?, '')", account_friends,"id = ?",
                     account_where);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("friends", ","+friend_id), false, true);
 
         } else if (scylladb_session != null) {
             return false;
@@ -993,8 +1158,10 @@ public class DatabaseManager {
             return editDataSQL(table_accounts,
                     postgressql_connection != null ? "chat_groups = chat_groups || ?" :
                             "chat_groups = CONCAT(chat_groups, ?)", account_friends,"id = ?", account_where);
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("chat_groups", ","+group_id), true, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1013,8 +1180,10 @@ public class DatabaseManager {
             return editDataSQL(table_accounts,
                     "groups = REPLACE(groups, ?, '')", account_friends,
                     "id = ?", account_where);
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
+                    new Document("chat_groups", ","+group_id), false, true);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1038,8 +1207,20 @@ public class DatabaseManager {
             }
 
 
-        } else if (mongoClient != null) {
+        } else if (mongoClient != null && mongoDatabase != null) {
 
+            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts,
+                    null, "");
+
+            if (account_data == null) {
+                return;
+            }
+
+            for (Map<String, Object> ids : account_data) {
+                try {
+                    updateUserSessionExpire(Long.parseLong(String.valueOf(ids.get("id"))));
+                } catch (Exception e) {}
+            }
 
         } else if (scylladb_session != null) {
 
@@ -1071,8 +1252,18 @@ public class DatabaseManager {
                     "?, ?, ?", set_data) ?
                     id : null;
 
-        } else if (mongoClient != null) {
-            return null;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> conv_data = MongoReadCollectionNoSQL(table_conversations, null,
+                    "conv_id");
+
+            if (conv_data == null) {
+                return null;
+            }
+
+            long id = MongoGenerateID(conv_data);
+
+            return MongoAddDataToCollectionNoSQL(table_conversations, new Document("conv_id", id)
+                    .append("party_id", party_id).append("party_id2", party_id2), null) ? id : null;
 
         } else if (scylladb_session != null) {
             return null;
@@ -1081,6 +1272,10 @@ public class DatabaseManager {
         return null;
     }
     public boolean addMessage(long conv_id, long sender_id, String message) {
+        String message_value = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) +
+                "|" +
+                message;
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> edit_condition_data = new ArrayList<>();
             edit_condition_data.add(conv_id);
@@ -1095,15 +1290,17 @@ public class DatabaseManager {
 
             List<Object> chat_data = new ArrayList<>();
             chat_data.add(conv_id);
-            chat_data.add(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) + "|" + message);
+            chat_data.add(message_value);
             chat_data.add(sender_id);
             chat_data.add(generateID(current_chat_data.get("msg_id")));
 
             List<Object> set_data = new ArrayList<>();
             set_data.add(message);
 
-            if ((current_chat_data.get("msg").isEmpty()) ||
-                    (!editDataSQL(table_chats, "msg = msg || ?", set_data,"conv_id = ?",
+            edit_condition_data.add(sender_id);
+
+            if (current_chat_data.get("msg").isEmpty() ||
+                    (!editDataSQL(table_chats, "msg = msg || ?", set_data,"conv_id = ? AND sent_by = ?",
                             edit_condition_data))) {
 
                 return addDataSQL(table_chats, "conv_id, msg, sent_by, msg_id","?, ?, ?, ?", chat_data);
@@ -1111,8 +1308,51 @@ public class DatabaseManager {
             } else {
                 return true;
             }
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            Document convId = new Document("conv_id", conv_id);
+            List<Map<String, Object>> chat_data = MongoReadCollectionNoSQL(table_chats,
+                    convId, "msg_id");
+
+            if (chat_data == null) {
+                return false;
+            }
+
+            Document msg = new Document("msg", message_value);
+
+            if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
+
+                return MongoAddDataToCollectionNoSQL(table_chats, msg.append("conv_id", conv_id)
+                        .append("sent_by", sender_id).append("msg_id", MongoGenerateID(chat_data)), null);
+
+            } else {
+                convId.append("sent_by", sender_id);
+
+                List<Map<String, Object>> message_data = MongoReadCollectionNoSQL(table_chats, convId,
+                        "msg", "msg_id");
+
+                if (message_data == null) {
+                    return false;
+                }
+
+                Long msg_id = null;
+
+                for (Map<String, Object> map : message_data) {
+                    if ((String.valueOf(map.get("msg")).length() + message_value.length()) < 2000) {
+                        msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
+                    }
+                }
+
+                if (msg_id == null) {
+
+                    return MongoAddDataToCollectionNoSQL(table_chats, msg.append("conv_id", conv_id)
+                            .append("sent_by", sender_id).append("msg_id", MongoGenerateID(chat_data)), null);
+                }
+
+                convId.append("msg_id", msg_id);
+
+                return MongoUpdateDocumentInCollectionNoSQL(table_chats,
+                        convId, msg, true, false);
+            }
 
         } else if (scylladb_session != null) {
             return false;
@@ -1120,15 +1360,30 @@ public class DatabaseManager {
         }
         return false;
     }
-    public Map<String, List<Object>> getMessages(long sender_id, long conv_id, int amount) {
+    public Map<String, List<Object>> getMessages(long conv_id, int amount) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> where_values = new ArrayList<>();
             where_values.add(conv_id);
 
             return getDataSQL(table_chats, "*", "conv_id = ?", where_values, null,
-                    "sent_at DESC", amount);
-        } else if (mongoClient != null) {
-            return null;
+                    "", amount);
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> mongoData = MongoReadCollectionNoSQL(table_chats, new Document("conv_id", conv_id));
+            Map<String, List<Object>> result = new HashMap<>();
+
+            result.put("msg", new ArrayList<>());
+            result.put("msg_id", new ArrayList<>());
+            result.put("sender_id", new ArrayList<>());
+            result.put("conv_id", new ArrayList<>());
+
+            for (Map<String, Object> map : mongoData) {
+                for (Map.Entry<String, Object> data : map.entrySet()) {
+                    result.get(data.getKey()).add(data.getValue());
+                }
+            }
+
+            return result;
 
         } else if (scylladb_session != null) {
             return null;
@@ -1144,8 +1399,11 @@ public class DatabaseManager {
             condition_data.add(sender_id);
 
             return deleteDataSQL(table_chats, "conv_id = ? AND msg_id = ? AND sent_by = ?", condition_data);
-        } else if (mongoClient != null) {
-            return false;
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoDeleteDataFromCollectionNoSQL(table_chats, new Document("conv_id", conv_id)
+                    .append("msg_id", message_id).append("sent_by", sender_id));
 
         } else if (scylladb_session != null) {
             return false;
@@ -1173,14 +1431,26 @@ public class DatabaseManager {
             values.add(answer);
             values.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
 
-            if (!addDataSQL(table_captchas,"id, answer, time, last_edit_time, failed",
-                    "?, ?, 10, ?, 0", values)) {
+            return addDataSQL(table_captchas,"id, answer, time, last_edit_time, failed",
+                    "?, ?, 10, ?, 0", values) ? id : null;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_captchas, null, "id");
+
+            if (data == null) {
                 return null;
             }
 
-            return id;
-        } else if (mongoClient != null) {
-            return null;
+            List<Object> all_captchas = new ArrayList<>();
+            for (Map<String, Object> map : data) {
+                all_captchas.addAll(map.values());
+            }
+
+            long id = generateID(all_captchas);
+
+            return MongoAddDataToCollectionNoSQL(table_captchas, new Document("id", id)
+                    .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("failed", 0),
+                    null) ? id : null;
 
         } else if (scylladb_session != null) {
             return null;
@@ -1202,7 +1472,7 @@ public class DatabaseManager {
                 return false;
             }
 
-            if (captcha_data.get("answer").contains(given_answer)) {
+            if (captcha_data.get("answer").equals(given_answer)) {
                 // solved!
                 return deleteDataSQL(table_captchas, "id = ?", condition_data);
 
@@ -1217,13 +1487,44 @@ public class DatabaseManager {
                 // the captcha was not solved and the user has more time and didn't failed 3 times
 
                 if (!(captcha_data.get("time").isEmpty() || captcha_data.get("failed").isEmpty())) {
+
                     editDataSQL(table_captchas, "failed = failed + 1", null, "id = ?",
                             condition_data);
+
                 }
                 return false;
             }
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            Document captcha_id = new Document("id", id);
+            List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
+                    "answer", "time", "failed");
+
+            if (captcha_data == null || captcha_data.isEmpty() || captcha_data.get(0).isEmpty()) {
+                return false;
+            }
+
+            Map<String, Object> data = captcha_data.get(0);
+            short time = Short.valueOf(String.valueOf(data.get("time")));
+
+            if (String.valueOf(data.get("answer")).equals(given_answer)) {
+                // solved!
+                return MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
+
+            } else if ((time <= 0) || (Short.valueOf(String.valueOf(data.get("failed"))) >= 3)) {
+                // failed!
+                MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
+
+                return false;
+
+            } else {
+                // the captcha was not solved and the user has more time and didn't failed 3 times
+                time--;
+                MongoUpdateDocumentInCollectionNoSQL(table_captchas, captcha_id, new Document("time", time),
+                        false, false);
+
+                return false;
+
+            }
 
         } else if (scylladb_session != null) {
             return false;
@@ -1260,8 +1561,32 @@ public class DatabaseManager {
             return editDataSQL(table_captchas, "last_edit_time = ?, time = time - 1", set_data,
                     "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+            Document captcha_id = new Document("id", id);
+            List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
+                    "last_edit_time", "time");
+
+            if (captcha_data == null || captcha_data.get(0).isEmpty()) {
+                return false;
+            }
+
+            Map<String, Object> map = captcha_data.get(0);
+            if (!isOneSecondAgo(Timestamp.valueOf(String.valueOf(map.get("last_edit_time"))))) {
+                return false;
+            }
+            short time = Short.valueOf(String.valueOf(map.get("time")));
+
+            if (time <= 0) {
+                // expired
+                return MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
+
+            }
+
+            time--;
+            return MongoUpdateDocumentInCollectionNoSQL(table_captchas, captcha_id,
+                    new Document("last_edit_time",
+                            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                            .append("time", time), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1285,8 +1610,18 @@ public class DatabaseManager {
             }
 
 
-        } else if (mongoClient != null) {
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> captcha_ids = MongoReadCollectionNoSQL(table_captchas, null, "id");
 
+            if (captcha_ids == null) {
+                return;
+            }
+
+            for (Map<String, Object> ids : captcha_ids) {
+                try {
+                    updateCaptchaTime(Long.parseLong(String.valueOf(ids.get("id"))));
+                } catch (Exception e) {}
+            }
 
         } else if (scylladb_session != null) {
 
@@ -1308,11 +1643,22 @@ public class DatabaseManager {
             data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             data.add(background);
 
-            return addDataSQL(table_posts,"sender_id, msg, tags, send_at, background",
+            return addDataSQL(table_posts, "sender_id, msg, tags, send_at, background",
                     "?, ?, ?, ?, ?", data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            List<Map<String, Object>> post_data = MongoReadCollectionNoSQL(table_posts, null, "id");
+            if (post_data == null) {
+                return false;
+            }
+
+            long id = MongoGenerateID(post_data);
+
+            return MongoAddDataToCollectionNoSQL(table_posts, new Document("id", id).append("sender_id", sender_id)
+                    .append("msg", msg).append("tags", tags).append("send_at",
+                            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                    .append("background", background), null);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1320,6 +1666,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean deletePost(long sender_id, long post_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1328,8 +1675,10 @@ public class DatabaseManager {
 
             return deleteDataSQL(table_posts, "id = ? AND sender_id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoDeleteDataFromCollectionNoSQL(table_posts, new Document("id", post_id)
+                    .append("sender_id", sender_id));
 
         } else if (scylladb_session != null) {
             return false;
@@ -1352,8 +1701,12 @@ public class DatabaseManager {
             return editDataSQL(table_posts, "msg = ?, tags = ?, background = ?", set_data,
                     "id = ? AND sender_id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_posts, new Document("id", post_id)
+                    .append("sender_id", sender_id), new Document("msg", edited_msg)
+                    .append("tags", edited_tags).append("background", given_background), false,
+                    false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1375,8 +1728,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_profiles, "pfp = ?", profile_data, "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("pfp", given_pfp), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1394,8 +1749,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_profiles, "banner = ?", profile_data, "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("banner", given_banner), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1413,8 +1770,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_profiles, "pets = ?", profile_data, "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("pets", given_pets), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1432,8 +1791,10 @@ public class DatabaseManager {
 
             return editDataSQL(table_profiles, "coins = ?", profile_data, "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("coins", given_coins), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1452,8 +1813,10 @@ public class DatabaseManager {
             return editDataSQL(table_profiles, "badges = ?", profile_data,
                     "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("badges", given_badges), false, false);
 
         } else if (scylladb_session != null) {
             return false;
@@ -1472,8 +1835,10 @@ public class DatabaseManager {
             return editDataSQL(table_profiles, "animations = ?", profile_data,
                     "id = ?", condition_data);
 
-        } else if (mongoClient != null) {
-            return false;
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
+                    new Document("animations", given_animations), false, false);
 
         } else if (scylladb_session != null) {
             return false;
