@@ -62,12 +62,12 @@ z
 java:S2629ı"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(©â™ø8°ü€‚º1
 Z
 java:S4973"<Strings and Boxed types should be compared using "equals()".(ÆË¦Ì8»ü€‚º1
-l
-java:S2095¶"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ûŠ¥8ß‡‚º1
 m
 java:S2095§"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(¼ôº´8ß‡‚º1
 m
 java:S2095Ş"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãª8ß‡‚º1
+l
+java:S2095¶"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(ûŠ¥8ß‡‚º1
 Œ
 java:S4165‹"iRemove this useless assignment; "data_to_add" already holds the assigned value along all execution paths.(¼ë±àÿÿÿÿÿ8ù»×‚º1
 Œ
