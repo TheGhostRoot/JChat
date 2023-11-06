@@ -120,9 +120,7 @@ public class API {
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
 
-        databaseManager.setupMongoDB();
-
-
+        databaseManager.setupScyllaDB();
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
@@ -147,8 +145,8 @@ public class API {
                     entry.setValue((short) (value - 1));
                 }
             }
-            databaseManager.handleCaptchas();
-            databaseManager.handleSessions();
+            //databaseManager.handleCaptchas();
+            //databaseManager.handleSessions();
         }, 0, 1, TimeUnit.SECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

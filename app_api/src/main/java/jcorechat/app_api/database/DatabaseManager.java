@@ -1,6 +1,10 @@
 package jcorechat.app_api.database;
 
+import com.datastax.dse.driver.internal.core.graph.MultiPageGraphResultSet;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinition;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.mongodb.client.*;
 import jcorechat.app_api.API;
@@ -13,9 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-
-import static com.mongodb.client.model.Filters.ne;
-import static com.mongodb.client.model.Filters.regex;
+import java.util.concurrent.CompletionStage;
 
 public class DatabaseManager {
 
@@ -119,19 +121,19 @@ public class DatabaseManager {
             profiles_table.add("animations TEXT, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
-            deleteTableSQL("profiles");
-            deleteTableSQL("posts");
-            deleteTableSQL("chats");
-            deleteTableSQL("captchas");
-            deleteTableSQL("conversations");
-            deleteTableSQL("accounts");
+            deleteTableSQL(table_profiles);
+            deleteTableSQL(table_posts);
+            deleteTableSQL(table_chats);
+            deleteTableSQL(table_captchas);
+            deleteTableSQL(table_conversations);
+            deleteTableSQL(table_accounts);
 
-            createTableSQL("accounts", accounts_table);
-            createTableSQL( "conversations", conversations_table);
-            createTableSQL( "captchas", captchas_table);
-            createTableSQL( "profiles", profiles_table);
-            createTableSQL( "posts", posts_table);
-            createTableSQL( "chats", chats_table);
+            createTableSQL( table_accounts, accounts_table);
+            createTableSQL( table_conversations, conversations_table);
+            createTableSQL( table_captchas, captchas_table);
+            createTableSQL( table_profiles, profiles_table);
+            createTableSQL( table_posts, posts_table);
+            createTableSQL( table_chats, chats_table);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -196,19 +198,19 @@ public class DatabaseManager {
             profiles_table.add("animations TEXT NULL, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
-            deleteTableSQL( "profiles");
-            deleteTableSQL( "posts");
-            deleteTableSQL( "chats");
-            deleteTableSQL( "captchas");
-            deleteTableSQL( "conversations");
-            deleteTableSQL( "accounts");
+            deleteTableSQL(table_profiles);
+            deleteTableSQL(table_posts);
+            deleteTableSQL(table_chats);
+            deleteTableSQL(table_captchas);
+            deleteTableSQL(table_conversations);
+            deleteTableSQL(table_accounts);
 
-            createTableSQL( "accounts", accounts_table);
-            createTableSQL( "conversations", conversations_table);
-            createTableSQL( "captchas", captchas_table);
-            createTableSQL( "profiles", profiles_table);
-            createTableSQL( "posts", posts_table);
-            createTableSQL( "chats", chats_table);
+            createTableSQL( table_accounts, accounts_table);
+            createTableSQL( table_conversations, conversations_table);
+            createTableSQL( table_captchas, captchas_table);
+            createTableSQL( table_profiles, profiles_table);
+            createTableSQL( table_posts, posts_table);
+            createTableSQL( table_chats, chats_table);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -243,17 +245,104 @@ public class DatabaseManager {
         try {
             scylladb_session = CqlSession.builder()
                     .addContactPoint(new InetSocketAddress(scylladb_host, scylladb_port))
-                    .withLocalDatacenter(scylladb_datacenter).build();
+                    .withLocalDatacenter(scylladb_datacenter).withKeyspace("jcorechat").build();
             // Execute a simple query
-            com.datastax.oss.driver.api.core.cql.ResultSet resultSet = scylladb_session.execute("SELECT * FROM system.local");
+            // com.datastax.oss.driver.api.core.cql.ResultSet resultSet = scylladb_session.execute("SELECT * FROM system.local");
 
-            // Process the result
-            Row row = resultSet.one();
-            if (row != null) {
-                API.logger.info("ScyllaDB Release Version: " + row.getString("release_version"));
-            }
+            List<String> accounts_table = new ArrayList<>();
+            accounts_table.add("id UUID PRIMARY KEY, ");
+            accounts_table.add("name VARCHAR(20) UNIQUE, ");
+            accounts_table.add("email VARCHAR(50) UNIQUE, ");
+            accounts_table.add("password VARCHAR(100), ");
+            accounts_table.add("encryption_key VARCHAR(100) UNIQUE, ");
+            accounts_table.add("sign_key VARCHAR(100) UNIQUE, ");
+            accounts_table.add("session_id VARINT UNIQUE, ");
+            accounts_table.add("session_expire SMALLINT, ");
+            accounts_table.add("last_edit_time TIMESTAMP, ");
+            accounts_table.add("session_suspended VARCHAR(1), ");
+            accounts_table.add("created_at TIMESTAMP, ");
+            accounts_table.add("friends TEXT, ");
+            accounts_table.add("chat_groups TEXT ");
 
-            scylladb_session.close();
+            List<String> conversations_table = new ArrayList<>();
+            conversations_table.add("party_id VARINT, ");
+            conversations_table.add("party_id2 VARINT, ");
+            conversations_table.add("conv_id UUID PRIMARY KEY, ");
+            conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
+            conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
+
+            List<String> chats_table = new ArrayList<>();
+            chats_table.add("conv_id VARINT, ");
+            chats_table.add("msg VARCHAR(2000), ");
+            chats_table.add("sent_by VARINT, ");
+            chats_table.add("msg_id VARINT, ");
+            chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
+
+            List<String> captchas_table = new ArrayList<>();
+            captchas_table.add("id UUID PRIMARY KEY, ");
+            captchas_table.add("answer TEXT, ");
+            captchas_table.add("time SMALLINT, ");
+            captchas_table.add("last_edit_time TIMESTAMP, ");
+            captchas_table.add("failed SMALLINT");
+
+            List<String> posts_table = new ArrayList<>();
+            posts_table.add("id VARINT UUID PRIMARY KEY, ");
+            posts_table.add("sender_id VARINT, ");
+            posts_table.add("msg VARCHAR(200), ");
+            posts_table.add("tags VARCHAR(100), ");
+            posts_table.add("send_at TIMESTAMP, ");
+            posts_table.add("background TEXT, ");
+            posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
+
+            List<String> profiles_table = new ArrayList<>();
+            profiles_table.add("id VARINT, ");
+            profiles_table.add("pfp TEXT, ");
+            profiles_table.add("banner TEXT, ");
+            profiles_table.add("pets TEXT, ");
+            profiles_table.add("coins INT, ");
+            profiles_table.add("badges TEXT, ");
+            profiles_table.add("animations TEXT, ");
+            profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+
+            //deleteTableSQL(table_profiles);
+            //deleteTableSQL(table_posts);
+            //deleteTableSQL(table_chats);
+            //deleteTableSQL(table_captchas);
+            //deleteTableSQL(table_conversations);
+            //deleteTableSQL(table_accounts);
+
+            /*try {
+                scylladb_session.execute("DROP KEYSPACE IF EXISTS jcorechat;");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }*/
+
+            /*try {
+                scylladb_session.execute("CREATE KEYSPACE IF NOT EXISTS jcorechat WITH replication = {'class': 'NetworkTopologyStrategy'};");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }*/
+
+
+
+            //createTableSQL( table_accounts, accounts_table);
+            //createTableSQL( table_conversations, conversations_table);
+            //createTableSQL( table_captchas, captchas_table);
+            //createTableSQL( table_profiles, profiles_table);
+            //createTableSQL( table_posts, posts_table);
+            //createTableSQL( table_chats, chats_table);
+
+
+            ScyllaAddData(table_accounts,
+                    "id, name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, session_suspended, created_at, friends, chat_groups",
+                    "123e4567-e89b-12d3-a456-426655440000, 'Bob', 'test@email.com', 'TyiioG6856768G79H8', 'YGtf6rt7GY8HUJIOP', 'R6DTF7Gy8huoiuh7G6', 0, 0, '2023-06-11 15:55:55', 'f', '2023-06-11 15:55:55', '', ''");
+
+            API.logger.info(ScyllaReadResult(scylladb_session.executeAsync("SELECT * FROM accounts;"), false).toString());
+
+            ScyllaDeleteData(table_accounts, "name = 'Bob'");
+
+            API.logger.info(ScyllaReadResult(scylladb_session.executeAsync("SELECT * FROM accounts;"), false).toString());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -280,36 +369,56 @@ public class DatabaseManager {
 
     @Deprecated
     private boolean createTableSQL(String table, List<String> colums) {
-        if (postgressql_connection == null && mysql_connection == null) {
-            return false;
-        }
-
         try {
+            if (postgressql_connection != null || mysql_connection != null) {
+                StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+                stringBuilder.append(table).append(" ( ");
+                if (colums != null) {
+                    for (String col : colums) {
+                        stringBuilder.append(col);
+                    }
+                }
+                getSQLConnection().prepareStatement(stringBuilder.append(" );").toString()).executeUpdate();
+                return true;
 
-            StringBuilder stringBuilder = new StringBuilder("CREATE TABLE ").append(table).append(" ( ");
+            } else if (scylladb_session != null) {
+                StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+                stringBuilder.append(table).append(" ( ");
+                if (colums != null) {
+                    for (String col : colums) {
+                        stringBuilder.append(col);
+                    }
+                }
+                String g = stringBuilder.append(" );").toString();
+                API.logger.info(g);
+                scylladb_session.executeAsync(g);
+                return true;
 
-            for (String col : colums) {
-                stringBuilder.append(col);
             }
-
-            getSQLConnection().prepareStatement(stringBuilder.append(" );").toString()).executeUpdate();
-            return true;
+            return false;
         } catch (Exception  e) {
+            e.printStackTrace();
             return false;
         }
     }
+
+
     @Deprecated
     private boolean deleteTableSQL(String table) {
-        if (postgressql_connection == null && mysql_connection == null) {
-            return false;
-        }
-
         try {
-            StringBuilder stringBuilder = new StringBuilder("DROP TABLE ").append(table).append(";");
+            if (postgressql_connection != null || mysql_connection != null) {
+                getSQLConnection().prepareStatement(new StringBuilder("DROP TABLE IF EXISTS ")
+                        .append(table).append(";").toString()).executeUpdate();
+                return true;
 
-            getSQLConnection().prepareStatement(stringBuilder.toString()).executeUpdate();
-            return true;
+            } else if (scylladb_session != null) {
+                scylladb_session.executeAsync(new StringBuilder("DROP TABLE IF EXISTS ")
+                        .append(table).append(";").toString());
+                return true;
+            }
+            return false;
         } catch (Exception  e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -344,8 +453,9 @@ public class DatabaseManager {
             return false;
         }
     }
+
     private List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
-                                                               String... filters) {
+                                                               boolean expectOne, String... filters) {
         if (mongoDatabase == null) {
             return null;
         }
@@ -358,6 +468,9 @@ public class DatabaseManager {
             MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
 
             while (cursor.hasNext()) {
+                if (expectOne && !result.isEmpty() && !result.get(0).isEmpty()) {
+                    break;
+                }
                 result = conditionFilter(condition, result, cursor.next(),
                         filter_list.size() > 0 ? filter_list : null, new HashMap<>());
 
@@ -453,7 +566,7 @@ public class DatabaseManager {
                 for (Map.Entry<String, Object> entry: updatedDoc.entrySet()) {
                     String key = entry.getKey();
                     List<Map<String, Object>> original_data = MongoReadCollectionNoSQL(collectionName, filter,
-                            key);
+                            true, key);
 
                     if (original_data == null) {
                         return false;
@@ -503,7 +616,7 @@ public class DatabaseManager {
                 for (Map.Entry<String, Object> entry: updatedDoc.entrySet()) {
                     String key = entry.getKey();
                     List<Map<String, Object>> original_data = MongoReadCollectionNoSQL(collectionName, filter,
-                            key);
+                            true, key);
 
                     if (original_data == null) {
                         return false;
@@ -583,6 +696,72 @@ public class DatabaseManager {
 
 
 
+    private List<Map<String, Object>> ScyllaReadResult(CompletionStage<AsyncResultSet> result,
+                                                       boolean expectOne) {
+
+        List<Map<String, Object>> output = new ArrayList<>();
+        try {
+            AsyncResultSet asyncResultSet = result.toCompletableFuture().get();
+            Iterator<Row> rows = asyncResultSet.currentPage().iterator();
+            ColumnDefinitions columnDefinitions = asyncResultSet.getColumnDefinitions();
+
+            while (rows.hasNext()) {
+                Map<String, Object> resultRow = new HashMap<>();
+                if (expectOne && !output.isEmpty() && !output.get(0).isEmpty()) {
+                    break;
+                }
+
+                for (int i = 0; i < columnDefinitions.size(); i++) {
+                    resultRow.put(columnDefinitions.get(i).getName().asCql(true), rows.next().getObject(i));
+                }
+                output.add(resultRow);
+            }
+
+            return output;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    private boolean ScyllaAddData(String table, String fields, String values) {
+        if (scylladb_session == null) {
+            return false;
+        }
+
+        try {
+            String g  = new StringBuilder("INSERT INTO ")
+                    .append(table).append(" (").append(fields).append(") VALUES (")
+                    .append(values).append(");").toString();
+
+            API.logger.info(g);
+
+            scylladb_session.executeAsync(g);
+
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean ScyllaDeleteData(String table, String condition) {
+        if (scylladb_session == null) {
+            return false;
+        }
+
+        try {
+            scylladb_session.executeAsync(new StringBuilder("USE jcorechat;\nDELETE FROM ").append(table).append(" WHERE ")
+                    .append(condition).append(";").toString());
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 
 
     private Map<String, List<Object>> readOutputSQL(ResultSet resultSet) {
@@ -611,6 +790,7 @@ public class DatabaseManager {
             return null;
         }
     }
+
     private List<Object> setDataSQL(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
             throws SQLException {
         List<Object> list = new ArrayList<>();
@@ -646,6 +826,7 @@ public class DatabaseManager {
 
         return list;
     }
+
     private boolean deleteDataSQL(String table, String condition, List<Object> conditionData) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
@@ -660,6 +841,7 @@ public class DatabaseManager {
             return false;
         }
     }
+
     private boolean addDataSQL(String table, String fields, String values, List<Object> data) {
 
         if (postgressql_connection == null && mysql_connection == null) {
@@ -680,6 +862,7 @@ public class DatabaseManager {
         }
 
     }
+
     private boolean editDataSQL(String table, String set_expression,
                                       List<Object> set_data, String condition, List<Object> conditionData) {
         if (postgressql_connection == null && mysql_connection == null) {
@@ -698,6 +881,7 @@ public class DatabaseManager {
             return false;
         }
     }
+
     private Map<String, List<Object>> getDataSQL(String table, String data_to_get, String condition,
                                               List<Object> conditionData, Map<String, List<Object>> join_data,
                                               String order, int limit) {
@@ -824,7 +1008,7 @@ public class DatabaseManager {
 
         } else if (mongoClient != null && mongoDatabase != null) {
             List<Map<String, Object>> accounts_id_data = MongoReadCollectionNoSQL(table_accounts, null,
-                    "id", "name", "email");
+                    false, "id", "name", "email");
 
             if (accounts_id_data == null) {
                 return null;
@@ -873,6 +1057,7 @@ public class DatabaseManager {
         }
         return null;
     }
+
     public boolean changeUserEmail(long id, String new_email) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
@@ -895,6 +1080,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean changeUserPassword(long id, String new_password) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
@@ -917,6 +1103,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean changeUserEncryptionKey(long id, String new_encryptino_key) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
@@ -938,6 +1125,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean changeUserSignKey(long id, String new_sign_key) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
@@ -959,6 +1147,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean changeUserSessionID(long id, long session_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_set = new ArrayList<>();
@@ -981,6 +1170,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateUserSessionExpire(long id)  {
         if (isUserSessionSuspended(id)) { return false; }
 
@@ -1017,7 +1207,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
             Document filter = new Document("id", id);
 
-            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts, filter,
+            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts, filter, true,
                     "last_edit_time", "session_expire");
 
             if (account_data == null || account_data.get(0).get("last_edit_time") == null ||
@@ -1052,6 +1242,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean changeUserSessionSuspended(long id, String stats) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> set_data = new ArrayList<>();
@@ -1075,6 +1266,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     private boolean isUserSessionSuspended(long id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1090,7 +1282,7 @@ public class DatabaseManager {
         }  else if (mongoClient != null && mongoDatabase != null) {
 
             List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_accounts, new Document("id", id),
-                    "session_suspended");
+                    true, "session_suspended");
 
             return data != null && data.get(0).get("session_suspended") != null &&
                     data.get(0).get("session_suspended").equals("t");
@@ -1101,6 +1293,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean addUserFriend(long id, long friend_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_where = new ArrayList<>();
@@ -1124,6 +1317,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean removeUserFriend(long id, long friend_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_where = new ArrayList<>();
@@ -1147,6 +1341,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean addUserGroup(long id, long group_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_where = new ArrayList<>();
@@ -1169,6 +1364,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean removeUserGroup(long id, long group_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_where = new ArrayList<>();
@@ -1191,6 +1387,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public void handleSessions() {
         if (postgressql_connection != null || mysql_connection != null) {
             Map<String, List<Object>> account_data = getDataSQL(table_accounts, "id", "",
@@ -1210,7 +1407,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
 
             List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts,
-                    null, "");
+                    null,  false,"");
 
             if (account_data == null) {
                 return;
@@ -1254,7 +1451,7 @@ public class DatabaseManager {
 
         } else if (mongoClient != null && mongoDatabase != null) {
             List<Map<String, Object>> conv_data = MongoReadCollectionNoSQL(table_conversations, null,
-                    "conv_id");
+                    false, "conv_id");
 
             if (conv_data == null) {
                 return null;
@@ -1271,6 +1468,7 @@ public class DatabaseManager {
         }
         return null;
     }
+
     public boolean addMessage(long conv_id, long sender_id, String message) {
         String message_value = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) +
@@ -1311,7 +1509,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
             Document convId = new Document("conv_id", conv_id);
             List<Map<String, Object>> chat_data = MongoReadCollectionNoSQL(table_chats,
-                    convId, "msg_id");
+                    convId, false, "msg_id");
 
             if (chat_data == null) {
                 return false;
@@ -1328,7 +1526,7 @@ public class DatabaseManager {
                 convId.append("sent_by", sender_id);
 
                 List<Map<String, Object>> message_data = MongoReadCollectionNoSQL(table_chats, convId,
-                        "msg", "msg_id");
+                      false,  "msg", "msg_id");
 
                 if (message_data == null) {
                     return false;
@@ -1360,6 +1558,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public Map<String, List<Object>> getMessages(long conv_id, int amount) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> where_values = new ArrayList<>();
@@ -1369,7 +1568,8 @@ public class DatabaseManager {
                     "", amount);
 
         } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> mongoData = MongoReadCollectionNoSQL(table_chats, new Document("conv_id", conv_id));
+            List<Map<String, Object>> mongoData = MongoReadCollectionNoSQL(table_chats,
+                    new Document("conv_id", conv_id), false);
             Map<String, List<Object>> result = new HashMap<>();
 
             result.put("msg", new ArrayList<>());
@@ -1391,6 +1591,7 @@ public class DatabaseManager {
         }
         return null;
     }
+
     public boolean deleteMessage(long sender_id, long conv_id, long message_id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1434,7 +1635,7 @@ public class DatabaseManager {
             return addDataSQL(table_captchas,"id, answer, time, last_edit_time, failed",
                     "?, ?, 10, ?, 0", values) ? id : null;
         } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_captchas, null, "id");
+            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_captchas, null, false,"id");
 
             if (data == null) {
                 return null;
@@ -1458,6 +1659,7 @@ public class DatabaseManager {
         }
         return null;
     }
+
     public boolean verifyCaptcha(long id, String given_answer) {
         // TODO when captcha is ready then update this
 
@@ -1497,7 +1699,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
             Document captcha_id = new Document("id", id);
             List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
-                    "answer", "time", "failed");
+                    true, "answer", "time", "failed");
 
             if (captcha_data == null || captcha_data.isEmpty() || captcha_data.get(0).isEmpty()) {
                 return false;
@@ -1532,6 +1734,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateCaptchaTime(long id) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1564,7 +1767,7 @@ public class DatabaseManager {
         } else if (mongoClient != null && mongoDatabase != null) {
             Document captcha_id = new Document("id", id);
             List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
-                    "last_edit_time", "time");
+                    true,"last_edit_time", "time");
 
             if (captcha_data == null || captcha_data.get(0).isEmpty()) {
                 return false;
@@ -1594,6 +1797,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public void handleCaptchas() {
         if (postgressql_connection != null || mysql_connection != null) {
             Map<String, List<Object>> captcha_data = getDataSQL(table_captchas, "id", "",
@@ -1611,7 +1815,8 @@ public class DatabaseManager {
 
 
         } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> captcha_ids = MongoReadCollectionNoSQL(table_captchas, null, "id");
+            List<Map<String, Object>> captcha_ids = MongoReadCollectionNoSQL(table_captchas, null,
+                    false, "id");
 
             if (captcha_ids == null) {
                 return;
@@ -1648,7 +1853,8 @@ public class DatabaseManager {
 
         } else if (mongoClient != null && mongoDatabase != null) {
 
-            List<Map<String, Object>> post_data = MongoReadCollectionNoSQL(table_posts, null, "id");
+            List<Map<String, Object>> post_data = MongoReadCollectionNoSQL(table_posts, null,
+                    false,"id");
             if (post_data == null) {
                 return false;
             }
@@ -1686,6 +1892,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean editPost(long sender_id, long post_id, String edited_tags,
                             String edited_msg, String given_background) {
         if (postgressql_connection != null || mysql_connection != null) {
@@ -1739,6 +1946,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateProfileBanner(long id, String given_banner) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1760,6 +1968,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateProfilePets(long id, String given_pets) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1781,6 +1990,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateProfileCoins(long id, int given_coins) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1802,6 +2012,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateProfileBadges(long id, String given_badges) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1824,6 +2035,7 @@ public class DatabaseManager {
         }
         return false;
     }
+
     public boolean updateProfileAnimations(long id, String given_animations) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
