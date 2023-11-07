@@ -1,23 +1,15 @@
 package jcorechat.app_api.database;
 
-import com.datastax.dse.driver.internal.core.graph.MultiPageGraphResultSet;
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
-import com.datastax.oss.driver.api.core.cql.ColumnDefinition;
-import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
-import com.datastax.oss.driver.api.core.cql.Row;
 import com.mongodb.client.*;
 import jcorechat.app_api.API;
 import org.bson.Document;
 
-import java.net.InetSocketAddress;
 import java.sql.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.CompletionStage;
 
 public class DatabaseManager {
 
@@ -51,15 +43,6 @@ public class DatabaseManager {
 
 
 
-    private final String scylladb_host = "129.152.4.113";
-
-    private final int scylladb_port = 9042;
-
-    private final String scylladb_datacenter = "datacenter1";
-
-    private CqlSession scylladb_session = null;
-
-
 
     public void setupPostgresSQL() {
         try {
@@ -75,7 +58,6 @@ public class DatabaseManager {
             accounts_table.add("session_id BIGINT UNIQUE, ");
             accounts_table.add("session_expire smallint, ");
             accounts_table.add("last_edit_time timestamp, ");
-            accounts_table.add("session_suspended VARCHAR(1) NOT NULL, ");
             accounts_table.add("created_at timestamp NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
             accounts_table.add("chat_groups TEXT NOT NULL ");
@@ -153,7 +135,6 @@ public class DatabaseManager {
             accounts_table.add("session_id BIGINT UNIQUE, ");
             accounts_table.add("session_expire SMALLINT, ");
             accounts_table.add("last_edit_time TIMESTAMP NULL, ");
-            accounts_table.add("session_suspended CHAR(1) NOT NULL, ");
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");
             accounts_table.add("friends LONGTEXT NOT NULL, ");
             accounts_table.add("chat_groups LONGTEXT NOT NULL ");
@@ -241,113 +222,6 @@ public class DatabaseManager {
         }
     }
 
-    public void setupScyllaDB() {
-        try {
-            scylladb_session = CqlSession.builder()
-                    .addContactPoint(new InetSocketAddress(scylladb_host, scylladb_port))
-                    .withLocalDatacenter(scylladb_datacenter).withKeyspace("jcorechat").build();
-            // Execute a simple query
-            // com.datastax.oss.driver.api.core.cql.ResultSet resultSet = scylladb_session.execute("SELECT * FROM system.local");
-
-            List<String> accounts_table = new ArrayList<>();
-            accounts_table.add("id UUID PRIMARY KEY, ");
-            accounts_table.add("name VARCHAR(20) UNIQUE, ");
-            accounts_table.add("email VARCHAR(50) UNIQUE, ");
-            accounts_table.add("password VARCHAR(100), ");
-            accounts_table.add("encryption_key VARCHAR(100) UNIQUE, ");
-            accounts_table.add("sign_key VARCHAR(100) UNIQUE, ");
-            accounts_table.add("session_id VARINT UNIQUE, ");
-            accounts_table.add("session_expire SMALLINT, ");
-            accounts_table.add("last_edit_time TIMESTAMP, ");
-            accounts_table.add("session_suspended VARCHAR(1), ");
-            accounts_table.add("created_at TIMESTAMP, ");
-            accounts_table.add("friends TEXT, ");
-            accounts_table.add("chat_groups TEXT ");
-
-            List<String> conversations_table = new ArrayList<>();
-            conversations_table.add("party_id VARINT, ");
-            conversations_table.add("party_id2 VARINT, ");
-            conversations_table.add("conv_id UUID PRIMARY KEY, ");
-            conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
-            conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
-
-            List<String> chats_table = new ArrayList<>();
-            chats_table.add("conv_id VARINT, ");
-            chats_table.add("msg VARCHAR(2000), ");
-            chats_table.add("sent_by VARINT, ");
-            chats_table.add("msg_id VARINT, ");
-            chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
-
-            List<String> captchas_table = new ArrayList<>();
-            captchas_table.add("id UUID PRIMARY KEY, ");
-            captchas_table.add("answer TEXT, ");
-            captchas_table.add("time SMALLINT, ");
-            captchas_table.add("last_edit_time TIMESTAMP, ");
-            captchas_table.add("failed SMALLINT");
-
-            List<String> posts_table = new ArrayList<>();
-            posts_table.add("id VARINT UUID PRIMARY KEY, ");
-            posts_table.add("sender_id VARINT, ");
-            posts_table.add("msg VARCHAR(200), ");
-            posts_table.add("tags VARCHAR(100), ");
-            posts_table.add("send_at TIMESTAMP, ");
-            posts_table.add("background TEXT, ");
-            posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
-
-            List<String> profiles_table = new ArrayList<>();
-            profiles_table.add("id VARINT, ");
-            profiles_table.add("pfp TEXT, ");
-            profiles_table.add("banner TEXT, ");
-            profiles_table.add("pets TEXT, ");
-            profiles_table.add("coins INT, ");
-            profiles_table.add("badges TEXT, ");
-            profiles_table.add("animations TEXT, ");
-            profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-            //deleteTableSQL(table_profiles);
-            //deleteTableSQL(table_posts);
-            //deleteTableSQL(table_chats);
-            //deleteTableSQL(table_captchas);
-            //deleteTableSQL(table_conversations);
-            //deleteTableSQL(table_accounts);
-
-            /*try {
-                scylladb_session.execute("DROP KEYSPACE IF EXISTS jcorechat;");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-
-            /*try {
-                scylladb_session.execute("CREATE KEYSPACE IF NOT EXISTS jcorechat WITH replication = {'class': 'NetworkTopologyStrategy'};");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }*/
-
-
-
-            //createTableSQL( table_accounts, accounts_table);
-            //createTableSQL( table_conversations, conversations_table);
-            //createTableSQL( table_captchas, captchas_table);
-            //createTableSQL( table_profiles, profiles_table);
-            //createTableSQL( table_posts, posts_table);
-            //createTableSQL( table_chats, chats_table);
-
-
-            ScyllaAddData(table_accounts,
-                    "id, name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, session_suspended, created_at, friends, chat_groups",
-                    "123e4567-e89b-12d3-a456-426655440000, 'Bob', 'test@email.com', 'TyiioG6856768G79H8', 'YGtf6rt7GY8HUJIOP', 'R6DTF7Gy8huoiuh7G6', 0, 0, '2023-06-11 15:55:55', 'f', '2023-06-11 15:55:55', '', ''");
-
-            API.logger.info(ScyllaReadResult(scylladb_session.executeAsync("SELECT * FROM accounts;"), false).toString());
-
-            ScyllaDeleteData(table_accounts, "name = 'Bob'");
-
-            API.logger.info(ScyllaReadResult(scylladb_session.executeAsync("SELECT * FROM accounts;"), false).toString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public void shutDown() {
         try {
             if (postgressql_connection != null) {
@@ -359,9 +233,6 @@ public class DatabaseManager {
             } else if (mongoClient != null) {
                 mongoClient.close();
 
-            } else if (scylladb_session != null) {
-                scylladb_session.close();
-
             }
         } catch (Exception e) {}
     }
@@ -369,35 +240,22 @@ public class DatabaseManager {
 
     @Deprecated
     private boolean createTableSQL(String table, List<String> colums) {
-        try {
-            if (postgressql_connection != null || mysql_connection != null) {
-                StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-                stringBuilder.append(table).append(" ( ");
-                if (colums != null) {
-                    for (String col : colums) {
-                        stringBuilder.append(col);
-                    }
-                }
-                getSQLConnection().prepareStatement(stringBuilder.append(" );").toString()).executeUpdate();
-                return true;
-
-            } else if (scylladb_session != null) {
-                StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-                stringBuilder.append(table).append(" ( ");
-                if (colums != null) {
-                    for (String col : colums) {
-                        stringBuilder.append(col);
-                    }
-                }
-                String g = stringBuilder.append(" );").toString();
-                API.logger.info(g);
-                scylladb_session.executeAsync(g);
-                return true;
-
-            }
+        if (postgressql_connection == null && mysql_connection == null) {
             return false;
+        }
+
+        try {
+            StringBuilder stringBuilder = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+            stringBuilder.append(table).append(" ( ");
+            if (colums != null) {
+                for (String col : colums) {
+                    stringBuilder.append(col);
+                }
+            }
+            getSQLConnection().prepareStatement(stringBuilder.append(" );").toString()).executeUpdate();
+            return true;
+
         } catch (Exception  e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -405,18 +263,16 @@ public class DatabaseManager {
 
     @Deprecated
     private boolean deleteTableSQL(String table) {
-        try {
-            if (postgressql_connection != null || mysql_connection != null) {
-                getSQLConnection().prepareStatement(new StringBuilder("DROP TABLE IF EXISTS ")
-                        .append(table).append(";").toString()).executeUpdate();
-                return true;
-
-            } else if (scylladb_session != null) {
-                scylladb_session.executeAsync(new StringBuilder("DROP TABLE IF EXISTS ")
-                        .append(table).append(";").toString());
-                return true;
-            }
+        if (postgressql_connection == null && mysql_connection == null) {
             return false;
+        }
+
+        try {
+
+            getSQLConnection().prepareStatement(new StringBuilder("DROP TABLE IF EXISTS ")
+                        .append(table).append(";").toString()).executeUpdate();
+            return true;
+
         } catch (Exception  e) {
             e.printStackTrace();
             return false;
@@ -551,6 +407,7 @@ public class DatabaseManager {
             return false;
         }
     }
+
     private boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc,
                                                          boolean toConcat, boolean toRemove) {
         if (mongoDatabase == null) {
@@ -670,6 +527,7 @@ public class DatabaseManager {
             return false;
         }
     }
+
     private boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, Document filter) {
         if (mongoDatabase == null) {
             return false;
@@ -694,72 +552,6 @@ public class DatabaseManager {
     }
 
 
-
-
-    private List<Map<String, Object>> ScyllaReadResult(CompletionStage<AsyncResultSet> result,
-                                                       boolean expectOne) {
-
-        List<Map<String, Object>> output = new ArrayList<>();
-        try {
-            AsyncResultSet asyncResultSet = result.toCompletableFuture().get();
-            Iterator<Row> rows = asyncResultSet.currentPage().iterator();
-            ColumnDefinitions columnDefinitions = asyncResultSet.getColumnDefinitions();
-
-            while (rows.hasNext()) {
-                Map<String, Object> resultRow = new HashMap<>();
-                if (expectOne && !output.isEmpty() && !output.get(0).isEmpty()) {
-                    break;
-                }
-
-                for (int i = 0; i < columnDefinitions.size(); i++) {
-                    resultRow.put(columnDefinitions.get(i).getName().asCql(true), rows.next().getObject(i));
-                }
-                output.add(resultRow);
-            }
-
-            return output;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-
-    }
-
-    private boolean ScyllaAddData(String table, String fields, String values) {
-        if (scylladb_session == null) {
-            return false;
-        }
-
-        try {
-            String g  = new StringBuilder("INSERT INTO ")
-                    .append(table).append(" (").append(fields).append(") VALUES (")
-                    .append(values).append(");").toString();
-
-            API.logger.info(g);
-
-            scylladb_session.executeAsync(g);
-
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    private boolean ScyllaDeleteData(String table, String condition) {
-        if (scylladb_session == null) {
-            return false;
-        }
-
-        try {
-            scylladb_session.executeAsync(new StringBuilder("USE jcorechat;\nDELETE FROM ").append(table).append(" WHERE ")
-                    .append(condition).append(";").toString());
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
 
 
@@ -976,8 +768,8 @@ public class DatabaseManager {
             account_details.add(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
 
             if (!addDataSQL(table_accounts,
-                        "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, session_suspended, created_at, friends, chat_groups",
-                        "?, ?, ?, ?, ?, NULL, NULL, NULL, 'f', ?, '', ''", account_details)) {
+                        "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, created_at, friends, chat_groups",
+                        "?, ?, ?, ?, ?, NULL, NULL, NULL, ?, '', ''", account_details)) {
                 return null;
             }
 
@@ -1051,9 +843,6 @@ public class DatabaseManager {
 
             return account_ID;
 
-        } else if (scylladb_session != null) {
-            return null;
-
         }
         return null;
     }
@@ -1073,9 +862,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("email", new_email), false, false);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1097,9 +883,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("password", new_password), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1119,9 +902,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("encryption_key", new_encryptino_key), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1140,9 +920,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("sign_key", new_sign_key), false, false);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1164,16 +941,11 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("session_id", session_id), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
 
     public boolean updateUserSessionExpire(long id)  {
-        if (isUserSessionSuspended(id)) { return false; }
-
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> account_where = new ArrayList<>();
             account_where.add(id);
@@ -1236,60 +1008,6 @@ public class DatabaseManager {
                                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))),
                     false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
-        }
-        return false;
-    }
-
-    public boolean changeUserSessionSuspended(long id, String stats) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> set_data = new ArrayList<>();
-            set_data.add(stats);
-
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            return editDataSQL(table_accounts,
-                    "session_suspended = ?", set_data,
-                    "id = ?", condition_data);
-
-        }  else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts,
-                    new Document("id", id), new Document("session_suspended", stats), false, false);
-
-        } else if (scylladb_session != null) {
-            return false;
-
-        }
-        return false;
-    }
-
-    private boolean isUserSessionSuspended(long id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-            // session_suspended
-
-            Map<String, List<Object>> data = getDataSQL(table_accounts, "session_suspended",
-                    "id = ?", condition_data, null, "", 0);
-
-            return data != null && !data.get("session_suspended").isEmpty() &&
-                    data.get("session_suspended").get(0).equals("t");
-
-        }  else if (mongoClient != null && mongoDatabase != null) {
-
-            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_accounts, new Document("id", id),
-                    true, "session_suspended");
-
-            return data != null && data.get(0).get("session_suspended") != null &&
-                    data.get(0).get("session_suspended").equals("t");
-
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1310,9 +1028,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("friends", "," + friend_id), true, false);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1335,9 +1050,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("friends", ","+friend_id), false, true);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1358,9 +1070,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("chat_groups", ","+group_id), true, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1380,9 +1089,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
                     new Document("chat_groups", ","+group_id), false, true);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1418,9 +1124,6 @@ public class DatabaseManager {
                     updateUserSessionExpire(Long.parseLong(String.valueOf(ids.get("id"))));
                 } catch (Exception e) {}
             }
-
-        } else if (scylladb_session != null) {
-
 
         }
     }
@@ -1461,9 +1164,6 @@ public class DatabaseManager {
 
             return MongoAddDataToCollectionNoSQL(table_conversations, new Document("conv_id", id)
                     .append("party_id", party_id).append("party_id2", party_id2), null) ? id : null;
-
-        } else if (scylladb_session != null) {
-            return null;
 
         }
         return null;
@@ -1552,9 +1252,6 @@ public class DatabaseManager {
                         convId, msg, true, false);
             }
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1585,9 +1282,6 @@ public class DatabaseManager {
 
             return result;
 
-        } else if (scylladb_session != null) {
-            return null;
-
         }
         return null;
     }
@@ -1605,9 +1299,6 @@ public class DatabaseManager {
 
             return MongoDeleteDataFromCollectionNoSQL(table_chats, new Document("conv_id", conv_id)
                     .append("msg_id", message_id).append("sent_by", sender_id));
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1652,9 +1343,6 @@ public class DatabaseManager {
                     .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()
                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("failed", 0),
                     null) ? id : null;
-
-        } else if (scylladb_session != null) {
-            return null;
 
         }
         return null;
@@ -1728,9 +1416,6 @@ public class DatabaseManager {
 
             }
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1791,9 +1476,6 @@ public class DatabaseManager {
                             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                             .append("time", time), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1827,9 +1509,6 @@ public class DatabaseManager {
                     updateCaptchaTime(Long.parseLong(String.valueOf(ids.get("id"))));
                 } catch (Exception e) {}
             }
-
-        } else if (scylladb_session != null) {
-
 
         }
     }
@@ -1866,9 +1545,6 @@ public class DatabaseManager {
                             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
                     .append("background", background), null);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1885,9 +1561,6 @@ public class DatabaseManager {
 
             return MongoDeleteDataFromCollectionNoSQL(table_posts, new Document("id", post_id)
                     .append("sender_id", sender_id));
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1915,9 +1588,6 @@ public class DatabaseManager {
                     .append("tags", edited_tags).append("background", given_background), false,
                     false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1940,9 +1610,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("pfp", given_pfp), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -1961,9 +1628,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("banner", given_banner), false, false);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -1984,9 +1648,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("pets", given_pets), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -2005,9 +1666,6 @@ public class DatabaseManager {
 
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("coins", given_coins), false, false);
-
-        } else if (scylladb_session != null) {
-            return false;
 
         }
         return false;
@@ -2029,9 +1687,6 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("badges", given_badges), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
@@ -2052,52 +1707,11 @@ public class DatabaseManager {
             return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
                     new Document("animations", given_animations), false, false);
 
-        } else if (scylladb_session != null) {
-            return false;
-
         }
         return false;
     }
 
 
 
-
-
-    @Deprecated
-    public boolean deleteUser(long id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-
-            List<Object> data = new ArrayList<>();
-
-            data.add(id);
-
-            if (!deleteDataSQL(table_accounts, "id = ?", data)) {
-                return false;
-            }
-            if (!deleteDataSQL(table_profiles, "id = ?", data)) {
-                return false;
-            }
-
-            data.clear();
-            data.add(id);
-            if (!deleteDataSQL(table_posts, "sender_id = ?", data)) {
-                return false;
-            }
-
-            data.clear();
-            data.add(id);
-            data.add(id);
-            return deleteDataSQL(table_chats, "id = ? OR id2 = ?", data);
-
-        } else if (mongoClient != null) {
-            return false;
-
-        } else if (scylladb_session != null) {
-            return false;
-
-        }
-        return false;
-
-    }
 
 }

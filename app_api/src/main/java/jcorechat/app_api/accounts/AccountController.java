@@ -3,7 +3,10 @@ package jcorechat.app_api.accounts;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.API;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;

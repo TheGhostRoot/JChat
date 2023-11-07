@@ -1,45 +1,45 @@
 
 ~
-java:S2629"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(±¹Ô²ÿÿÿÿÿ8«š‘¶1
-~	java:S116"]Rename this field "AlphaNumericString" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÜğşÿÿÿÿÿ8Ûš‘¶1
-w	java:S116"[Rename this field "GlobalSECRET_KEY" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(úö„Ï8Ûš‘¶1
-{	java:S116"ZRename this field "GlobalSignInKey" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ìû‹ ıÿÿÿÿ8Ûš‘¶1
+java:S2629"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(±¹Ô²ÿÿÿÿÿ8«š‘¶1
+~	java:S116"]Rename this field "AlphaNumericString" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÜğşÿÿÿÿÿ8Ûš‘¶1
+w	java:S116"[Rename this field "GlobalSECRET_KEY" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(úö„Ï8Ûš‘¶1
+{	java:S116"ZRename this field "GlobalSignInKey" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ìû‹ ıÿÿÿÿ8Ûš‘¶1
 C
-java:S1170"!Make this final field static too.(ÖÜğşÿÿÿÿÿ8Üš‘¶1
+java:S1170"!Make this final field static too.(ÖÜğşÿÿÿÿÿ8Üš‘¶1
 >
-java:S1170"!Make this final field static too.(úö„Ï8Üš‘¶1
+java:S1170"!Make this final field static too.(úö„Ï8Üš‘¶1
 c
-java:S3457"AFormat specifiers should be used instead of string concatenation.(±¹Ô²ÿÿÿÿÿ8äš‘¶1
+java:S3457"AFormat specifiers should be used instead of string concatenation.(±¹Ô²ÿÿÿÿÿ8äš‘¶1
 A
-java:S1168""$Return an empty map instead of null.(ñÆ†­8êš‘¶1
+java:S1168'"$Return an empty map instead of null.(ñÆ†­8êš‘¶1
 N
-java:S1905&",Remove this unnecessary cast to "SecretKey".(µ­¶‡ÿÿÿÿÿ8ëš‘¶1
+java:S1905+",Remove this unnecessary cast to "SecretKey".(µ­¶‡ÿÿÿÿÿ8ëš‘¶1
 A
-java:S11681"$Return an empty map instead of null.(ñÆ†­8îš‘¶1
+java:S11686"$Return an empty map instead of null.(ñÆ†­8îš‘¶1
 R
-java:S1874B"0Remove this use of "signWith"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
+java:S1874G"0Remove this use of "signWith"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
 \
-java:S1874B":Remove this use of "SignatureAlgorithm"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
+java:S1874G":Remove this use of "SignatureAlgorithm"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
 \
-java:S1874B":Remove this use of "SignatureAlgorithm"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
+java:S1874G":Remove this use of "SignatureAlgorithm"; it is deprecated.(ãÄ±Ïúÿÿÿÿ8ôš‘¶1
 M
-java:S1874E"0Remove this use of "signWith"; it is deprecated.(Ş²ğ–8öš‘¶1
+java:S1874J"0Remove this use of "signWith"; it is deprecated.(Ş²ğ–8öš‘¶1
 W
-java:S1874E":Remove this use of "SignatureAlgorithm"; it is deprecated.(Ş²ğ–8÷š‘¶1
+java:S1874J":Remove this use of "SignatureAlgorithm"; it is deprecated.(Ş²ğ–8÷š‘¶1
 W
-java:S1874E":Remove this use of "SignatureAlgorithm"; it is deprecated.(Ş²ğ–8÷š‘¶1
+java:S1874J":Remove this use of "SignatureAlgorithm"; it is deprecated.(Ş²ğ–8÷š‘¶1
 M
-java:S1874N"0Remove this use of "signWith"; it is deprecated.(òŞ½·8úš‘¶1
+java:S1874S"0Remove this use of "signWith"; it is deprecated.(òŞ½·8úš‘¶1
 W
-java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ûš‘¶1
+java:S1874S":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ûš‘¶1
 W
-java:S1874N":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ûš‘¶1
+java:S1874S":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ûš‘¶1
 M
-java:S1874Q"0Remove this use of "signWith"; it is deprecated.(òŞ½·8şš‘¶1
+java:S1874V"0Remove this use of "signWith"; it is deprecated.(òŞ½·8şš‘¶1
 W
-java:S1874Q":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ÿš‘¶1
+java:S1874V":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ÿš‘¶1
 W
-java:S1874Q":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ÿš‘¶1
-X	java:S125["<This block of commented-out lines of code should be removed.(«øé8ƒš‘¶1
+java:S1874V":Remove this use of "SignatureAlgorithm"; it is deprecated.(òŞ½·8ÿš‘¶1
+X	java:S125`"<This block of commented-out lines of code should be removed.(«øé8ƒš‘¶1
 5
-java:S2140\"Use "nextInt()" instead.(®ŸÓ 8„š‘¶1
+java:S2140a"Use "nextInt()" instead.(®ŸÓ 8„š‘¶1

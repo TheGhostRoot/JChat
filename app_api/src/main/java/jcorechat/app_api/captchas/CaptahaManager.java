@@ -2,7 +2,9 @@ package jcorechat.app_api.captchas;
 
 import jcorechat.app_api.API;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class CaptahaManager {
 
