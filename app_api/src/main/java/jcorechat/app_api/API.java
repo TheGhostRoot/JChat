@@ -4,6 +4,7 @@ package jcorechat.app_api;
 import jakarta.servlet.http.HttpServletRequest;
 import jcorechat.app_api.accounts.AccountManager;
 import jcorechat.app_api.captchas.CaptahaManager;
+import jcorechat.app_api.database.DatabaseHandler;
 import jcorechat.app_api.database.DatabaseManager;
 import jcorechat.app_api.security.Cription;
 import jcorechat.app_api.security.JwtService;
@@ -36,6 +37,8 @@ public class API {
     public static CaptahaManager captahaManager;
 
     public static DatabaseManager databaseManager;
+
+    public static DatabaseHandler databaseHandler;
 
     // user id : email
     public static HashMap<Long, String> emails = new HashMap<>();
@@ -120,7 +123,9 @@ public class API {
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
 
-        databaseManager.setupScyllaDB();
+        databaseManager.setupMySQL();
+
+        databaseHandler = new DatabaseHandler(databaseManager);
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {

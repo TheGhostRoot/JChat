@@ -3035,3 +3035,5 @@ u
 Eapp_api/src/main/java/jcorechat/app_api/updates/UpdateController.java,3\4\342040b9d7b09e2cc94b3dc4cb4d9086a6bb8f64
 r
 Bapp_api/src/main/java/jcorechat/app_api/updates/UpdateManager.java,7\6\765ab344fc92fb77f4aead51e9e50ef9804c138e
+u
+Eapp_api/src/main/java/jcorechat/app_api/database/DatabaseHandler.java,8\e\8e8422eac96ed6bca014ea3a9ec470d56feab6e7

@@ -7,38 +7,39 @@ import org.bson.Document;
 import java.sql.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class DatabaseManager {
 
     protected static final String table_accounts = "accounts";
     protected static final String table_chats = "chats";
+    protected static final String table_groups = "chat_groups";
+    protected static final String table_group_content = "chat_group_content";
     protected static final String table_captchas = "captchas";
     protected static final String table_posts = "posts";
     protected static final String table_profiles = "profiles";
-    protected static final String table_conversations = "conversations";
 
 
-    private final String postgressql_url = "jdbc:postgresql://localhost:5433/jcorechat-db";
-    private final String postgressql_username = "jcorechat";
-    private final String postgressql_password = "app_api";
-    private Connection postgressql_connection = null;
+    protected final String postgressql_url = "jdbc:postgresql://localhost:5433/jcorechat-db";
+    protected final String postgressql_username = "jcorechat";
+    protected final String postgressql_password = "app_api";
+    protected Connection postgressql_connection = null;
 
 
-    private final String mysql_url = "jdbc:mysql://localhost:3306/jcorechat";
-    private final String mysql_username = "jcorechat";
-    private final String mysql_password = "JCCpwd123";
-    public Connection mysql_connection = null;
+    protected final String mysql_url = "jdbc:mysql://localhost:3306/jcorechat";
+    protected final String mysql_username = "jcorechat";
+    protected final String mysql_password = "JCCpwd123";
+    protected Connection mysql_connection = null;
 
 
 
 
-    private final String mongo_database = "jcorechat";
-    private final String mongo_url = "mongodb://localhost:27017";
-    private MongoDatabase mongoDatabase = null;
-    private MongoClient mongoClient = null;
+    protected final String mongo_database = "jcorechat";
+    protected final String mongo_url = "mongodb://localhost:27017";
+    protected MongoDatabase mongoDatabase = null;
+    protected MongoClient mongoClient = null;
+
+
 
 
 
@@ -60,22 +61,29 @@ public class DatabaseManager {
             accounts_table.add("last_edit_time timestamp, ");
             accounts_table.add("created_at timestamp NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
-            accounts_table.add("chat_groups TEXT NOT NULL ");
-
-            List<String> conversations_table = new ArrayList<>();
-            conversations_table.add("party_id BIGINT NOT NULL, ");
-            conversations_table.add("party_id2 BIGINT NOT NULL, ");
-            conversations_table.add("conv_id BIGINT PRIMARY KEY NOT NULL, ");
-            conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
-            conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
-
+            accounts_table.add("chat_groups_ TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
-            chats_table.add("conv_id BIGINT NOT NULL, ");
+            chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
+            chats_table.add("send_at timestamp NOT NULL, ");
             chats_table.add("sent_by BIGINT NOT NULL, ");
-            chats_table.add("msg_id BIGINT NOT NULL, ");
-            chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
+            chats_table.add("msg_id BIGINT NOT NULL");
+            chats_table.add("FOREIGN KEY (sent_by) REFERENCES accounts(id)");
+
+            List<String> group_table = new ArrayList<>();
+            group_table.add("id BIGINT PRIMARY KEY, ");
+            group_table.add("name VARCHAR(50), ");
+            group_table.add("logo TEXT, ");
+            group_table.add("banner TEXT, ");
+            group_table.add("animations TEXT");
+
+            List<String> group_content_table = new ArrayList<>();
+            group_content_table.add("group_id BIGINT, ");
+            group_content_table.add("member_id BIGINT, ");
+            group_content_table.add("channel_id BIGINT, ");
+            group_content_table.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+            group_content_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
             captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
@@ -87,10 +95,9 @@ public class DatabaseManager {
             List<String> posts_table = new ArrayList<>();
             posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
             posts_table.add("sender_id BIGINT NOT NULL, ");
-            posts_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_table.add("tags VARCHAT(100) NOT NULL, ");
             posts_table.add("send_at timestamp NOT NULL, ");
-            posts_table.add("background TEXT, ");
+            posts_table.add("msg VARCHAR(200) NOT NULL, ");
+            posts_table.add("background TEXT NOT NULL, ");
             posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
 
             List<String> profiles_table = new ArrayList<>();
@@ -105,17 +112,20 @@ public class DatabaseManager {
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_posts);
+            deleteTableSQL(table_group_content);
+            deleteTableSQL(table_groups);
             deleteTableSQL(table_chats);
             deleteTableSQL(table_captchas);
-            deleteTableSQL(table_conversations);
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
-            createTableSQL( table_conversations, conversations_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
             createTableSQL( table_posts, posts_table);
             createTableSQL( table_chats, chats_table);
+            createTableSQL(table_groups, group_table);
+            createTableSQL(table_group_content, group_content_table);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,22 +146,30 @@ public class DatabaseManager {
             accounts_table.add("session_expire SMALLINT, ");
             accounts_table.add("last_edit_time TIMESTAMP NULL, ");
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");
-            accounts_table.add("friends LONGTEXT NOT NULL, ");
-            accounts_table.add("chat_groups LONGTEXT NOT NULL ");
-
-            List<String> conversations_table = new ArrayList<>();
-            conversations_table.add("party_id BIGINT NOT NULL, ");
-            conversations_table.add("party_id2 BIGINT NOT NULL, ");
-            conversations_table.add("conv_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            conversations_table.add("FOREIGN KEY (party_id) REFERENCES accounts(id), ");
-            conversations_table.add("FOREIGN KEY (party_id2) REFERENCES accounts(id)");
+            accounts_table.add("friends TEXT NOT NULL, ");
+            accounts_table.add("chat_groups_ TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
-            chats_table.add("conv_id BIGINT NOT NULL, ");
+            chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
+            chats_table.add("send_at TIMESTAMP NOT NULL, ");
             chats_table.add("sent_by BIGINT NOT NULL, ");
             chats_table.add("msg_id BIGINT NOT NULL, ");
-            chats_table.add("FOREIGN KEY (conv_id) REFERENCES conversations(conv_id)");
+            chats_table.add("FOREIGN KEY (sent_by) REFERENCES accounts(id)");
+
+            List<String> group_table = new ArrayList<>();
+            group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+            group_table.add("name VARCHAR(50) NOT NULL, ");
+            group_table.add("logo TEXT NOT NULL, ");
+            group_table.add("banner TEXT NOT NULL, ");
+            group_table.add("animations TEXT NOT NULL");
+
+            List<String> group_content_table = new ArrayList<>();
+            group_content_table.add("group_id BIGINT, ");
+            group_content_table.add("member_id BIGINT, ");
+            group_content_table.add("channel_id BIGINT, ");
+            group_content_table.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+            group_content_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
             captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -163,9 +181,8 @@ public class DatabaseManager {
             List<String> posts_table = new ArrayList<>();
             posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             posts_table.add("sender_id BIGINT NOT NULL, ");
-            posts_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_table.add("tags VARCHAR(100) NOT NULL, ");
             posts_table.add("send_at TIMESTAMP NOT NULL, ");
+            posts_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_table.add("background TEXT NULL, ");
             posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
 
@@ -181,17 +198,19 @@ public class DatabaseManager {
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_posts);
+            deleteTableSQL(table_group_content);
+            deleteTableSQL(table_groups);
             deleteTableSQL(table_chats);
             deleteTableSQL(table_captchas);
-            deleteTableSQL(table_conversations);
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
-            createTableSQL( table_conversations, conversations_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
             createTableSQL( table_posts, posts_table);
             createTableSQL( table_chats, chats_table);
+            createTableSQL(table_groups, group_table);
+            createTableSQL(table_group_content, group_content_table);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -204,23 +223,25 @@ public class DatabaseManager {
             mongoDatabase = mongoClient.getDatabase(mongo_database);
 
             MongoDeleteCollectionNoSQL(table_accounts);
-            MongoDeleteCollectionNoSQL(table_conversations);
             MongoDeleteCollectionNoSQL(table_profiles);
             MongoDeleteCollectionNoSQL(table_captchas);
             MongoDeleteCollectionNoSQL(table_chats);
             MongoDeleteCollectionNoSQL(table_posts);
+            MongoDeleteCollectionNoSQL(table_groups);
+
 
             MongoCreateCollectionNoSQL(table_accounts);
-            MongoCreateCollectionNoSQL(table_conversations);
             MongoCreateCollectionNoSQL(table_profiles);
             MongoCreateCollectionNoSQL(table_captchas);
             MongoCreateCollectionNoSQL(table_chats);
             MongoCreateCollectionNoSQL(table_posts);
+            MongoCreateCollectionNoSQL(table_groups);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
     public void shutDown() {
         try {
@@ -239,7 +260,7 @@ public class DatabaseManager {
 
 
     @Deprecated
-    private boolean createTableSQL(String table, List<String> colums) {
+    protected boolean createTableSQL(String table, List<String> colums) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
         }
@@ -252,6 +273,7 @@ public class DatabaseManager {
                     stringBuilder.append(col);
                 }
             }
+
             getSQLConnection().prepareStatement(stringBuilder.append(" );").toString()).executeUpdate();
             return true;
 
@@ -262,19 +284,18 @@ public class DatabaseManager {
 
 
     @Deprecated
-    private boolean deleteTableSQL(String table) {
+    protected boolean deleteTableSQL(String table) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
         }
 
         try {
-
             getSQLConnection().prepareStatement(new StringBuilder("DROP TABLE IF EXISTS ")
-                        .append(table).append(";").toString()).executeUpdate();
+                    .append(table).append(";").toString()).executeUpdate();
+
             return true;
 
         } catch (Exception  e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -283,7 +304,7 @@ public class DatabaseManager {
 
 
     @Deprecated
-    private boolean MongoCreateCollectionNoSQL(String collectionName) {
+    protected boolean MongoCreateCollectionNoSQL(String collectionName) {
         if (mongoDatabase == null) {
             return false;
         }
@@ -296,7 +317,7 @@ public class DatabaseManager {
         }
     }
     @Deprecated
-    private boolean MongoDeleteCollectionNoSQL(String collectionName) {
+    protected boolean MongoDeleteCollectionNoSQL(String collectionName) {
         if (mongoDatabase == null) {
             return false;
         }
@@ -310,8 +331,8 @@ public class DatabaseManager {
         }
     }
 
-    private List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
-                                                               boolean expectOne, String... filters) {
+    protected List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
+                                                       boolean expectOne, String... filters) {
         if (mongoDatabase == null) {
             return null;
         }
@@ -377,7 +398,7 @@ public class DatabaseManager {
         return result;
     }
 
-    private HashMap<String, Object> FilterHandler(HashMap<String, Object> data_to_add, Document next, List<String> filter_list) {
+    protected HashMap<String, Object> FilterHandler(HashMap<String, Object> data_to_add, Document next, List<String> filter_list) {
         for (Map.Entry<String, Object> entry : next.entrySet()) {
             if (filter_list.contains(entry.getKey())) {
                 data_to_add.put(entry.getKey(), entry.getValue());
@@ -386,7 +407,7 @@ public class DatabaseManager {
         return data_to_add;
     }
 
-    private boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document, Document condition) {
+    protected boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document, Document condition) {
         try {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
 
@@ -408,16 +429,16 @@ public class DatabaseManager {
         }
     }
 
-    private boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc,
-                                                         boolean toConcat, boolean toRemove) {
+    protected boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc) {
         if (mongoDatabase == null) {
             return false;
         }
 
         try {
 
-            Document update = new Document("$set", updatedDoc);
+            //Document update = new Document("$set", updatedDoc);
 
+            /*
             if (toConcat) {
                 List<Document> docs = new ArrayList<>();
                 for (Map.Entry<String, Object> entry: updatedDoc.entrySet()) {
@@ -520,7 +541,9 @@ public class DatabaseManager {
 
             }
 
-            mongoDatabase.getCollection(collectionName).updateMany(filter, update);
+             */
+
+            mongoDatabase.getCollection(collectionName).updateMany(filter, new Document("$set", updatedDoc));
             return true;
 
         } catch (Exception e) {
@@ -528,7 +551,7 @@ public class DatabaseManager {
         }
     }
 
-    private boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, Document filter) {
+    protected boolean MongoDeleteDataFromCollectionNoSQL(String collectionName, Document filter) {
         if (mongoDatabase == null) {
             return false;
         }
@@ -541,7 +564,7 @@ public class DatabaseManager {
         }
     }
 
-    private long MongoGenerateID(List<Map<String, Object>> post_data) {
+    protected long MongoGenerateID(List<Map<String, Object>> post_data) {
         List<Object> all_posts = new ArrayList<>();
 
         for (Map<String, Object> data : post_data) {
@@ -556,7 +579,7 @@ public class DatabaseManager {
 
 
 
-    private Map<String, List<Object>> readOutputSQL(ResultSet resultSet) {
+    protected Map<String, List<Object>> readOutputSQL(ResultSet resultSet) {
         Map<String, List<Object>> result = new HashMap<>();
 
         if (null == resultSet) {
@@ -583,7 +606,7 @@ public class DatabaseManager {
         }
     }
 
-    private List<Object> setDataSQL(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
+    protected List<Object> setDataSQL(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
             throws SQLException {
         List<Object> list = new ArrayList<>();
 
@@ -619,7 +642,7 @@ public class DatabaseManager {
         return list;
     }
 
-    private boolean deleteDataSQL(String table, String condition, List<Object> conditionData) {
+    protected boolean deleteDataSQL(String table, String condition, List<Object> conditionData) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
         }
@@ -634,7 +657,7 @@ public class DatabaseManager {
         }
     }
 
-    private boolean addDataSQL(String table, String fields, String values, List<Object> data) {
+    protected boolean addDataSQL(String table, String fields, String values, List<Object> data) {
 
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
@@ -655,7 +678,7 @@ public class DatabaseManager {
 
     }
 
-    private boolean editDataSQL(String table, String set_expression,
+    protected boolean editDataSQL(String table, String set_expression,
                                       List<Object> set_data, String condition, List<Object> conditionData) {
         if (postgressql_connection == null && mysql_connection == null) {
             return false;
@@ -674,7 +697,7 @@ public class DatabaseManager {
         }
     }
 
-    private Map<String, List<Object>> getDataSQL(String table, String data_to_get, String condition,
+    protected Map<String, List<Object>> getDataSQL(String table, String data_to_get, String condition,
                                               List<Object> conditionData, Map<String, List<Object>> join_data,
                                               String order, int limit) {
 
@@ -728,15 +751,15 @@ public class DatabaseManager {
 
 
 
-    private long generateID(List<Object> toContain) {
+    protected long generateID(List<Object> toContain) {
         long id = 1L;
-        while (toContain.contains(id)) {
+        while (toContain.contains(id) || id == 0L) {
             id = API.random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
         }
         return id;
     }
 
-    public boolean isOneSecondAgo(Timestamp last_edit_time) {
+    protected boolean isOneSecondAgo(Timestamp last_edit_time) {
         try {
 
             return Duration.between(last_edit_time.toInstant(),
@@ -746,7 +769,7 @@ public class DatabaseManager {
 
     }
 
-    private Connection getSQLConnection() {
+    protected Connection getSQLConnection() {
         return postgressql_connection != null ? postgressql_connection :
                 mysql_connection;
     }
@@ -754,962 +777,6 @@ public class DatabaseManager {
 
 
 
-
-
-
-    public Long createUser(String name, String email, String password, String encryption_key, String sign_key) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_details = new ArrayList<>();
-            account_details.add(name);
-            account_details.add(email);
-            account_details.add(password);
-            account_details.add(encryption_key);
-            account_details.add(sign_key);
-            account_details.add(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
-
-            if (!addDataSQL(table_accounts,
-                        "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, created_at, friends, chat_groups",
-                        "?, ?, ?, ?, ?, NULL, NULL, NULL, ?, '', ''", account_details)) {
-                return null;
-            }
-
-
-            List<Object> search_condition = new ArrayList<>();
-            search_condition.add(email);
-
-            Map<String, List<Object>> account_data = getDataSQL(
-                    table_accounts, "id",
-                    "email = ?", search_condition, null, "", 0);
-
-            if (account_data == null || account_data.isEmpty()) {
-                return null;
-            }
-
-            List<Object> profile_details = new ArrayList<>();
-            long id = (long) account_data.get("id").get(0);
-            profile_details.add(id);
-
-            if (!addDataSQL(table_profiles, "id, pfp, banner, pets, coins, badges, animations",
-                    "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) {
-
-                deleteDataSQL(table_accounts, "id = ?", profile_details);
-                return null;
-            }
-
-            return id;
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> accounts_id_data = MongoReadCollectionNoSQL(table_accounts, null,
-                    false, "id", "name", "email");
-
-            if (accounts_id_data == null) {
-                return null;
-            }
-
-            List<Object> all_ids = new ArrayList<>();
-
-            for (Map<String, Object> map : accounts_id_data) {
-                if (map.get("name").equals(name) || map.get("email").equals(email)) {
-                    return null;
-                }
-                if (map.containsKey("id")) {
-                    all_ids.add(map.get("id"));
-                }
-            }
-
-            long account_ID = generateID(all_ids);
-
-            if (!MongoAddDataToCollectionNoSQL(table_accounts, new Document("id", account_ID).append("name", name)
-                    .append("email", email).append("password", password)
-                    .append("encryption_key", encryption_key).append("sign_key", sign_key)
-                    .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
-                    .append("session_suspended", "f")
-                    .append("created_at", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                    .append("friends", "").append("chat_groups", ""), null)) {
-
-                return null;
-            }
-
-            if (!MongoAddDataToCollectionNoSQL(table_profiles, new Document("id", account_ID)
-                    .append("pfp", "Default Pic").append("banner", "Default Banner")
-                    .append("pets", null).append("coins", 0).append("badges", "No badges")
-                            .append("animations", null), null)) {
-
-
-                MongoDeleteDataFromCollectionNoSQL(table_accounts, new Document("id", account_ID));
-                return null;
-            }
-
-
-            return account_ID;
-
-        }
-        return null;
-    }
-
-    public boolean changeUserEmail(long id, String new_email) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(new_email);
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            return editDataSQL(table_accounts, "email = ?", account_set,
-                    "id = ?", account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("email", new_email), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean changeUserPassword(long id, String new_password) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(new_password);
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            return editDataSQL(table_accounts, "password = ?", account_set,
-                    "id = ?", account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("password", new_password), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean changeUserEncryptionKey(long id, String new_encryptino_key) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(new_encryptino_key);
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            return editDataSQL(table_accounts, "encryption_key = ?", account_set,
-                    "id = ?", account_where);
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("encryption_key", new_encryptino_key), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean changeUserSignKey(long id, String new_sign_key) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(new_sign_key);
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            return editDataSQL(table_accounts, "sign_key = ?", account_set,
-                    "id = ?", account_where);
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("sign_key", new_sign_key), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean changeUserSessionID(long id, long session_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(session_id);
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            return editDataSQL(table_accounts, "session_id = ?", account_set,
-                    "id = ?", account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("session_id", session_id), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateUserSessionExpire(long id)  {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            Map<String, List<Object>> sess_data = getDataSQL(table_accounts, "last_edit_time, session_expire",
-                    "id = ?", account_where, null, "", 0);
-
-            if (sess_data == null || (sess_data.get("last_edit_time").isEmpty() ||
-                    Objects.equals(String.valueOf(sess_data.get("last_edit_time").get(0)), "null")) ||
-                    (sess_data.get("session_expire").isEmpty() ||
-                    Objects.equals(String.valueOf(sess_data.get("session_expire").get(0)), "null")) ||
-                    !isOneSecondAgo(Timestamp.valueOf(String.valueOf(sess_data.get("last_edit_time").get(0))))) {
-
-                return false;
-            }
-
-            if (((short) sess_data.get("session_expire").get(0)) <= 0) {
-                // session expired. END IT
-                return editDataSQL(table_accounts,
-                        "session_expire = NULL, session_id = NULL, last_edit_time = NULL",
-                        null, "id = ?", account_where);
-            }
-
-            List<Object> account_set = new ArrayList<>();
-            account_set.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-
-            return editDataSQL(table_accounts,
-                    "last_edit_time = ?, session_expire = session_expire - 1", account_set,
-                    "id = ?", account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            Document filter = new Document("id", id);
-
-            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts, filter, true,
-                    "last_edit_time", "session_expire");
-
-            if (account_data == null || account_data.get(0).get("last_edit_time") == null ||
-                    account_data.get(0).get("session_expire") == null ||
-                    !isOneSecondAgo(Timestamp.valueOf(String.valueOf(account_data.get(0).get("last_edit_time"))))) {
-
-                return false;
-            }
-
-            Map<String, Object> data = account_data.get(0);
-
-            short sessionExpire = Short.valueOf(String.valueOf(data.get("session_expire")));
-
-            if (sessionExpire <= 0) {
-                // remove the session
-                return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
-                        new Document("session_expire", null).append("last_edit_time", null)
-                                .append("session_id", null), false, false);
-            }
-
-            sessionExpire--;
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, filter,
-                    new Document("session_expire", sessionExpire)
-                            .append("last_edit_time",
-                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))),
-                    false, false);
-
-        }
-        return false;
-    }
-
-    public boolean addUserFriend(long id, long friend_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_friends = new ArrayList<>();
-            account_friends.add("," + friend_id);
-
-            return editDataSQL(table_accounts,
-                    postgressql_connection != null ? "friends = friends || ?" : "friends = CONCAT(friends, ?)",
-                    account_friends, "id = ?", account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("friends", "," + friend_id), true, false);
-
-        }
-        return false;
-    }
-
-    public boolean removeUserFriend(long id, long friend_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_friends = new ArrayList<>();
-            account_friends.add("," + friend_id);
-
-            return editDataSQL(table_accounts,
-                    "friends = REPLACE(friends, ?, '')", account_friends,"id = ?",
-                    account_where);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("friends", ","+friend_id), false, true);
-
-        }
-        return false;
-    }
-
-    public boolean addUserGroup(long id, long group_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_friends = new ArrayList<>();
-            account_friends.add("," + group_id);
-
-            return editDataSQL(table_accounts,
-                    postgressql_connection != null ? "chat_groups = chat_groups || ?" :
-                            "chat_groups = CONCAT(chat_groups, ?)", account_friends,"id = ?", account_where);
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("chat_groups", ","+group_id), true, false);
-
-        }
-        return false;
-    }
-
-    public boolean removeUserGroup(long id, long group_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_friends = new ArrayList<>();
-            account_friends.add("," + group_id);
-
-            return editDataSQL(table_accounts,
-                    "groups = REPLACE(groups, ?, '')", account_friends,
-                    "id = ?", account_where);
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_accounts, new Document("id", id),
-                    new Document("chat_groups", ","+group_id), false, true);
-
-        }
-        return false;
-    }
-
-    public void handleSessions() {
-        if (postgressql_connection != null || mysql_connection != null) {
-            Map<String, List<Object>> account_data = getDataSQL(table_accounts, "id", "",
-                    null, null, "", 0);
-
-            if (account_data == null) {
-                return;
-            }
-
-            for (Object account_id : account_data.get("id")) {
-                try {
-                    updateUserSessionExpire(Long.parseLong(String.valueOf(account_id)));
-                } catch (Exception e) {}
-            }
-
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            List<Map<String, Object>> account_data = MongoReadCollectionNoSQL(table_accounts,
-                    null,  false,"");
-
-            if (account_data == null) {
-                return;
-            }
-
-            for (Map<String, Object> ids : account_data) {
-                try {
-                    updateUserSessionExpire(Long.parseLong(String.valueOf(ids.get("id"))));
-                } catch (Exception e) {}
-            }
-
-        }
-    }
-
-
-
-
-
-    public Long createConvID(long party_id, long party_id2) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> set_data = new ArrayList<>();
-            set_data.add(party_id);
-            set_data.add(party_id2);
-
-            Map<String, List<Object>> conv_data = getDataSQL(table_conversations, "conv_id", "",
-                    null, null, "", 0);
-
-            if (conv_data == null) {
-                return null;
-            }
-
-            long id = generateID(conv_data.get("conv_id"));
-
-            set_data.add(id);
-            return addDataSQL(table_conversations, "party_id, party_id2, conv_id",
-                    "?, ?, ?", set_data) ?
-                    id : null;
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> conv_data = MongoReadCollectionNoSQL(table_conversations, null,
-                    false, "conv_id");
-
-            if (conv_data == null) {
-                return null;
-            }
-
-            long id = MongoGenerateID(conv_data);
-
-            return MongoAddDataToCollectionNoSQL(table_conversations, new Document("conv_id", id)
-                    .append("party_id", party_id).append("party_id2", party_id2), null) ? id : null;
-
-        }
-        return null;
-    }
-
-    public boolean addMessage(long conv_id, long sender_id, String message) {
-        String message_value = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) +
-                "|" +
-                message;
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> edit_condition_data = new ArrayList<>();
-            edit_condition_data.add(conv_id);
-
-            Map<String, List<Object>> current_chat_data = getDataSQL(table_chats,"msg, msg_id",
-                    "conv_id = ?",
-                    edit_condition_data, null, "", 0);
-
-            if (current_chat_data == null) {
-                return false;
-            }
-
-            List<Object> chat_data = new ArrayList<>();
-            chat_data.add(conv_id);
-            chat_data.add(message_value);
-            chat_data.add(sender_id);
-            chat_data.add(generateID(current_chat_data.get("msg_id")));
-
-            List<Object> set_data = new ArrayList<>();
-            set_data.add(message);
-
-            edit_condition_data.add(sender_id);
-
-            if (current_chat_data.get("msg").isEmpty() ||
-                    (!editDataSQL(table_chats, "msg = msg || ?", set_data,"conv_id = ? AND sent_by = ?",
-                            edit_condition_data))) {
-
-                return addDataSQL(table_chats, "conv_id, msg, sent_by, msg_id","?, ?, ?, ?", chat_data);
-
-            } else {
-                return true;
-            }
-        } else if (mongoClient != null && mongoDatabase != null) {
-            Document convId = new Document("conv_id", conv_id);
-            List<Map<String, Object>> chat_data = MongoReadCollectionNoSQL(table_chats,
-                    convId, false, "msg_id");
-
-            if (chat_data == null) {
-                return false;
-            }
-
-            Document msg = new Document("msg", message_value);
-
-            if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
-
-                return MongoAddDataToCollectionNoSQL(table_chats, msg.append("conv_id", conv_id)
-                        .append("sent_by", sender_id).append("msg_id", MongoGenerateID(chat_data)), null);
-
-            } else {
-                convId.append("sent_by", sender_id);
-
-                List<Map<String, Object>> message_data = MongoReadCollectionNoSQL(table_chats, convId,
-                      false,  "msg", "msg_id");
-
-                if (message_data == null) {
-                    return false;
-                }
-
-                Long msg_id = null;
-
-                for (Map<String, Object> map : message_data) {
-                    if ((String.valueOf(map.get("msg")).length() + message_value.length()) < 2000) {
-                        msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
-                    }
-                }
-
-                if (msg_id == null) {
-
-                    return MongoAddDataToCollectionNoSQL(table_chats, msg.append("conv_id", conv_id)
-                            .append("sent_by", sender_id).append("msg_id", MongoGenerateID(chat_data)), null);
-                }
-
-                convId.append("msg_id", msg_id);
-
-                return MongoUpdateDocumentInCollectionNoSQL(table_chats,
-                        convId, msg, true, false);
-            }
-
-        }
-        return false;
-    }
-
-    public Map<String, List<Object>> getMessages(long conv_id, int amount) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> where_values = new ArrayList<>();
-            where_values.add(conv_id);
-
-            return getDataSQL(table_chats, "*", "conv_id = ?", where_values, null,
-                    "", amount);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> mongoData = MongoReadCollectionNoSQL(table_chats,
-                    new Document("conv_id", conv_id), false);
-            Map<String, List<Object>> result = new HashMap<>();
-
-            result.put("msg", new ArrayList<>());
-            result.put("msg_id", new ArrayList<>());
-            result.put("sender_id", new ArrayList<>());
-            result.put("conv_id", new ArrayList<>());
-
-            for (Map<String, Object> map : mongoData) {
-                for (Map.Entry<String, Object> data : map.entrySet()) {
-                    result.get(data.getKey()).add(data.getValue());
-                }
-            }
-
-            return result;
-
-        }
-        return null;
-    }
-
-    public boolean deleteMessage(long sender_id, long conv_id, long message_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(conv_id);
-            condition_data.add(message_id);
-            condition_data.add(sender_id);
-
-            return deleteDataSQL(table_chats, "conv_id = ? AND msg_id = ? AND sent_by = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoDeleteDataFromCollectionNoSQL(table_chats, new Document("conv_id", conv_id)
-                    .append("msg_id", message_id).append("sent_by", sender_id));
-
-        }
-        return false;
-    }
-
-
-
-
-    public Long startCaptcha(String answer) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            Map<String, List<Object>> data = getDataSQL(table_captchas, "id", "",
-                    null, null, "", 0);
-
-            if (data == null) {
-                return null;
-            }
-
-            long id = generateID(data.get("id"));
-
-            List<Object> values = new ArrayList<>();
-            values.add(id);
-            values.add(answer);
-            values.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-
-            return addDataSQL(table_captchas,"id, answer, time, last_edit_time, failed",
-                    "?, ?, 10, ?, 0", values) ? id : null;
-        } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table_captchas, null, false,"id");
-
-            if (data == null) {
-                return null;
-            }
-
-            List<Object> all_captchas = new ArrayList<>();
-            for (Map<String, Object> map : data) {
-                all_captchas.addAll(map.values());
-            }
-
-            long id = generateID(all_captchas);
-
-            return MongoAddDataToCollectionNoSQL(table_captchas, new Document("id", id)
-                    .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("failed", 0),
-                    null) ? id : null;
-
-        }
-        return null;
-    }
-
-    public boolean verifyCaptcha(long id, String given_answer) {
-        // TODO when captcha is ready then update this
-
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            Map<String, List<Object>> captcha_data = getDataSQL(table_captchas, "answer, time, failed",
-                    "id = ?", condition_data, null, "", 0);
-
-            if (captcha_data == null) {
-                return false;
-            }
-
-            if (captcha_data.get("answer").equals(given_answer)) {
-                // solved!
-                return deleteDataSQL(table_captchas, "id = ?", condition_data);
-
-            } else if ((3 <= (short) captcha_data.get("failed").get(0)) ||
-                    (0 >= (short) captcha_data.get("time").get(0))) {
-                // extended fails or time
-
-                deleteDataSQL(table_captchas, "id = ?", condition_data);
-
-                return false;
-            } else {
-                // the captcha was not solved and the user has more time and didn't failed 3 times
-
-                if (!(captcha_data.get("time").isEmpty() || captcha_data.get("failed").isEmpty())) {
-
-                    editDataSQL(table_captchas, "failed = failed + 1", null, "id = ?",
-                            condition_data);
-
-                }
-                return false;
-            }
-        } else if (mongoClient != null && mongoDatabase != null) {
-            Document captcha_id = new Document("id", id);
-            List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
-                    true, "answer", "time", "failed");
-
-            if (captcha_data == null || captcha_data.isEmpty() || captcha_data.get(0).isEmpty()) {
-                return false;
-            }
-
-            Map<String, Object> data = captcha_data.get(0);
-            short time = Short.valueOf(String.valueOf(data.get("time")));
-
-            if (String.valueOf(data.get("answer")).equals(given_answer)) {
-                // solved!
-                return MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
-
-            } else if ((time <= 0) || (Short.valueOf(String.valueOf(data.get("failed"))) >= 3)) {
-                // failed!
-                MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
-
-                return false;
-
-            } else {
-                // the captcha was not solved and the user has more time and didn't failed 3 times
-                time--;
-                MongoUpdateDocumentInCollectionNoSQL(table_captchas, captcha_id, new Document("time", time),
-                        false, false);
-
-                return false;
-
-            }
-
-        }
-        return false;
-    }
-
-    public boolean updateCaptchaTime(long id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            Map<String, List<Object>> sess_data = getDataSQL(table_captchas, "last_edit_time, time",
-                    "id = ?", condition_data, null, "", 0);
-
-            if (sess_data == null || sess_data.get("last_edit_time").isEmpty() || sess_data.get("time").isEmpty()) {
-                return false;
-            }
-
-            String editTime = String.valueOf(sess_data.get("last_edit_time").get(0));
-
-            if (editTime != "null" && !isOneSecondAgo(Timestamp.valueOf(editTime))) {
-                return false;
-            }
-
-            if (((short) sess_data.get("time").get(0)) <= 0) {
-                // time expire
-                return deleteDataSQL(table_captchas, "id = ?", condition_data);
-            }
-
-            List<Object> set_data = new ArrayList<>();
-            set_data.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-
-            return editDataSQL(table_captchas, "last_edit_time = ?, time = time - 1", set_data,
-                    "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            Document captcha_id = new Document("id", id);
-            List<Map<String, Object>> captcha_data = MongoReadCollectionNoSQL(table_captchas, captcha_id,
-                    true,"last_edit_time", "time");
-
-            if (captcha_data == null || captcha_data.get(0).isEmpty()) {
-                return false;
-            }
-
-            Map<String, Object> map = captcha_data.get(0);
-            if (!isOneSecondAgo(Timestamp.valueOf(String.valueOf(map.get("last_edit_time"))))) {
-                return false;
-            }
-            short time = Short.valueOf(String.valueOf(map.get("time")));
-
-            if (time <= 0) {
-                // expired
-                return MongoDeleteDataFromCollectionNoSQL(table_captchas, captcha_id);
-
-            }
-
-            time--;
-            return MongoUpdateDocumentInCollectionNoSQL(table_captchas, captcha_id,
-                    new Document("last_edit_time",
-                            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                            .append("time", time), false, false);
-
-        }
-        return false;
-    }
-
-    public void handleCaptchas() {
-        if (postgressql_connection != null || mysql_connection != null) {
-            Map<String, List<Object>> captcha_data = getDataSQL(table_captchas, "id", "",
-                    null, null, "", 0);
-
-            if (captcha_data == null) {
-                return;
-            }
-
-            for (Object captchas_id : captcha_data.get("id")) {
-                try {
-                    updateCaptchaTime(Long.parseLong(String.valueOf(captchas_id)));
-                } catch (Exception e) {}
-            }
-
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> captcha_ids = MongoReadCollectionNoSQL(table_captchas, null,
-                    false, "id");
-
-            if (captcha_ids == null) {
-                return;
-            }
-
-            for (Map<String, Object> ids : captcha_ids) {
-                try {
-                    updateCaptchaTime(Long.parseLong(String.valueOf(ids.get("id"))));
-                } catch (Exception e) {}
-            }
-
-        }
-    }
-
-
-
-
-
-    public boolean createPost(long sender_id, String msg, String tags, String background) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            // there is no custom background if empty
-            List<Object> data = new ArrayList<>();
-            data.add(sender_id);
-            data.add(msg);
-            data.add(tags);
-            data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-            data.add(background);
-
-            return addDataSQL(table_posts, "sender_id, msg, tags, send_at, background",
-                    "?, ?, ?, ?, ?", data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            List<Map<String, Object>> post_data = MongoReadCollectionNoSQL(table_posts, null,
-                    false,"id");
-            if (post_data == null) {
-                return false;
-            }
-
-            long id = MongoGenerateID(post_data);
-
-            return MongoAddDataToCollectionNoSQL(table_posts, new Document("id", id).append("sender_id", sender_id)
-                    .append("msg", msg).append("tags", tags).append("send_at",
-                            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                    .append("background", background), null);
-
-        }
-        return false;
-    }
-
-    public boolean deletePost(long sender_id, long post_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(post_id);
-            condition_data.add(sender_id);
-
-            return deleteDataSQL(table_posts, "id = ? AND sender_id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoDeleteDataFromCollectionNoSQL(table_posts, new Document("id", post_id)
-                    .append("sender_id", sender_id));
-
-        }
-        return false;
-    }
-
-    public boolean editPost(long sender_id, long post_id, String edited_tags,
-                            String edited_msg, String given_background) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(post_id);
-            condition_data.add(sender_id);
-
-            List<Object> set_data = new ArrayList<>();
-            set_data.add(edited_msg);
-            set_data.add(edited_tags);
-            set_data.add(given_background);
-
-            return editDataSQL(table_posts, "msg = ?, tags = ?, background = ?", set_data,
-                    "id = ? AND sender_id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_posts, new Document("id", post_id)
-                    .append("sender_id", sender_id), new Document("msg", edited_msg)
-                    .append("tags", edited_tags).append("background", given_background), false,
-                    false);
-
-        }
-        return false;
-    }
-
-
-
-
-    public boolean updateProfilePfp(long id, String given_pfp) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_pfp);
-
-            return editDataSQL(table_profiles, "pfp = ?", profile_data, "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("pfp", given_pfp), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateProfileBanner(long id, String given_banner) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_banner);
-
-            return editDataSQL(table_profiles, "banner = ?", profile_data, "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("banner", given_banner), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateProfilePets(long id, String given_pets) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_pets);
-
-            return editDataSQL(table_profiles, "pets = ?", profile_data, "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("pets", given_pets), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateProfileCoins(long id, int given_coins) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_coins);
-
-            return editDataSQL(table_profiles, "coins = ?", profile_data, "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("coins", given_coins), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateProfileBadges(long id, String given_badges) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_badges);
-
-            return editDataSQL(table_profiles, "badges = ?", profile_data,
-                    "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("badges", given_badges), false, false);
-
-        }
-        return false;
-    }
-
-    public boolean updateProfileAnimations(long id, String given_animations) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_animations);
-
-            return editDataSQL(table_profiles, "animations = ?", profile_data,
-                    "id = ?", condition_data);
-
-        } else if (mongoClient != null && mongoDatabase != null) {
-
-            return MongoUpdateDocumentInCollectionNoSQL(table_profiles, new Document("id", id),
-                    new Document("animations", given_animations), false, false);
-
-        }
-        return false;
-    }
 
 
 
