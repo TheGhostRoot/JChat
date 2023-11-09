@@ -14,7 +14,10 @@ public class DatabaseManager {
     protected static final String table_accounts = "accounts";
     protected static final String table_chats = "chats";
     protected static final String table_groups = "chat_groups";
-    protected static final String table_group_content = "chat_group_content";
+    protected static final String table_group_members = "chat_group_members";
+    protected static final String table_group_channels = "chat_group_channels";
+    protected static final String table_group_rols = "chat_group_roles";
+    protected static final String table_group_logs = "chat_group_logs";
     protected static final String table_captchas = "captchas";
     protected static final String table_posts = "posts";
     protected static final String table_profiles = "profiles";
@@ -72,18 +75,48 @@ public class DatabaseManager {
             chats_table.add("FOREIGN KEY (sent_by) REFERENCES accounts(id)");
 
             List<String> group_table = new ArrayList<>();
-            group_table.add("id BIGINT PRIMARY KEY, ");
-            group_table.add("name VARCHAR(50), ");
-            group_table.add("logo TEXT, ");
-            group_table.add("banner TEXT, ");
-            group_table.add("animations TEXT");
+            group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+            group_table.add("name VARCHAR(50) NOT NULL, ");
+            group_table.add("owner_id BIGINT NOT NULL, ");
+            group_table.add("logo TEXT NOT NULL, ");
+            group_table.add("banner TEXT NOT NULL, ");
+            group_table.add("animations TEXT NOT NULL, ");
+            group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
-            List<String> group_content_table = new ArrayList<>();
-            group_content_table.add("group_id BIGINT, ");
-            group_content_table.add("member_id BIGINT, ");
-            group_content_table.add("channel_id BIGINT, ");
-            group_content_table.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_content_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+            List<String> group_members_tabls = new ArrayList<>();
+            group_members_tabls.add("group_id BIGINT, ");
+            group_members_tabls.add("member_id BIGINT, ");
+            group_members_tabls.add("roles_id TEXT NOT NULL, ");
+            group_members_tabls.add("nickname VARCHAR(50) NULL, ");
+            group_members_tabls.add("settings TEXT NOT NULL, ");
+            group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+            group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+
+            List<String> group_channels_tabls = new ArrayList<>();
+            group_channels_tabls.add("group_id BIGINT, ");
+            group_channels_tabls.add("channel_id BIGINT, ");
+            group_channels_tabls.add("name TEXT NOT NULL, ");
+            group_channels_tabls.add("permissions TEXT NOT NULL, ");
+            group_channels_tabls.add("channel_type TEXT NOT NULL, ");
+            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+
+            List<String> group_roles_tabls = new ArrayList<>();
+            group_roles_tabls.add("group_id BIGINT, ");
+            group_roles_tabls.add("role_id BIGINT, ");
+            group_roles_tabls.add("name TEXT NOT NULL, ");
+            group_roles_tabls.add("permissions TEXT NOT NULL, ");
+            group_roles_tabls.add("role_type TEXT NOT NULL, ");
+            group_roles_tabls.add("members_id TEXT NOT NULL, ");
+            group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+
+            List<String> group_logs_tabls = new ArrayList<>();
+            group_logs_tabls.add("group_id BIGINT, ");
+            group_logs_tabls.add("actor_id BIGINT, ");
+            group_logs_tabls.add("log_type TEXT NOT NULL, ");
+            group_logs_tabls.add("log_message TEXT NOT NULL, ");
+            group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
+            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+            group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
             captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
@@ -112,8 +145,11 @@ public class DatabaseManager {
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_content);
             deleteTableSQL(table_groups);
+            deleteTableSQL(table_group_members);
+            deleteTableSQL(table_group_channels);
+            deleteTableSQL(table_group_rols);
+            deleteTableSQL(table_group_logs);
             deleteTableSQL(table_chats);
             deleteTableSQL(table_captchas);
             deleteTableSQL(table_accounts);
@@ -124,7 +160,10 @@ public class DatabaseManager {
             createTableSQL( table_posts, posts_table);
             createTableSQL( table_chats, chats_table);
             createTableSQL(table_groups, group_table);
-            createTableSQL(table_group_content, group_content_table);
+            createTableSQL(table_group_members, group_members_tabls);
+            createTableSQL(table_group_channels, group_channels_tabls);
+            createTableSQL(table_group_rols, group_roles_tabls);
+            createTableSQL(table_group_logs, group_logs_tabls);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,16 +199,46 @@ public class DatabaseManager {
             List<String> group_table = new ArrayList<>();
             group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             group_table.add("name VARCHAR(50) NOT NULL, ");
+            group_table.add("owner_id BIGINT NOT NULL, ");
             group_table.add("logo TEXT NOT NULL, ");
             group_table.add("banner TEXT NOT NULL, ");
-            group_table.add("animations TEXT NOT NULL");
+            group_table.add("animations TEXT NOT NULL, ");
+            group_table.add("settings TEXT NOT NULL, ");
+            group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
-            List<String> group_content_table = new ArrayList<>();
-            group_content_table.add("group_id BIGINT, ");
-            group_content_table.add("member_id BIGINT, ");
-            group_content_table.add("channel_id BIGINT, ");
-            group_content_table.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_content_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+            List<String> group_members_tabls = new ArrayList<>();
+            group_members_tabls.add("group_id BIGINT, ");
+            group_members_tabls.add("member_id BIGINT, ");
+            group_members_tabls.add("roles_id TEXT NOT NULL, ");
+            group_members_tabls.add("nickname VARCHAR(50) NULL, ");
+            group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+            group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+
+            List<String> group_channels_tabls = new ArrayList<>();
+            group_channels_tabls.add("group_id BIGINT, ");
+            group_channels_tabls.add("channel_id BIGINT, ");
+            group_channels_tabls.add("name TEXT NOT NULL, ");
+            group_channels_tabls.add("permissions TEXT NOT NULL, ");
+            group_channels_tabls.add("channel_type TEXT NOT NULL, ");
+            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+
+            List<String> group_roles_tabls = new ArrayList<>();
+            group_roles_tabls.add("group_id BIGINT, ");
+            group_roles_tabls.add("role_id BIGINT, ");
+            group_roles_tabls.add("name TEXT NOT NULL, ");
+            group_roles_tabls.add("permissions TEXT NOT NULL, ");
+            group_roles_tabls.add("role_type TEXT NOT NULL, ");
+            group_roles_tabls.add("members_id TEXT NOT NULL, ");
+            group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+
+            List<String> group_logs_tabls = new ArrayList<>();
+            group_logs_tabls.add("group_id BIGINT, ");
+            group_logs_tabls.add("actor_id BIGINT, ");
+            group_logs_tabls.add("log_type TEXT NOT NULL, ");
+            group_logs_tabls.add("log_message TEXT NOT NULL, ");
+            group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
+            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+            group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
             captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -198,8 +267,11 @@ public class DatabaseManager {
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_content);
             deleteTableSQL(table_groups);
+            deleteTableSQL(table_group_members);
+            deleteTableSQL(table_group_channels);
+            deleteTableSQL(table_group_rols);
+            deleteTableSQL(table_group_logs);
             deleteTableSQL(table_chats);
             deleteTableSQL(table_captchas);
             deleteTableSQL(table_accounts);
@@ -210,7 +282,10 @@ public class DatabaseManager {
             createTableSQL( table_posts, posts_table);
             createTableSQL( table_chats, chats_table);
             createTableSQL(table_groups, group_table);
-            createTableSQL(table_group_content, group_content_table);
+            createTableSQL(table_group_members, group_members_tabls);
+            createTableSQL(table_group_channels, group_channels_tabls);
+            createTableSQL(table_group_rols, group_roles_tabls);
+            createTableSQL(table_group_logs, group_logs_tabls);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -227,6 +302,10 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_captchas);
             MongoDeleteCollectionNoSQL(table_chats);
             MongoDeleteCollectionNoSQL(table_posts);
+            MongoDeleteCollectionNoSQL(table_group_channels);
+            MongoDeleteCollectionNoSQL(table_group_rols);
+            MongoDeleteCollectionNoSQL(table_group_logs);
+            MongoDeleteCollectionNoSQL(table_group_members);
             MongoDeleteCollectionNoSQL(table_groups);
 
 
@@ -236,6 +315,10 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_chats);
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
+            MongoCreateCollectionNoSQL(table_group_channels);
+            MongoCreateCollectionNoSQL(table_group_members);
+            MongoCreateCollectionNoSQL(table_group_logs);
+            MongoCreateCollectionNoSQL(table_group_rols);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -773,12 +856,5 @@ public class DatabaseManager {
         return postgressql_connection != null ? postgressql_connection :
                 mysql_connection;
     }
-
-
-
-
-
-
-
 
 }

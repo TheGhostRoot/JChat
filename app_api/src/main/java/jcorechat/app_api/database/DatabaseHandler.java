@@ -423,6 +423,7 @@ public class DatabaseHandler {
 
 
 
+
     public boolean addMessage(long channel_id, long sender_id, String message) {
         if (message.isBlank()) {
             return false;
@@ -454,7 +455,7 @@ public class DatabaseHandler {
 
             edit_condition_data.add(sender_id);
 
-            if (current_chat_data.get("msg").isEmpty()) {
+            if (!current_chat_data.get("msg").isEmpty()) {
                 if (Long.valueOf(String.valueOf(current_chat_data.get("sent_by").get(0))) == sender_id) {
 
                     edit_condition_data.add(Long.parseLong(String.valueOf(current_chat_data.get("msg_id").get(0))));
@@ -472,13 +473,33 @@ public class DatabaseHandler {
                 return databaseManager.addDataSQL(databaseManager.table_chats,
                             "channel_id, msg, send_at, sent_by, msg_id", "?, ?, ?, ?, ?", chat_data);
 
+            } else if (channel_id == 0L) {
+                // no messages in this channel
+
+                Map<String, List<Object>> channel_ids = databaseManager.getDataSQL(DatabaseManager.table_chats,
+                        "channel_id", "", null, null, "", 0);
+
+                if (channel_ids == null) {
+                    return false;
+                }
+
+                List<Object> new_chat_data = new ArrayList<>();
+                new_chat_data.add(databaseManager.generateID(channel_ids.get("channel_id")));
+                new_chat_data.add(message);
+                new_chat_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+                new_chat_data.add(sender_id);
+                new_chat_data.add(databaseManager.generateID(current_chat_data.get("msg_id")));
+
+                return databaseManager.addDataSQL(databaseManager.table_chats,
+                        "channel_id, msg, send_at, sent_by, msg_id", "?, ?, ?, ?, ?", chat_data);
+
             } else {
-                return true;
+                return false;
             }
         } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
             Document convId = new Document("channel_id", channel_id);
             List<Map<String, Object>> chat_data = databaseManager.MongoReadCollectionNoSQL(databaseManager.table_chats,
-                    convId, false, "msg", "msg_id", "sent_by", "send_at");
+                    convId, false, "msg", "msg_id", "sent_by", "send_at", "channel_id");
 
             if (chat_data == null) {
                 return false;
@@ -490,17 +511,21 @@ public class DatabaseHandler {
             String send_at = now.format(formatter);
 
             List<Object> all_ids = new ArrayList<>();
+            List<Object> all_channel_ids = new ArrayList<>();
             for (Map<String, Object> map : chat_data) {
                 all_ids.add(map.get("msg_id"));
+                all_channel_ids.add(map.get("channel_id"));
             }
 
             long new_msg_id = databaseManager.generateID(all_ids);
             if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
 
+
                 return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_chats,
-                        msg.append("channel_id", channel_id)
-                        .append("sent_by", sender_id).append("msg_id", new_msg_id)
-                        .append("send_at", send_at), null);
+                            msg.append("channel_id", channel_id == 0L ?
+                                            databaseManager.generateID(all_channel_ids) : channel_id)
+                                    .append("sent_by", sender_id).append("msg_id", new_msg_id)
+                                    .append("send_at", send_at), null);
 
             } else {
 
@@ -519,19 +544,19 @@ public class DatabaseHandler {
                     }
                 }
 
-                if (message_sender_id == null || message_sender_id != sender_id) {
+                if (message_sender_id == sender_id) {
+                    convId.append("msg_id", resent_msg_id);
+                    convId.append("send_by", sender_id);
+
+                    return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_chats, convId,
+                            new Document("msg", current_message + message));
+
+                } else {
 
                     return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_chats,
                             msg.append("channel_id", channel_id)
                                     .append("sent_by", sender_id).append("msg_id", new_msg_id)
                                     .append("send_at", send_at), null);
-
-                } else {
-                    convId.append("msg_id", resent_msg_id);
-                    convId.append("send_by", sender_id);
-
-                    return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_chats, convId,
-                            new Document("msg", current_message+message));
 
                 }
 
@@ -1002,6 +1027,230 @@ public class DatabaseHandler {
     }
 
 
+
+    private boolean updateGroupLogs(long actor_id, long group_id, String log_message, LocalDateTime now, String log_type) {
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> log_data = new ArrayList<>();
+            log_data.add(group_id);
+            log_data.add(actor_id);
+            log_data.add(log_type);
+            log_data.add(log_message);
+            log_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+
+            return databaseManager.addDataSQL(DatabaseManager.table_group_logs,
+                    "group_id, actor_id, log_type, log_message, acted_at",
+                    "?, ?, ?, ?, ?", log_data);
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_group_logs,
+                    new Document("group_id", group_id)
+                            .append("actor_id", actor_id)
+                            .append("log_type", log_type)
+                            .append("log_message", log_message)
+                            .append("acted_at", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))),
+                    null);
+        }
+
+        return false;
+    }
+
+    public boolean createGroup(long owner_id, String name, String logo, String banner, String animations,
+                               String settings) {
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> group_data = new ArrayList<>();
+            group_data.add(name);
+            group_data.add(owner_id);
+            group_data.add(logo);
+            group_data.add(banner);
+            group_data.add(animations);
+            group_data.add(settings);
+
+            return databaseManager.addDataSQL(DatabaseManager.table_groups,
+                    "name, owner_id, logo, banner, animations, settings", "?, ?, ?, ?, ?, ?", group_data);
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+            List<Map<String, Object>> all_groups_id = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    null, false, "id");
+
+            if (all_groups_id == null) {
+                return false;
+            }
+
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", databaseManager.MongoGenerateID(all_groups_id))
+                            .append("name", name).append("owner_id", owner_id)
+                            .append("logo", logo).append("banner", banner)
+                            .append("animations", animations)
+                            .append("settings", settings), null);
+
+        }
+        return false;
+    }
+
+    public boolean updateGroupSettings(long actor_id, long group_id, String new_settings, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> search_data = new ArrayList<>();
+            search_data.add(group_id);
+
+            List<Object> updatedData = new ArrayList<>();
+            updatedData.add(new_settings);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_groups, "settings = ?",
+                    updatedData, "id = ?", search_data) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Settings");
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("settings", new_settings)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Settings");
+        }
+        return false;
+    }
+
+    public boolean updateGroupName(long actor_id, long group_id, String new_name, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> search_data = new ArrayList<>();
+            search_data.add(group_id);
+
+            List<Object> updatedData = new ArrayList<>();
+            updatedData.add(new_name);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_groups, "name = ?",
+                    updatedData, "id = ?", search_data) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Name");
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("name", new_name)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Name");
+        }
+        return false;
+    }
+
+    public boolean updateGroupOwner(long new_owner_id, long group_id, long actor_id, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> search_data = new ArrayList<>();
+            search_data.add(group_id);
+
+            List<Object> updatedData = new ArrayList<>();
+            updatedData.add(new_owner_id);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_groups, "owner_id = ?",
+                    updatedData, "id = ?", search_data) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Changed Owner");
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("owner_id", new_owner_id)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Changed Owner");
+
+        }
+        return false;
+    }
+
+    public boolean updateGroupLogo(String new_logo, long group_id, long actor_id, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> search_data = new ArrayList<>();
+            search_data.add(group_id);
+
+            List<Object> updatedData = new ArrayList<>();
+            updatedData.add(new_logo);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_groups, "logo = ?",
+                    updatedData, "id = ?", search_data) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Logo");
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("logo", new_logo)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Logo");
+
+        }
+        return false;
+    }
+
+    public boolean updateGroupBanner(String new_banner, long group_id, long actor_id, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> search_data = new ArrayList<>();
+            search_data.add(group_id);
+
+            List<Object> updatedData = new ArrayList<>();
+            updatedData.add(new_banner);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_groups, "banner = ?",
+                    updatedData, "id = ?", search_data) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Banner");
+
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("banner", new_banner)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now, "Updated Banner");
+        }
+        return false;
+    }
+
+    public boolean addGroupMember(long member_id, long group_id, String roles_id, String nickname, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> member_data = new ArrayList<>();
+            member_data.add(group_id);
+            member_data.add(member_id);
+            member_data.add(roles_id);
+            member_data.add(nickname);
+
+            return databaseManager.addDataSQL(DatabaseManager.table_group_members,
+                    "group_id, member_id, roles_id, nickname", "?, ?, ?, ?", member_data) ?
+                    updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group") : false;
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_group_members,
+                    new Document("group_id", group_id)
+                            .append("member_id", member_id)
+                            .append("roles_id", roles_id)
+                            .append("nickname", nickname), null) &&
+                    updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group");
+        }
+        return false;
+    }
+
+
+    public boolean removeGroupMember(long member_id, long group_id, String leave_type, String log_message) {
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> member_data = new ArrayList<>();
+            member_data.add(group_id);
+            member_data.add(member_id);
+            member_data.add("");
+            member_data.add("");
+
+            return databaseManager.addDataSQL(DatabaseManager.table_group_members,
+                    "group_id, member_id, roles_id, nickname", "?, ?, ?, ?", member_data) ?
+                    updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group") : false;
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_group_members,
+                    new Document("group_id", group_id)
+                            .append("member_id", member_id)
+                            .append("roles_id", "")
+                            .append("nickname", ""), null) &&
+                    updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group");
+        }
+        return false;
+    }
 
 
 }
