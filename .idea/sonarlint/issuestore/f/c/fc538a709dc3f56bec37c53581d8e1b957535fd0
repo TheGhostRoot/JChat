@@ -28,9 +28,9 @@ java:S1192Y"gDefine a constant instead of duplicating this literal "id BIGINT A
 r
 java:S2095¼"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(±¡Ì’ùÿÿÿÿ8“É˜Ï»1
 m
-java:S2095ô"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãª8üĞğÍ»1
-m
 java:S2095¬"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(¼ôº´8“É˜Ï»1
+m
+java:S2095ô"OUse try-with-resources or close this "PreparedStatement" in a "finally" clause.(Ãª8üĞğÍ»1
 v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(½©´8ıĞğÍ»1
 v	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(õÊ¢ó8ıĞğÍ»1
 {	java:S115"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(ÕîÕøÿÿÿÿ8ıĞğÍ»1
