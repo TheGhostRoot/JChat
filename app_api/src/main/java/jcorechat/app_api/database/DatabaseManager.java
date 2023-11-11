@@ -68,22 +68,24 @@ public class DatabaseManager {
             accounts_table.add("created_at timestamp NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
             accounts_table.add("chat_groups_ TEXT NOT NULL, ");
-            accounts_table.add("starts_sub TIMESTAMP, ");
-            accounts_table.add("ends_sub TIMESTAMP, ");
+            accounts_table.add("starts_sub TIMESTAMP NULL, ");
+            accounts_table.add("ends_sub TIMESTAMP NULL, ");
             accounts_table.add("bookmarks TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
             chats_table.add("send_at timestamp NOT NULL, ");
-            chats_table.add("sent_by BIGINT NOT NULL, ");
+            chats_table.add("send_by BIGINT NOT NULL, ");
             chats_table.add("msg_id BIGINT NOT NULL");
-            chats_table.add("FOREIGN KEY (sent_by) REFERENCES accounts(id)");
+            chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
             List<String> reactions_table = new ArrayList<>();
             reactions_table.add("channel_id BIGINT NOT NULL, ");
-            reactions_table.add("reaction TEXT PRIMARY KEY NOT NULL, ");
-            reactions_table.add("msg_id BIGINT NOT NULL");
+            reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
+            reactions_table.add("msg_id BIGINT NOT NULL, ");
+            reactions_table.add("member_id BIGINT NOT NULL, ");
+            reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
             List<String> group_table = new ArrayList<>();
             group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -134,7 +136,7 @@ public class DatabaseManager {
             group_logs_tabls.add("log_type TEXT NOT NULL, ");
             group_logs_tabls.add("log_message TEXT NOT NULL, ");
             group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
-            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
@@ -174,9 +176,9 @@ public class DatabaseManager {
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_category);
             deleteTableSQL(table_group_members);
             deleteTableSQL(table_group_channels);
+            deleteTableSQL(table_group_category);
             deleteTableSQL(table_group_roles);
             deleteTableSQL(table_group_logs);
             deleteTableSQL(table_groups);
@@ -194,10 +196,10 @@ public class DatabaseManager {
             createTableSQL(table_reactions, reactions_table);
             createTableSQL(table_groups, group_table);
             createTableSQL(table_group_members, group_members_tabls);
+            createTableSQL(table_group_category, group_categories_tabls);
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_group_category, group_categories_tabls);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,22 +223,24 @@ public class DatabaseManager {
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
             accounts_table.add("chat_groups_ TEXT NOT NULL, ");
-            accounts_table.add("starts_sub TIMESTAMP, ");
-            accounts_table.add("ends_sub TIMESTAMP, ");
+            accounts_table.add("starts_sub TIMESTAMP NULL, ");
+            accounts_table.add("ends_sub TIMESTAMP NULL, ");
             accounts_table.add("bookmarks TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
             chats_table.add("send_at TIMESTAMP NOT NULL, ");
-            chats_table.add("sent_by BIGINT NOT NULL, ");
+            chats_table.add("send_by BIGINT NOT NULL, ");
             chats_table.add("msg_id BIGINT NOT NULL, ");
-            chats_table.add("FOREIGN KEY (sent_by) REFERENCES accounts(id)");
+            chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
             List<String> reactions_table = new ArrayList<>();
             reactions_table.add("channel_id BIGINT NOT NULL, ");
-            reactions_table.add("reaction TEXT PRIMARY KEY NOT NULL, ");
-            reactions_table.add("msg_id BIGINT NOT NULL");
+            reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
+            reactions_table.add("msg_id BIGINT NOT NULL, ");
+            reactions_table.add("member_id BIGINT NOT NULL, ");
+            reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
             List<String> group_table = new ArrayList<>();
             group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -288,7 +292,7 @@ public class DatabaseManager {
             group_logs_tabls.add("log_type TEXT NOT NULL, ");
             group_logs_tabls.add("log_message TEXT NOT NULL, ");
             group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
-            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
             List<String> captchas_table = new ArrayList<>();
@@ -328,9 +332,9 @@ public class DatabaseManager {
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_category);
             deleteTableSQL(table_group_members);
             deleteTableSQL(table_group_channels);
+            deleteTableSQL(table_group_category);
             deleteTableSQL(table_group_roles);
             deleteTableSQL(table_group_logs);
             deleteTableSQL(table_groups);
@@ -348,10 +352,10 @@ public class DatabaseManager {
             createTableSQL(table_reactions, reactions_table);
             createTableSQL(table_groups, group_table);
             createTableSQL(table_group_members, group_members_tabls);
+            createTableSQL(table_group_category, group_categories_tabls);
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_group_category, group_categories_tabls);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -463,6 +467,7 @@ public class DatabaseManager {
         try {
             mongoDatabase.createCollection(collectionName);
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -477,6 +482,7 @@ public class DatabaseManager {
 
             mongoDatabase.getCollection(collectionName).drop();
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -506,6 +512,7 @@ public class DatabaseManager {
 
             cursor.close();
             return result;
+
         } catch (Exception e) {
             return null;
         }
@@ -546,6 +553,7 @@ public class DatabaseManager {
         if (!data_to_add.isEmpty()) {
             result.add(data_to_add);
         }
+
         return result;
     }
 
@@ -555,6 +563,7 @@ public class DatabaseManager {
                 data_to_add.put(entry.getKey(), entry.getValue());
             }
         }
+
         return data_to_add;
     }
 
@@ -575,6 +584,7 @@ public class DatabaseManager {
                 collection.insertOne(document);
             }
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -710,6 +720,7 @@ public class DatabaseManager {
         try {
             mongoDatabase.getCollection(collectionName).deleteMany(filter);
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -752,33 +763,39 @@ public class DatabaseManager {
             }
 
             return result;
+
         } catch (Exception e) {
             return null;
         }
     }
 
     protected List<Object> setDataSQL(short parameterIndex, List<Object> changes, PreparedStatement preparedStatement)
-            throws SQLException {
+            throws Exception {
         List<Object> list = new ArrayList<>();
 
         if (null != changes) {
             for (Object value : changes) {
                 switch (value.getClass().getSimpleName()) {
                     case "String":
-                        preparedStatement.setString(parameterIndex, (String) value);
+                        preparedStatement.setString(parameterIndex, String.valueOf(value));
                         break;
+
                     case "Integer":
-                        preparedStatement.setInt(parameterIndex, (Integer) value);
+                        preparedStatement.setInt(parameterIndex, Integer.parseInt(String.valueOf(value)));
                         break;
+
                     case "Long":
-                        preparedStatement.setLong(parameterIndex, (Long) value);
+                        preparedStatement.setLong(parameterIndex, Long.parseLong(String.valueOf(value)));
                         break;
+
                     case "Short":
-                        preparedStatement.setShort(parameterIndex, (Short) value);
+                        preparedStatement.setShort(parameterIndex, Short.parseShort(String.valueOf(value)));
                         break;
+
                     case "LocalDateTime":
                         preparedStatement.setTimestamp(parameterIndex, Timestamp.valueOf((LocalDateTime) value));
                         break;
+
                     default:
                         preparedStatement.setObject(parameterIndex, value);
                         break;
@@ -799,10 +816,12 @@ public class DatabaseManager {
         }
 
         StringBuilder stringBuilder = new StringBuilder("DELETE FROM ").append(table).append(" WHERE ").append(condition);
+
         try {
             ((PreparedStatement) setDataSQL((short) 1, conditionData,
                     getSQLConnection().prepareStatement(stringBuilder.toString())).get(1)).executeUpdate();
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -815,15 +834,14 @@ public class DatabaseManager {
         }
 
         try {
-
             ( (PreparedStatement) setDataSQL((short) 1, data, getSQLConnection()
                     .prepareStatement(new StringBuilder("INSERT INTO ")
-                    .append(table).append(" (").append(fields).append(") VALUES (").append(values).append(");")
-                    .toString())).get(1) ).executeUpdate();
+                            .append(table).append(" (").append(fields).append(") VALUES (").append(values).append(");")
+                            .toString())).get(1) ).executeUpdate();
 
             return true;
+
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
 
@@ -843,6 +861,7 @@ public class DatabaseManager {
             ((PreparedStatement) setDataSQL((short) data.get(0), conditionData, (PreparedStatement) data.get(1)).get(1))
                     .executeUpdate();
             return true;
+
         } catch (Exception e) {
             return false;
         }
@@ -873,7 +892,7 @@ public class DatabaseManager {
 
         if (!order.isBlank()) { select_query.append(" ORDER BY ").append(order); }
 
-        if (0 < limit) { select_query.append("LIMIT ").append(limit); }
+        if (0 < limit) { select_query.append(" LIMIT ").append(limit); }
 
         try {
 
@@ -893,6 +912,7 @@ public class DatabaseManager {
             }
 
             return readOutputSQL(((PreparedStatement) setDataSQL(i, conditionData, preparedStatement).get(1)).executeQuery());
+
         } catch (Exception e) {
             return null;
         }

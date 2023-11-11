@@ -1,127 +1,129 @@
 
 €
-java:S1319("cThe type of "emails" should be an interface such as "Map" rather than the implementation "HashMap".(×ò€¿8×€ÿ¤º1
+java:S1319)"cThe type of "emails" should be an interface such as "Map" rather than the implementation "HashMap".(×ò€¿8¦×Áì»1
 
-java:S1319,"bThe type of "names" should be an interface such as "Map" rather than the implementation "HashMap".(‚ªçŸ8×€ÿ¤º1
+java:S1319-"bThe type of "names" should be an interface such as "Map" rather than the implementation "HashMap".(‚ªçŸ8¦×Áì»1
 ˆ
-java:S13190"fThe type of "passwords" should be an interface such as "Map" rather than the implementation "HashMap".(€‘ä¸úÿÿÿÿ8×€ÿ¤º1
+java:S13191"fThe type of "passwords" should be an interface such as "Map" rather than the implementation "HashMap".(€‘ä¸úÿÿÿÿ8¦×Áì»1
 ‚
-java:S13194"eThe type of "sessions" should be an interface such as "Map" rather than the implementation "HashMap".(©¬³Ä8×€ÿ¤º1
+java:S13195"eThe type of "sessions" should be an interface such as "Map" rather than the implementation "HashMap".(©¬³Ä8¦×Áì»1
 Ž
-java:S13197"qThe type of "encryption_user_keys" should be an interface such as "Map" rather than the implementation "HashMap".(ä›¯ß8×€ÿ¤º1
+java:S13198"qThe type of "encryption_user_keys" should be an interface such as "Map" rather than the implementation "HashMap".(ä›¯ß8¦×Áì»1
 ˆ
-java:S1319<"kThe type of "sign_user_keys" should be an interface such as "Map" rather than the implementation "HashMap".(¶õçÒ8×€ÿ¤º1
+java:S1319="kThe type of "sign_user_keys" should be an interface such as "Map" rather than the implementation "HashMap".(¶õçÒ8¦×Áì»1
 Ž
-java:S1319?"lThe type of "captcha_results" should be an interface such as "Map" rather than the implementation "HashMap".(îï²”ýÿÿÿÿ8×€ÿ¤º1
+java:S1319@"lThe type of "captcha_results" should be an interface such as "Map" rather than the implementation "HashMap".(îï²”ýÿÿÿÿ8¦×Áì»1
 ˆ
-java:S1319C"kThe type of "captcha_expire" should be an interface such as "Map" rather than the implementation "HashMap".(ØÉê€8×€ÿ¤º1
+java:S1319D"kThe type of "captcha_expire" should be an interface such as "Map" rather than the implementation "HashMap".(ØÉê€8¦×Áì»1
 ‡
-java:S1319G"jThe type of "captcha_fails" should be an interface such as "Map" rather than the implementation "HashMap".(¿ÌØ¹8×€ÿ¤º1
+java:S1319H"jThe type of "captcha_fails" should be an interface such as "Map" rather than the implementation "HashMap".(¿ÌØ¹8¦×Áì»1
 ˆ
-java:S1319J"kThe type of "session_expire" should be an interface such as "Map" rather than the implementation "HashMap".(ý¶Ÿ‹8×€ÿ¤º1
+java:S1319K"kThe type of "session_expire" should be an interface such as "Map" rather than the implementation "HashMap".(ý¶Ÿ‹8¦×Áì»1
 s
-java:S1104"VMake jwtService a static final constant or non-public and provide accessors if needed.(‹¨§¼8Ø€ÿ¤º1
+java:S1104"VMake jwtService a static final constant or non-public and provide accessors if needed.(‹¨§¼8¦×Áì»1
 q
-java:S1104"TMake cription a static final constant or non-public and provide accessors if needed.(™¢®8Ø€ÿ¤º1
+java:S1104"TMake cription a static final constant or non-public and provide accessors if needed.(™¢®8¦×Áì»1
 w
-java:S1104"ZMake accountManager a static final constant or non-public and provide accessors if needed.(§ÄÀž8Ø€ÿ¤º1
+java:S1104 "ZMake accountManager a static final constant or non-public and provide accessors if needed.(§ÄÀž8¦×Áì»1
 |
-java:S1104!"ZMake captahaManager a static final constant or non-public and provide accessors if needed.(‘»˜¼ùÿÿÿÿ8Ø€ÿ¤º1
+java:S1104""ZMake captahaManager a static final constant or non-public and provide accessors if needed.(‘»˜¼ùÿÿÿÿ8¦×Áì»1
 x
-java:S1104#"[Make databaseManager a static final constant or non-public and provide accessors if needed.(à ‹ê8Ø€ÿ¤º1
+java:S1104$"[Make databaseManager a static final constant or non-public and provide accessors if needed.(à ‹ê8¦×Áì»1
 }
-java:S1104%"[Make databaseHandler a static final constant or non-public and provide accessors if needed.(‹¹þýýÿÿÿÿ8Ê‰ïüº1
+java:S1104&"[Make databaseHandler a static final constant or non-public and provide accessors if needed.(‹¹þýýÿÿÿÿ8§×Áì»1
 o
-java:S1104("RMake emails a static final constant or non-public and provide accessors if needed.(×ò€¿8Ø€ÿ¤º1
+java:S1104)"RMake emails a static final constant or non-public and provide accessors if needed.(×ò€¿8§×Áì»1
 n
-java:S1104,"QMake names a static final constant or non-public and provide accessors if needed.(‚ªçŸ8Ø€ÿ¤º1
+java:S1104-"QMake names a static final constant or non-public and provide accessors if needed.(‚ªçŸ8§×Áì»1
 w
-java:S11040"UMake passwords a static final constant or non-public and provide accessors if needed.(€‘ä¸úÿÿÿÿ8Ø€ÿ¤º1
+java:S11041"UMake passwords a static final constant or non-public and provide accessors if needed.(€‘ä¸úÿÿÿÿ8§×Áì»1
 q
-java:S11044"TMake sessions a static final constant or non-public and provide accessors if needed.(©¬³Ä8Ø€ÿ¤º1
+java:S11045"TMake sessions a static final constant or non-public and provide accessors if needed.(©¬³Ä8§×Áì»1
 }
-java:S11047"`Make encryption_user_keys a static final constant or non-public and provide accessors if needed.(ä›¯ß8Ø€ÿ¤º1
+java:S11048"`Make encryption_user_keys a static final constant or non-public and provide accessors if needed.(ä›¯ß8§×Áì»1
 w
-java:S1104<"ZMake sign_user_keys a static final constant or non-public and provide accessors if needed.(¶õçÒ8Ø€ÿ¤º1
+java:S1104="ZMake sign_user_keys a static final constant or non-public and provide accessors if needed.(¶õçÒ8§×Áì»1
 }
-java:S1104?"[Make captcha_results a static final constant or non-public and provide accessors if needed.(îï²”ýÿÿÿÿ8Ø€ÿ¤º1
+java:S1104@"[Make captcha_results a static final constant or non-public and provide accessors if needed.(îï²”ýÿÿÿÿ8§×Áì»1
 w
-java:S1104C"ZMake captcha_expire a static final constant or non-public and provide accessors if needed.(ØÉê€8Ø€ÿ¤º1
+java:S1104D"ZMake captcha_expire a static final constant or non-public and provide accessors if needed.(ØÉê€8§×Áì»1
 v
-java:S1104G"YMake captcha_fails a static final constant or non-public and provide accessors if needed.(¿ÌØ¹8Ø€ÿ¤º1
+java:S1104H"YMake captcha_fails a static final constant or non-public and provide accessors if needed.(¿ÌØ¹8§×Áì»1
 w
-java:S1104J"ZMake session_expire a static final constant or non-public and provide accessors if needed.(ý¶Ÿ‹8Ø€ÿ¤º1
+java:S1104K"ZMake session_expire a static final constant or non-public and provide accessors if needed.(ý¶Ÿ‹8§×Áì»1
 t
-java:S1104L"RMake random a static final constant or non-public and provide accessors if needed.(×‘éµùÿÿÿÿ8Ø€ÿ¤º1
+java:S1104M"RMake random a static final constant or non-public and provide accessors if needed.(×‘éµùÿÿÿÿ8§×Áì»1
 M
-java:S1444"0Make this "public static jwtService" field final(‹¨§¼8Ø€ÿ¤º1
+java:S1444"0Make this "public static jwtService" field final(‹¨§¼8§×Áì»1
 K
-java:S1444".Make this "public static cription" field final(™¢®8Ø€ÿ¤º1
+java:S1444".Make this "public static cription" field final(™¢®8§×Áì»1
 Q
-java:S1444"4Make this "public static accountManager" field final(§ÄÀž8Ø€ÿ¤º1
+java:S1444 "4Make this "public static accountManager" field final(§ÄÀž8§×Áì»1
 V
-java:S1444!"4Make this "public static captahaManager" field final(‘»˜¼ùÿÿÿÿ8Ø€ÿ¤º1
+java:S1444""4Make this "public static captahaManager" field final(‘»˜¼ùÿÿÿÿ8§×Áì»1
 R
-java:S1444#"5Make this "public static databaseManager" field final(à ‹ê8Ø€ÿ¤º1
+java:S1444$"5Make this "public static databaseManager" field final(à ‹ê8§×Áì»1
 W
-java:S1444%"5Make this "public static databaseHandler" field final(‹¹þýýÿÿÿÿ8Ì‰ïüº1
+java:S1444&"5Make this "public static databaseHandler" field final(‹¹þýýÿÿÿÿ8§×Áì»1
 I
-java:S1444(",Make this "public static emails" field final(×ò€¿8Ø€ÿ¤º1
+java:S1444)",Make this "public static emails" field final(×ò€¿8§×Áì»1
 H
-java:S1444,"+Make this "public static names" field final(‚ªçŸ8Ø€ÿ¤º1
+java:S1444-"+Make this "public static names" field final(‚ªçŸ8§×Áì»1
 Q
-java:S14440"/Make this "public static passwords" field final(€‘ä¸úÿÿÿÿ8Ø€ÿ¤º1
+java:S14441"/Make this "public static passwords" field final(€‘ä¸úÿÿÿÿ8§×Áì»1
 K
-java:S14444".Make this "public static sessions" field final(©¬³Ä8Ø€ÿ¤º1
+java:S14445".Make this "public static sessions" field final(©¬³Ä8§×Áì»1
 W
-java:S14447":Make this "public static encryption_user_keys" field final(ä›¯ß8Ø€ÿ¤º1
+java:S14448":Make this "public static encryption_user_keys" field final(ä›¯ß8§×Áì»1
 Q
-java:S1444<"4Make this "public static sign_user_keys" field final(¶õçÒ8Ø€ÿ¤º1
+java:S1444="4Make this "public static sign_user_keys" field final(¶õçÒ8§×Áì»1
 W
-java:S1444?"5Make this "public static captcha_results" field final(îï²”ýÿÿÿÿ8Ø€ÿ¤º1
+java:S1444@"5Make this "public static captcha_results" field final(îï²”ýÿÿÿÿ8§×Áì»1
 Q
-java:S1444C"4Make this "public static captcha_expire" field final(ØÉê€8Ø€ÿ¤º1
+java:S1444D"4Make this "public static captcha_expire" field final(ØÉê€8§×Áì»1
 P
-java:S1444G"3Make this "public static captcha_fails" field final(¿ÌØ¹8Ø€ÿ¤º1
+java:S1444H"3Make this "public static captcha_fails" field final(¿ÌØ¹8§×Áì»1
 Q
-java:S1444J"4Make this "public static session_expire" field final(ý¶Ÿ‹8Ø€ÿ¤º1
+java:S1444K"4Make this "public static session_expire" field final(ý¶Ÿ‹8§×Áì»1
 N
-java:S1444L",Make this "public static random" field final(×‘éµùÿÿÿÿ8Ø€ÿ¤º1
+java:S1444M",Make this "public static random" field final(×‘éµùÿÿÿÿ8§×Áì»1
 |
-java:S30087"_Rename this field "encryption_user_keys" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ä›¯ß8â€ÿ¤º1
+java:S30088"_Rename this field "encryption_user_keys" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ä›¯ß8²×Áì»1
 v
-java:S3008<"YRename this field "sign_user_keys" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶õçÒ8â€ÿ¤º1
+java:S3008="YRename this field "sign_user_keys" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¶õçÒ8²×Áì»1
 |
-java:S3008?"ZRename this field "captcha_results" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(îï²”ýÿÿÿÿ8â€ÿ¤º1
+java:S3008@"ZRename this field "captcha_results" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(îï²”ýÿÿÿÿ8²×Áì»1
 v
-java:S3008C"YRename this field "captcha_expire" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ØÉê€8â€ÿ¤º1
+java:S3008D"YRename this field "captcha_expire" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ØÉê€8²×Áì»1
 u
-java:S3008G"XRename this field "captcha_fails" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¿ÌØ¹8â€ÿ¤º1
+java:S3008H"XRename this field "captcha_fails" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¿ÌØ¹8²×Áì»1
 v
-java:S3008J"YRename this field "session_expire" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ý¶Ÿ‹8â€ÿ¤º1
+java:S3008K"YRename this field "session_expire" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ý¶Ÿ‹8²×Áì»1
 :
-java:S2386("Make this member "protected".(×ò€¿8ã€ÿ¤º1
+java:S2386)"Make this member "protected".(×ò€¿8³×Áì»1
 :
-java:S2386,"Make this member "protected".(‚ªçŸ8ä€ÿ¤º1
+java:S2386-"Make this member "protected".(‚ªçŸ8´×Áì»1
 ?
-java:S23860"Make this member "protected".(€‘ä¸úÿÿÿÿ8ä€ÿ¤º1
+java:S23861"Make this member "protected".(€‘ä¸úÿÿÿÿ8´×Áì»1
 :
-java:S23864"Make this member "protected".(©¬³Ä8ä€ÿ¤º1
+java:S23865"Make this member "protected".(©¬³Ä8´×Áì»1
 :
-java:S23867"Make this member "protected".(ä›¯ß8ä€ÿ¤º1
+java:S23868"Make this member "protected".(ä›¯ß8´×Áì»1
 :
-java:S2386<"Make this member "protected".(¶õçÒ8ä€ÿ¤º1
+java:S2386="Make this member "protected".(¶õçÒ8´×Áì»1
 ?
-java:S2386?"Make this member "protected".(îï²”ýÿÿÿÿ8ä€ÿ¤º1
+java:S2386@"Make this member "protected".(îï²”ýÿÿÿÿ8´×Áì»1
 :
-java:S2386C"Make this member "protected".(ØÉê€8ä€ÿ¤º1
+java:S2386D"Make this member "protected".(ØÉê€8´×Áì»1
 :
-java:S2386G"Make this member "protected".(¿ÌØ¹8ä€ÿ¤º1
+java:S2386H"Make this member "protected".(¿ÌØ¹8´×Áì»1
 :
-java:S2386J"Make this member "protected".(ý¶Ÿ‹8ä€ÿ¤º1
+java:S2386K"Make this member "protected".(ý¶Ÿ‹8´×Áì»1
 K
-java:S2440c".Remove this instantiation of "CaptahaManager".(‚¶ˆš8ô€ÿ¤º1
-X	java:S125l"<This block of commented-out lines of code should be removed.(ºæ–è8ú€ÿ¤º1
-I
-java:S1602p",Remove useless curly braces around statement(è¶…Ð8û€ÿ¤º1
-o	java:S100y"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°þÿÿÿÿ8ÿ¤º1
+java:S2440d".Remove this instantiation of "CaptahaManager".(‚¶ˆš8¾×Áì»1
+X	java:S125~"<This block of commented-out lines of code should be removed.(ºæ–è8Â×Áì»1
+J
+java:S1602‚",Remove useless curly braces around statement(è¶…Ð8Ã×Áì»1
+p	java:S100‹"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(º•ü°þÿÿÿÿ8Ê×Áì»1
+V
+java:S1128"4Remove this unused import 'java.time.LocalDateTime'.(æÃ§ƒüÿÿÿÿ8Ë×Áì»1

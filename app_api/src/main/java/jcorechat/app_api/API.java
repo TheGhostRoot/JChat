@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -102,6 +103,57 @@ public class API {
         databaseManager.setupMySQL();
 
         databaseHandler = new DatabaseHandler(databaseManager);
+
+        long user_id = databaseHandler.createUser("John", "fwfewfw@text.com", "fwfwc3gwr",
+                "wfwfwfwg3q23tg24fG", "FYGIUHOI8YT76R75E4");
+
+        long user_id2 = databaseHandler.createUser("Bob", "fwfe22wfw@text.com", "fwf22wc3gwr",
+                "wfwfwfw22g3q23tg24fG", "FYGIUH22OI8YT76R75E4");
+
+
+        /*
+        databaseHandler.addMessage(0, user_id, user_id2, "Hello");
+
+        long channel_id = databaseHandler.getDMChannelID(user_id, user_id2);
+        Map<String, List<Object>> all_messages = databaseHandler.getMessages(channel_id, 10);
+        long msg_id = Long.parseLong(String.valueOf(all_messages.get("msg_id").get(0)));
+
+        databaseHandler.addReaction(channel_id, msg_id, "Wow", user_id2, 0L);
+        databaseHandler.addReaction(channel_id, msg_id, "Yaaa", user_id, 0L);
+
+        databaseHandler.removeReaction(channel_id, msg_id, "Wow", user_id2, 0L);
+
+        databaseHandler.createPost(user_id, "My first Post", "No background");
+
+        Map<String, List<Object>> posts = databaseHandler.getLatestPosts(1);
+        long post_id = Long.parseLong(String.valueOf(posts.get("id").get(0)));
+
+        databaseHandler.addCommentToPost(user_id, post_id, "My comment");
+
+        Map<String, List<Object>> all_comments = databaseHandler.getLatestCommentsOnPost(post_id, 1);
+        Long msg_id = null;
+        int i = 0;
+        for (Object sender_id : all_comments.get("send_by")) {
+            if (Long.valueOf(String.valueOf(sender_id)) == user_id) {
+                msg_id = Long.valueOf(String.valueOf(all_comments.get("msg_id").get(i)));
+            }
+            i++;
+        }
+
+        databaseHandler.updateProfilePfp(user_id, "new pfp");
+        databaseHandler.updateProfileBadges(user_id, "new Badges");
+        databaseHandler.updateProfileBanner(user_id, "new banner");
+        databaseHandler.updateProfileAnimations(user_id, "new animations");
+        databaseHandler.updateProfileCoins(user_id, 100);
+        databaseHandler.updateProfilePets(user_id, "My God");*/
+
+
+
+
+
+
+
+
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
