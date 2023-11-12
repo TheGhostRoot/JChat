@@ -147,9 +147,11 @@ public class API {
         databaseHandler.updateProfileCoins(user_id, 100);
         databaseHandler.updateProfilePets(user_id, "My God");*/
 
+        databaseHandler.createGroup(user_id, "My Group", "My logo", "My banner",
+                "no animations", "some settings");
 
-
-
+        List<Long> groups = databaseHandler.getAllGroupsWithUser(user_id);
+        long group_id = groups.get(0);
 
 
 

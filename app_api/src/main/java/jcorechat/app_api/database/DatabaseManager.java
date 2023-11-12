@@ -94,6 +94,7 @@ public class DatabaseManager {
             group_table.add("logo TEXT NOT NULL, ");
             group_table.add("banner TEXT NOT NULL, ");
             group_table.add("animations TEXT NOT NULL, ");
+            group_table.add("created_at TIMESTAMP NOT NULL, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
             List<String> group_members_tabls = new ArrayList<>();
@@ -250,6 +251,7 @@ public class DatabaseManager {
             group_table.add("banner TEXT NOT NULL, ");
             group_table.add("animations TEXT NOT NULL, ");
             group_table.add("settings TEXT NOT NULL, ");
+            group_table.add("created_at TIMESTAMP NOT NULL, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
             List<String> group_members_tabls = new ArrayList<>();

@@ -1634,6 +1634,8 @@ public class DatabaseHandler {
 
 
 
+
+
     public boolean addCommentToPost(long sender_id, long post_id, String message) {
         LocalDateTime now = LocalDateTime.now();
         if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
@@ -1912,6 +1914,51 @@ public class DatabaseHandler {
         return false;
     }
 
+    public List<Long> getAllGroupsWithUser(long user_id) {
+        List<Long> all_groups = new ArrayList<>();
+
+        if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(user_id);
+
+            Map<String, List<Object>> groups_id = databaseManager.getDataSQL(DatabaseManager.table_group_members,
+                    "group_id", "member_id = ?", condition_data,
+                    null, "", 0);
+
+            if (groups_id == null || groups_id.isEmpty() || groups_id.get("group_id").isEmpty()) {
+                return null;
+            }
+
+            for (Object group_id : groups_id.get("group_id")) {
+                all_groups.add(Long.parseLong(String.valueOf(group_id)));
+            }
+
+            return all_groups.isEmpty() ? null : all_groups;
+
+        } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
+            List<Map<String, Object>> groups = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    null, false, "members");
+
+            if (groups == null || groups.isEmpty()) {
+                return null;
+            }
+
+            for (Map<String, Object> group : groups) {
+                for (Map<String, Object> member : (List<Map<String, Object>>) group.get("members")) {
+                    if (Long.valueOf(String.valueOf(member.get("member_id"))) == user_id) {
+                        all_groups.add(Long.parseLong(String.valueOf(group.get("id"))));
+                        break;
+                    }
+                }
+            }
+
+            return all_groups.isEmpty() ? null : all_groups;
+
+        }
+
+        return null;
+    }
+
     public boolean createGroup(long owner_id, String name, String logo, String banner, String animations,
                                String settings) {
         if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
@@ -1924,9 +1971,33 @@ public class DatabaseHandler {
             group_data.add(banner);
             group_data.add(animations);
             group_data.add(settings);
+            group_data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
 
-            return databaseManager.addDataSQL(DatabaseManager.table_groups,
-                    "name, owner_id, logo, banner, animations, settings", "?, ?, ?, ?, ?, ?", group_data);
+            if (!databaseManager.addDataSQL(DatabaseManager.table_groups,
+                    "name, owner_id, logo, banner, animations, settings, created_at",
+                    "?, ?, ?, ?, ?, ?, ?",
+                    group_data)) {
+                return false;
+            }
+
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(owner_id);
+
+            Map<String, List<Object>> group_id = databaseManager.getDataSQL(DatabaseManager.table_groups,
+                    "id", "owner_id = ?", condition_data, null,
+                    "created_at DESC", 1);
+
+            if (group_id == null || group_id.isEmpty() || group_id.get("id") == null ||
+                    group_id.get("id").isEmpty()) {
+                return false;
+            }
+
+            List<Object> values = new ArrayList<>();
+            values.add(Long.parseLong(String.valueOf(group_id.get("id").get(0))));
+            values.add(owner_id);
+
+            return databaseManager.addDataSQL(DatabaseManager.table_group_members,
+                    "group_id, member_id, roles_id, nickname", "?, ?, '', NULL", values);
 
         } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
             if (checkIfAccountExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
@@ -1944,10 +2015,16 @@ public class DatabaseHandler {
                             .append("name", name).append("owner_id", owner_id)
                             .append("logo", logo).append("banner", banner)
                             .append("animations", animations)
-                            .append("settings", settings), null);
+                            .append("settings", settings).append("members",
+                                    Arrays.asList(new Document("member_id", owner_id)
+                                            .append("roles_id", "").append("nickname", null))), null);
 
         }
         return false;
+    }
+
+    public boolean deleteGroup(long group_id) {
+
     }
 
     public boolean updateGroupSettings(long actor_id, long group_id, String new_settings, String log_message) {
@@ -2120,11 +2197,23 @@ public class DatabaseHandler {
             if (checkIfAccountExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
                     new Document("id", group_id), true, "name"))) return false;
 
-            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_group_members,
-                    new Document("group_id", group_id)
-                            .append("member_id", member_id)
-                            .append("roles_id", roles_id)
-                            .append("nickname", nickname), null) &&
+            List<Map<String, Object>> group = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), true, "members");
+
+            if (group == null) {
+                return false;
+            }
+
+            Map<String, Object> member_data = new HashMap<>();
+            member_data.put("member_id", member_id);
+            member_data.put("roles_id", roles_id);
+            member_data.put("nickname", nickname);
+
+            List<Map<String, Object>> all_members = (List<Map<String, Object>>) group.get(0).get("members");
+            all_members.add(member_data);
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), new Document("members", all_members)) &&
                     updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group");
         }
         return false;
@@ -2135,18 +2224,57 @@ public class DatabaseHandler {
         if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
             List<Object> member_data = new ArrayList<>();
             member_data.add(group_id);
-            member_data.add(member_id);
 
-            return databaseManager.deleteDataSQL(DatabaseManager.table_group_members,
-                    "group_id = ? AND member_id = ?", member_data) ?
-                    updateGroupLogs(member_id, group_id, log_message, now, leave_type) : false;
+            Map<String, List<Object>> group = databaseManager.getDataSQL(DatabaseManager.table_group_members,
+                    "member_id", "group_id = ?", member_data, null, "" ,0);
+
+            if (group == null) {
+                return false;
+            }
+
+            if (group.isEmpty() || group.get("member_id").isEmpty()) {
+                // the group is empty | delete the group
+                return deleteGroup(group_id);
+
+            } else {
+
+                member_data.add(member_id);
+
+                return databaseManager.deleteDataSQL(DatabaseManager.table_group_members,
+                        "group_id = ? AND member_id = ?", member_data) ?
+                        updateGroupLogs(member_id, group_id, log_message, now, leave_type) : false;
+            }
 
         } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
 
-            return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_group_members,
-                    new Document("group_id", group_id)
-                            .append("member_id", member_id)) &&
-                    updateGroupLogs(member_id, group_id, log_message, now, leave_type);
+            List<Map<String, Object>> group = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), true, "members");
+
+            if (group == null || group.isEmpty()) {
+                return false;
+            }
+
+
+            List<Map<String, Object>> all_members = (List<Map<String, Object>>) group.get(0).get("members");
+
+            for (int i = 0; i < all_members.size(); i++) {
+                if (Long.valueOf(String.valueOf(all_members.get(i).get("member_id"))) == member_id) {
+                    all_members.remove(i);
+                    break;
+                }
+            }
+
+            if (all_members.isEmpty()) {
+                // last member left | delete the group
+                return deleteGroup(group_id);
+
+            } else {
+                return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_groups,
+                        new Document("id", group_id)
+                                .append("members", all_members)) &&
+                        updateGroupLogs(member_id, group_id, log_message, now, leave_type);
+
+            }
         }
         return false;
     }
@@ -2181,40 +2309,32 @@ public class DatabaseHandler {
             if (checkIfAccountExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", actor_id), true, "name"))) return false;
 
-            Document filter = new Document("group_id", group_id).append("member_id", member_id);
-            List<Map<String, Object>> user_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_group_members,
-                    filter, true, "roles_id");
+            Document filter = new Document("group_id", group_id);
+            List<Map<String, Object>> user_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, true, "members");
 
             if (user_data == null) {
                 return false;
             }
 
             String role_value = "," + role_id;
-            if (user_data.isEmpty() || user_data.get(0).isEmpty()) {
-                if (toAdd) {
-                    return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_group_members,
-                            filter, new Document("roles_id", role_value)) &&
-                            updateGroupLogs(actor_id, group_id, log_message, now, "Added Roles From Member");
-
-                } else {
-                    return false;
-                }
-
-            } else {
-                String current_roles = String.valueOf(user_data.get(0).get("roles_id"));
-
-                if (toAdd) {
-                    current_roles += role_value;
-                    return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_group_members,
-                            filter, new Document("roles_id", current_roles)) &&
-                            updateGroupLogs(actor_id, group_id, log_message, now, "Added Roles From Member");
-
-                } else {
-                    return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_group_members,
-                            filter, new Document("roles_id", current_roles.replace(role_value, ""))) &&
-                            updateGroupLogs(actor_id, group_id, log_message, now, "Removed Roles From Member");
+            List<Map<String, Object>> members = (List<Map<String, Object>>) user_data.get(0).get("members");
+            for (Map<String, Object> mem : members) {
+                if (Long.valueOf(String.valueOf(mem.get("member_id"))) == member_id) {
+                    if (toAdd) {
+                        mem.put("roles_id", String.valueOf(mem.get("roles_id")) + role_value);
+                    } else {
+                        mem.put("roles_id", String.valueOf(mem.get("roles_id")).replace(role_value, ""));
+                    }
+                    break;
                 }
             }
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, new Document("members", members)) &&
+                    updateGroupLogs(actor_id, group_id, log_message, now,
+                            toAdd ? "Added Roles From Member" : "Removed Roles From Member" );
+
 
         }
         return false;
@@ -2242,9 +2362,24 @@ public class DatabaseHandler {
             if (checkIfAccountExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", actor_id), true, "name"))) return false;
 
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_group_members,
-                    new Document("group_id", group_id).append("member_id", member_id),
-                    new Document("nickname", new_nickname)) &&
+            Document filter = new Document("group_id", group_id);
+            List<Map<String, Object>> user_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, true, "members");
+
+            if (user_data == null) {
+                return false;
+            }
+
+            List<Map<String, Object>> members = (List<Map<String, Object>>) user_data.get(0).get("members");
+            for (Map<String, Object> mem : members) {
+                if (Long.valueOf(String.valueOf(mem.get("member_id"))) == member_id) {
+                    mem.put("nickname", new_nickname);
+                    break;
+                }
+            }
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, new Document("members", members)) &&
                     updateGroupLogs(actor_id, group_id, log_message, now, "Updated Nickname");
 
 
