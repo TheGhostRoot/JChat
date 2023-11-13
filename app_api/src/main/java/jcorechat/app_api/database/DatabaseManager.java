@@ -777,6 +777,10 @@ public class DatabaseManager {
 
         if (null != changes) {
             for (Object value : changes) {
+                if (value == null) {
+                    preparedStatement.setNull(parameterIndex, Types.NULL);
+                    continue;
+                }
                 switch (value.getClass().getSimpleName()) {
                     case "String":
                         preparedStatement.setString(parameterIndex, String.valueOf(value));
@@ -870,7 +874,7 @@ public class DatabaseManager {
     }
 
     protected Map<String, List<Object>> getDataSQL(String table, String data_to_get, String condition,
-                                              List<Object> conditionData, Map<String, List<Object>> join_data,
+                                              List<Object> conditionData, Map<String, String> join_data,
                                               String order, int limit) {
 
         if (postgressql_connection == null && mysql_connection == null) {
@@ -879,15 +883,12 @@ public class DatabaseManager {
 
         StringBuilder select_query = new StringBuilder("SELECT ").append(data_to_get).append(" FROM ").append(table);
 
-        // join_data ->  key = table name ; value = index 0 -> condition  | the rest is data for condition
+        // join_data ->  key = table name ; value = condition
         if (null != join_data && !join_data.isEmpty()) {
-            for (Map.Entry<String, List<Object>> entry : join_data.entrySet()) {
-                List<Object> value = entry.getValue();
-                select_query.append(" JOIN ").append(entry.getKey()).append(" ON ")
-                        .append(value.get(0));
-                value.remove(0);
-                entry.setValue(value);
+            for (Map.Entry<String, String> entry : join_data.entrySet()) {
+                select_query.append(" JOIN ").append(entry.getKey()).append(" ON ").append(entry.getValue());
             }
+
         }
 
         if (!condition.isBlank()) { select_query.append(" WHERE ").append(condition); }
@@ -900,20 +901,10 @@ public class DatabaseManager {
 
             // We use Java 17 so the hashmap is ordered, and we assume that it is.
 
-            short i = 1;
-
             PreparedStatement preparedStatement = getSQLConnection().prepareStatement(select_query.append(";")
                     .toString());
 
-            if (null != join_data && !join_data.isEmpty()) {
-                for (Map.Entry<String, List<Object>> entry : join_data.entrySet()) {
-                    List<Object> data_list = setDataSQL(i, entry.getValue(), preparedStatement);
-                    i = (short) data_list.get(0);
-                    preparedStatement = (PreparedStatement) data_list.get(1);
-                }
-            }
-
-            return readOutputSQL(((PreparedStatement) setDataSQL(i, conditionData, preparedStatement).get(1)).executeQuery());
+            return readOutputSQL(((PreparedStatement) setDataSQL((short) 1, conditionData, preparedStatement).get(1)).executeQuery());
 
         } catch (Exception e) {
             return null;
@@ -945,6 +936,23 @@ public class DatabaseManager {
     protected Connection getSQLConnection() {
         return postgressql_connection != null ? postgressql_connection :
                 mysql_connection;
+    }
+
+    protected List<Map<String, Object>> getCollectionMongo(String table, String collection, Document filter) {
+        List<Map<String, Object>> group = MongoReadCollectionNoSQL(table,
+                filter, true, collection);
+
+        if (group == null) {
+            return null;
+        }
+
+        List<Map<String, Object>> all_categories = new ArrayList<>();
+        Object category = group.get(0).get(collection);
+
+        if (category != null) {
+            all_categories.addAll((List<Map<String, Object>>) group.get(0).get(collection));
+        }
+        return all_categories;
     }
 
 }
