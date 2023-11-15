@@ -1,5 +1,6 @@
 package jcorechat.app_api.database;
 
+
 import jcorechat.app_api.API;
 import org.bson.Document;
 
@@ -63,8 +64,9 @@ public class DatabaseHandler {
             return id;
 
         } else if (databaseManager.mongoClient != null && databaseManager.mongoDatabase != null) {
-            List<Map<String, Object>> accounts_id_data = databaseManager.MongoReadCollectionNoSQL(databaseManager.table_accounts, null,
-                    false, "id", "name", "email");
+            List<Map<String, Object>> accounts_id_data = databaseManager.MongoReadCollectionNoSQL(databaseManager.table_accounts,
+                    null,
+                    false, "id", "name", "email", "sign_key", "encryption_key");
 
             if (accounts_id_data == null) {
                 return null;
@@ -201,7 +203,7 @@ public class DatabaseHandler {
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_accounts,
                     new Document("id", id),
-                    new Document("starts_sub", new_starts.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))));
+                    new Document("starts_sub", new_starts.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
 
         }
         return false;
@@ -222,7 +224,7 @@ public class DatabaseHandler {
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_accounts,
                     new Document("id", id),
-                    new Document("ends_sub", new_stops));
+                    new Document("ends_sub", new_stops.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
 
         }
         return false;
@@ -318,15 +320,22 @@ public class DatabaseHandler {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     null, false, "session_id");
 
-            if (all_keys == null || all_keys.stream().anyMatch(map ->
-                    Long.valueOf(String.valueOf(map.get("sign_key"))) == session_id)) {
+            if (all_keys == null) {
                 return false;
+            }
+
+            for (Map<String, Object> map : all_keys) {
+                String sess_id = String.valueOf(map.get("session_id"));
+                if (!Objects.equals(sess_id, "null") && Long.valueOf(sess_id) == session_id) {
+                    return false;
+                }
             }
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_accounts,
                     new Document("id", id),
                     new Document("session_id", session_id).append("session_expire", 3)
-                            .append("last_edit_time", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))));
+                            .append("last_edit_time",
+                                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
 
         }
         return false;
@@ -551,6 +560,13 @@ public class DatabaseHandler {
     }
 
 
+
+
+
+
+
+
+
     public boolean addMessage(long channel_id, long sender_id, long resiver_id, String message) {
         if (message.isBlank()) {
             return false;
@@ -649,30 +665,28 @@ public class DatabaseHandler {
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             String send_at = now.format(formatter);
-
-            List<Object> all_ids = new ArrayList<>();
-            List<Object> all_channel_ids = Arrays.asList(chat_data.get(0).get("channel_id"));
-            List<Map<String, Object>> chat_msgs = (List<Map<String, Object>>) chat_data.get(0).get("msgs");
-            for (Map<String, Object> all_msg : chat_msgs) {
-                all_ids.add(all_msg.get("msg_id"));
-            }
-
-            long new_msg_id = databaseManager.generateID(all_ids);
             Document msg = new Document("msg", message);
 
             if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
 
                 return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_chats,
                         new Document("channel_id", channel_id == 0L ?
-                                databaseManager.generateID(all_channel_ids) : channel_id)
+                                databaseManager.generateID(new ArrayList<>()) : channel_id)
                                 .append("user1", sender_id)
                                 .append("user2", resiver_id)
                                 .append("msgs",
                                         Arrays.asList(msg.append("send_by", sender_id)
                                                 .append("send_at", send_at)
-                                                .append("msg_id", new_msg_id))), null);
+                                                .append("msg_id", databaseManager.generateID(new ArrayList<>())))),
+                        null);
 
             } else {
+
+                List<Object> all_ids = new ArrayList<>();
+                List<Map<String, Object>> chat_msgs = (List<Map<String, Object>>) chat_data.get(0).get("msgs");
+                for (Map<String, Object> all_msg : chat_msgs) {
+                    all_ids.add(all_msg.get("msg_id"));
+                }
 
                 LocalDateTime mostRecentDate = null;
                 Long resent_msg_id = null;
@@ -702,7 +716,7 @@ public class DatabaseHandler {
                 } else {
                     Map<String, Object> new_msg = new HashMap<>();
                     new_msg.put("send_by", sender_id);
-                    new_msg.put("msg_id", new_msg_id);
+                    new_msg.put("msg_id", databaseManager.generateID(all_ids));
                     new_msg.put("send_at", send_at);
                     new_msg.put("msg", message);
 
@@ -784,7 +798,10 @@ public class DatabaseHandler {
             int i = 0;
             for (Map<String, Object> map : mongoData) {
                 for (Map.Entry<String, Object> data : map.entrySet()) {
-                    result.get(data.getKey()).add(data.getValue());
+                    String key = data.getKey();
+                    if (!Objects.equals(key, "_id")) {
+                        result.get(key).add(data.getValue());
+                    }
                 }
                 i++;
                 if (i >= amount) {
@@ -914,6 +931,17 @@ public class DatabaseHandler {
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
     public boolean addReaction(long channel_id, long message_id, String reaction, long actor_id, long group_id) {
         if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
             if (sqlIfAccountExists(actor_id, databaseManager.table_accounts)) return false;
@@ -1033,19 +1061,41 @@ public class DatabaseHandler {
             if (checkIfAccountDoesntExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", actor_id), true, "name"))) return false;
 
-            List<Map<String, Object>> account_data2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    new Document("id", channel_id), true, "name");
+            List<Map<String, Object>> account_data2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("id", group_id), true, "channels");
 
             if (account_data2 == null || account_data2.isEmpty() || account_data2.get(0).isEmpty()) {
                 // TODO not a DM
                 return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
                         new Document("channel_id", channel_id).append("reaction", reaction)
                                 .append("msg_id", message_id));
-            }
 
+            } else {
+
+                boolean isInGroup = false;
+                for (Document channel : (List<Document>) account_data2.get(0).get("channels")) {
+                    isInGroup = Long.valueOf(String.valueOf(channel.get("channel_id"))) == channel_id;
+                    if (isInGroup) {
+                        break;
+                    }
+                }
+
+                if (isInGroup) {
+                    // TODO not DM
+
+                } else {
+
+                }
+
+            }
         }
         return false;
     }
+
+
+
+
+
 
 
 
@@ -1137,13 +1187,14 @@ public class DatabaseHandler {
 
             Map<String, Object> data = captcha_data.get(0);
             short time = Short.valueOf(String.valueOf(data.get("time")));
+            short failed = Short.valueOf(String.valueOf(data.get("failed")));
 
             if (String.valueOf(data.get("answer")).equals(given_answer)) {
                 // solved!
                 return databaseManager.MongoDeleteDataFromCollectionNoSQL(databaseManager.table_captchas, captcha_id);
 
-            } else if ((time <= 0) || (Short.valueOf(String.valueOf(data.get("failed"))) >= 3)) {
-                // failed!
+            } else if ((time <= 0) || (failed >= 3)) {
+                // didn't solved the captcha
                 databaseManager.MongoDeleteDataFromCollectionNoSQL(databaseManager.table_captchas, captcha_id);
 
                 return false;
@@ -1151,8 +1202,9 @@ public class DatabaseHandler {
             } else {
                 // the captcha was not solved and the user has more time and didn't failed 3 times
                 time--;
+                failed++;
                 databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_captchas,
-                        captcha_id, new Document("time", time));
+                        captcha_id, new Document("time", time).append("failed", failed));
 
                 return false;
 
@@ -1259,6 +1311,8 @@ public class DatabaseHandler {
 
 
 
+
+
     public boolean createPost(long sender_id, String msg, String background) {
         if (databaseManager.postgressql_connection != null || databaseManager.mysql_connection != null) {
             if (sqlIfAccountExists(sender_id, databaseManager.table_accounts)) return false;
@@ -1289,7 +1343,7 @@ public class DatabaseHandler {
                     new Document("id", id).append("sender_id", sender_id)
                     .append("msg", msg).append("send_at",
                             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                    .append("background", background), null);
+                    .append("background", background).append("comments", Arrays.asList()), null);
 
         }
         return false;
@@ -1312,11 +1366,15 @@ public class DatabaseHandler {
             result.put("msg", new ArrayList<>());
             result.put("send_at", new ArrayList<>());
             result.put("background", new ArrayList<>());
+            result.put("comments", new ArrayList<>());
 
             int i = 0;
             for (Map<String, Object> map : mongoData) {
                 for (Map.Entry<String, Object> data : map.entrySet()) {
-                    result.get(data.getKey()).add(data.getValue());
+                    String key = data.getKey();
+                    if (!Objects.equals(key, "_id")) {
+                        result.get(key).add(data.getValue());
+                    }
                 }
                 i++;
                 if (i >= amount) {
@@ -1468,7 +1526,10 @@ public class DatabaseHandler {
             int i = 0;
             for (Map<String, Object> map : mongoData) {
                 for (Map.Entry<String, Object> data : map.entrySet()) {
-                    result.get(data.getKey()).add(data.getValue());
+                    String key = data.getKey();
+                    if (!key.equals("_id")) {
+                        result.get(key).add(data.getValue());
+                    }
                 }
                 i++;
                 if (i >= amount) {
@@ -1712,7 +1773,7 @@ public class DatabaseHandler {
             collection.add(log);
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
-                    new Document("group_id", group_id), new Document("logs", collection));
+                    new Document("id", group_id), new Document("logs", collection));
         }
 
         return false;
@@ -1753,7 +1814,10 @@ public class DatabaseHandler {
             int i = 0;
             for (Map<String, Object> map : mongoData) {
                 for (Map.Entry<String, Object> data : map.entrySet()) {
-                    result.get(data.getKey()).add(data.getValue());
+                    String key = data.getKey();
+                    if (!key.equals("_id")) {
+                        result.get(key).add(data.getValue());
+                    }
                 }
                 i++;
                 if (i >= amount) {
@@ -2737,21 +2801,30 @@ public class DatabaseHandler {
             if (checkIfAccountDoesntExists(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", actor_id), true, "name"))) return null;
 
-            List<Map<String, Object>> roles_id = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_group_roles,
-                    new Document("group_id", group_id), false, "role_id");
+            Document filter = new Document("id", group_id);
+            List<Map<String, Object>> roles_id = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
+                    "roles", filter);
 
             if (roles_id == null) {
                 return null;
             }
 
-            long id = databaseManager.MongoGenerateID(roles_id);
+            List<Object> all_role_ids = new ArrayList<>();
+            for (Map<String, Object> role : roles_id) {
+                all_role_ids.add(role.get("role_id"));
+            }
 
-            if (databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_group_roles,
-                    new Document("group_id", group_id)
-                            .append("role_id", id)
-                            .append("name", name)
-                            .append("permissions", permissions)
-                            .append("role_type", role_type), null) &&
+            long id = databaseManager.generateID(all_role_ids);
+
+            Map<String, Object> New_role = new HashMap<>();
+            New_role.put("role_id", id);
+            New_role.put("name", name);
+            New_role.put("permissions", permissions);
+            New_role.put("role_type", role_type);
+            roles_id.add(New_role);
+
+            if (databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_groups,
+                    new Document("roles", roles_id), filter) &&
                     updateGroupLogs(actor_id, group_id, log_message, now, "Created "+role_type+" Role")) {
                 return id;
 

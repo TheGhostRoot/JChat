@@ -375,10 +375,6 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_chats);
             MongoDeleteCollectionNoSQL(table_reactions);
             MongoDeleteCollectionNoSQL(table_posts);
-            MongoDeleteCollectionNoSQL(table_group_channels);
-            MongoDeleteCollectionNoSQL(table_group_roles);
-            MongoDeleteCollectionNoSQL(table_group_logs);
-            MongoDeleteCollectionNoSQL(table_group_members);
             MongoDeleteCollectionNoSQL(table_groups);
 
 
@@ -389,10 +385,6 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_reactions);
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
-            MongoCreateCollectionNoSQL(table_group_channels);
-            MongoCreateCollectionNoSQL(table_group_members);
-            MongoCreateCollectionNoSQL(table_group_logs);
-            MongoCreateCollectionNoSQL(table_group_roles);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -591,6 +583,7 @@ public class DatabaseManager {
             return false;
         }
     }
+
 
     protected boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc) {
         if (mongoDatabase == null) {
@@ -947,10 +940,10 @@ public class DatabaseManager {
         }
 
         List<Map<String, Object>> all_categories = new ArrayList<>();
-        Object category = group.get(0).get(collection);
-
-        if (category != null) {
-            all_categories.addAll((List<Map<String, Object>>) group.get(0).get(collection));
+        if (!group.isEmpty()) {
+            if (group.get(0).get(collection) != null) {
+                all_categories.addAll((List<Map<String, Object>>) group.get(0).get(collection));
+            }
         }
         return all_categories;
     }
