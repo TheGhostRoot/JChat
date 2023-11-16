@@ -7,6 +7,7 @@ import org.bson.Document;
 import java.sql.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class DatabaseManager {
@@ -24,6 +25,7 @@ public class DatabaseManager {
     protected static final String table_posts = "posts";
     protected static final String table_post_comments = "post_comments";
     protected static final String table_profiles = "profiles";
+    protected static final String table_shop = "shop";
 
 
     protected final String postgressql_url = "jdbc:postgresql://localhost:5433/jcorechat-db";
@@ -46,6 +48,8 @@ public class DatabaseManager {
     protected MongoClient mongoClient = null;
 
 
+
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
 
@@ -174,7 +178,14 @@ public class DatabaseManager {
             profiles_table.add("animations TEXT, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
+            List<String> shop_table = new ArrayList<>();
+            shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
+            shop_table.add("item_name TEXT NOT NULL, ");
+            shop_table.add("item_price INT NOT NULL, ");
+            shop_table.add("seller_id BIGINT NOT NULL");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
             deleteTableSQL(table_group_members);
@@ -201,6 +212,7 @@ public class DatabaseManager {
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
+            createTableSQL(table_shop, shop_table);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -331,7 +343,14 @@ public class DatabaseManager {
             profiles_table.add("animations TEXT NULL, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
+            List<String> shop_table = new ArrayList<>();
+            shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
+            shop_table.add("item_name TEXT NOT NULL, ");
+            shop_table.add("item_price INT NOT NULL, ");
+            shop_table.add("seller_id BIGINT NOT NULL");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
             deleteTableSQL(table_group_members);
@@ -358,6 +377,7 @@ public class DatabaseManager {
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
+            createTableSQL(table_shop, shop_table);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -376,6 +396,7 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_reactions);
             MongoDeleteCollectionNoSQL(table_posts);
             MongoDeleteCollectionNoSQL(table_groups);
+            MongoDeleteCollectionNoSQL(table_shop);
 
 
             MongoCreateCollectionNoSQL(table_accounts);
@@ -385,6 +406,7 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_reactions);
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
+            MongoCreateCollectionNoSQL(table_shop);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -493,7 +515,7 @@ public class DatabaseManager {
         List<String> filter_list = Arrays.stream(filters).toList();
 
         try {
-            MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
+            MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find(condition).iterator();
 
             while (cursor.hasNext()) {
                 if (expectOne && !result.isEmpty() && !result.get(0).isEmpty()) {
@@ -946,6 +968,83 @@ public class DatabaseManager {
             }
         }
         return all_categories;
+    }
+
+
+    public boolean checkIDExists(long id, String table) {
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(id);
+
+            Map<String, List<Object>> data = getDataSQL(table, "id",
+                    "id = ?", condition_data, null, "", 0);
+
+            return data != null && data.get("id") != null && !data.get("id").isEmpty();
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table,
+                    new Document("id", id), true, "id");
+
+            return data != null && data.get(0) != null && data.get(0).get("id") != null;
+        }
+        return false;
+    }
+
+    public boolean checkNotUniqueWithStream(List<Map<String, Object>> values, String key, Object key_to_check) {
+        return values.stream().anyMatch(map ->
+                String.valueOf(map.get(key)).equals(key_to_check));
+    }
+
+    public List<Object> extract_all_content(List<Map<String, Object>> mongo_data, String to_extract) {
+        List<Object> extracted_data = new ArrayList<>();
+        for (Map<String, Object> map : mongo_data) {
+            if (map.containsKey(to_extract)) {
+                extracted_data.add(map.get(to_extract));
+            }
+        }
+        return extracted_data;
+    }
+
+    public List<Object> extract_all_content(Map<String, List<Object>> sql_data, String to_extract) {
+        List<Object> extracted_data = new ArrayList<>();
+        for (Map.Entry<String, List<Object>> map : sql_data.entrySet()) {
+            if (map.getKey().equals(to_extract)) {
+                extracted_data.add(map.getValue());
+            }
+        }
+        return extracted_data;
+    }
+
+    public boolean checkUnique(List<Map<String, Object>> mongo_data, Map<String, Object> values) {
+        for (Map<String, Object> map : mongo_data) {
+            for (Map.Entry<String, Object> map_data : map.entrySet()) {
+                String key = map_data.getKey();
+                if (values.containsKey(key) && values.get(key).equals(map_data.getValue())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public Map<String, List<Object>> transformMongoToSQL(int amount, List<Map<String, Object>> mongoData,
+                                                                 Map<String, List<Object>> result) {
+        int i = 0;
+        for (Map<String, Object> map : mongoData) {
+            for (Map.Entry<String, Object> data : map.entrySet()) {
+                String key = data.getKey();
+                if (!key.equals("_id")) {
+                    result.get(key).add(data.getValue());
+                }
+            }
+            i++;
+            if (i >= amount) {
+                break;
+            }
+        }
+
+        return result;
     }
 
 }

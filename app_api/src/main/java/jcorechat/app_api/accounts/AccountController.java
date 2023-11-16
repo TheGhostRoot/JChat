@@ -81,7 +81,6 @@ public class AccountController {
 
     @GetMapping()
     public String getAccount(HttpServletRequest request) {
-
         final Map<String, Object> data = API.jwtService.getData(request.getHeader("Authorization"));
         if (null == data) { return null; }
 

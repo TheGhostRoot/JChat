@@ -117,7 +117,7 @@ public class API {
         captahaManager = new CaptahaManager();
         databaseManager = new DatabaseManager();
 
-        databaseManager.setupMongoDB();
+        databaseManager.setupMySQL();
 
         databaseHandler = new DatabaseHandler(databaseManager);
 
