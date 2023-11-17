@@ -8,7 +8,11 @@ import java.sql.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DatabaseManager {
 
@@ -288,7 +292,6 @@ public class DatabaseManager {
             group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             group_categories_tabls.add("group_id BIGINT NOT NULL, ");
             group_categories_tabls.add("name TEXT NOT NULL, ");
-            group_categories_tabls.add("permissions TEXT NOT NULL, ");
             group_categories_tabls.add("category_type TEXT NOT NULL, ");
             group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
@@ -961,17 +964,17 @@ public class DatabaseManager {
             return null;
         }
 
-        List<Map<String, Object>> all_categories = new ArrayList<>();
         if (!group.isEmpty()) {
-            if (group.get(0).get(collection) != null) {
-                all_categories.addAll((List<Map<String, Object>>) group.get(0).get(collection));
+            Object group_collection = group.get(0).get(collection);
+            if (group_collection != null) {
+                return (List<Map<String, Object>>) group_collection;
             }
         }
-        return all_categories;
+        return null;
     }
 
 
-    public boolean checkIDExists(long id, String table) {
+    protected boolean checkIDExists(long id, String table) {
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(id);
@@ -991,12 +994,12 @@ public class DatabaseManager {
         return false;
     }
 
-    public boolean checkNotUniqueWithStream(List<Map<String, Object>> values, String key, Object key_to_check) {
+    protected boolean checkNotUniqueWithStream(List<Map<String, Object>> values, String key, Object key_to_check) {
         return values.stream().anyMatch(map ->
                 String.valueOf(map.get(key)).equals(key_to_check));
     }
 
-    public List<Object> extract_all_content(List<Map<String, Object>> mongo_data, String to_extract) {
+    protected List<Object> extract_all_content(List<Map<String, Object>> mongo_data, String to_extract) {
         List<Object> extracted_data = new ArrayList<>();
         for (Map<String, Object> map : mongo_data) {
             if (map.containsKey(to_extract)) {
@@ -1006,7 +1009,7 @@ public class DatabaseManager {
         return extracted_data;
     }
 
-    public List<Object> extract_all_content(Map<String, List<Object>> sql_data, String to_extract) {
+    protected List<Object> extract_all_content(Map<String, List<Object>> sql_data, String to_extract) {
         List<Object> extracted_data = new ArrayList<>();
         for (Map.Entry<String, List<Object>> map : sql_data.entrySet()) {
             if (map.getKey().equals(to_extract)) {
@@ -1016,7 +1019,7 @@ public class DatabaseManager {
         return extracted_data;
     }
 
-    public boolean checkUnique(List<Map<String, Object>> mongo_data, Map<String, Object> values) {
+    protected boolean checkUnique(List<Map<String, Object>> mongo_data, Map<String, Object> values) {
         for (Map<String, Object> map : mongo_data) {
             for (Map.Entry<String, Object> map_data : map.entrySet()) {
                 String key = map_data.getKey();
@@ -1028,7 +1031,7 @@ public class DatabaseManager {
         return true;
     }
 
-    public Map<String, List<Object>> transformMongoToSQL(int amount, List<Map<String, Object>> mongoData,
+    protected Map<String, List<Object>> transformMongoToSQL(int amount, List<Map<String, Object>> mongoData,
                                                                  Map<String, List<Object>> result) {
         int i = 0;
         for (Map<String, Object> map : mongoData) {
@@ -1045,6 +1048,459 @@ public class DatabaseManager {
         }
 
         return result;
+    }
+
+
+
+    protected List<Long> getUserRolesID(long user_id, long group_id) {
+        // we assume that user_id and group_id are valid
+        List<Long> roles = new ArrayList<>();
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(group_id);
+            condition_data.add(user_id);
+
+            Map<String, List<Object>> roles_data = getDataSQL(table_group_members, "roles_id",
+                    "group_id = ? AND member_id = ?",
+                    condition_data, null, "", 0);
+
+            if (roles_data == null || roles_data.isEmpty() || roles_data.get("roles_id").isEmpty()) {
+                return null;
+            }
+
+            for (String role_id_text : String.valueOf(roles_data.get("roles_id").get(0)).split(",")) {
+                roles.add(Long.parseLong(role_id_text));
+            }
+            return roles;
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> members_data = getCollectionMongo(table_groups, "members",
+                    new Document("id", group_id));
+
+            if (members_data == null || members_data.isEmpty() || members_data.get(0).isEmpty()) {
+                return null;
+            }
+
+            for (Map<String, Object> member : members_data) {
+                try {
+                    if (Long.parseLong(String.valueOf(member.get("member_id"))) == user_id) {
+                        for (String role_id_text : String.valueOf(member.get("roles_id")).split(",")) {
+                            roles.add(Long.parseLong(role_id_text));
+                        }
+                        return roles;
+                    }
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+
+        }
+        return null;
+    }
+
+    protected Map<String, Boolean> calculateRolePermissions(List<Long> roles_id, long group_id) {
+        // name of permission : does the roles provide it?
+        Map<String, Boolean> permissions = new HashMap<>();
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            for (long role_id : roles_id) {
+                condition_data.clear();
+                condition_data.add(role_id);
+                condition_data.add(group_id);
+
+                Map<String, List<Object>> role_data = getDataSQL(table_group_roles, "permissions",
+                        "role_id = ? AND group_id = ?", condition_data, null, "", 0);
+
+                if (role_data == null || role_data.isEmpty() || role_data.get("permissions") == null ||
+                        role_data.get("permissions").isEmpty()) {
+                    return null;
+                }
+
+                Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(String.valueOf(role_data
+                        .get("permissions").get(0))); // jwt token
+
+                if (permission_data == null) {
+                    return null;
+                }
+
+                permissions = OverridePermissions(permissions, permission_data.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> (Boolean) entry.getValue(),
+                                (existing, replacement) -> existing,
+                                HashMap::new
+                        )));
+            }
+
+            return permissions;
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> roles_data = getCollectionMongo(table_groups, "roles",
+                    new Document("id", group_id));
+
+            if (roles_data == null || roles_data.isEmpty() || roles_data.get(0).isEmpty()) {
+                return null;
+            }
+
+            for (Map<String, Object> role : roles_data) {
+                try {
+                    if (roles_id.contains(Long.parseLong(String.valueOf(role.get("role_id"))))) {
+                        Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(String.valueOf(role
+                                .get("permissions"))); // jwt token
+
+                        if (permission_data == null) {
+                            return null;
+                        }
+
+                        permissions = OverridePermissions(permissions, permission_data.entrySet().stream()
+                                .collect(Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        entry -> (Boolean) entry.getValue(),
+                                        (existing, replacement) -> existing,
+                                        HashMap::new
+                                )));
+                    }
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+
+            return permissions;
+        }
+        return null;
+    }
+
+    protected Map<Long, Map<String, Boolean>> calculateChannelPermissions(long channel_id, long group_id) {
+        Map<Long, Map<String, Boolean>> permissions = new HashMap<>();
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(channel_id);
+            condition_data.add(group_id);
+
+            Map<String, List<Object>> channel_data = getDataSQL(table_group_channels, "permissions",
+                        "channel_id = ? AND group_id = ?", condition_data, null, "", 0);
+
+            if (channel_data == null || channel_data.isEmpty() || channel_data.get("permissions") == null ||
+                        channel_data.get("permissions").isEmpty()) {
+                return null;
+            }
+
+            String channel_permissions_text = String.valueOf(channel_data.get("permissions").get(0));
+            if (channel_permissions_text.isBlank()) {
+                return permissions;
+            }
+
+            Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(channel_permissions_text); // jwt token
+
+            // expected data: role_id: {"permission": true/false}, ...
+
+            if (permission_data == null) {
+                return null;
+            }
+
+            for (Map.Entry<String, Object> entry : permission_data.entrySet()) {
+                try {
+                    permissions.put(Long.parseLong(String.valueOf(entry.getKey())),
+                            OverridePermissions((Map<String, Boolean>) entry.getValue()));
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+            return permissions;
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> channel_data = getCollectionMongo(table_groups, "channels",
+                    new Document("id", group_id));
+
+            if (channel_data == null || channel_data.isEmpty() || channel_data.get(0).isEmpty()) {
+                return null;
+            }
+
+            for (Map<String, Object> channel : channel_data) {
+                try {
+                    if (Long.parseLong(String.valueOf(channel.get("channel_id"))) == channel_id) {
+                        String channel_permissions_text = String.valueOf(channel.get("permissions"));
+                        if (channel_permissions_text.isBlank()) {
+                            return permissions;
+                        }
+
+                        Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(channel_permissions_text);// jwt token
+
+                        if (permission_data == null) {
+                            return null;
+                        }
+
+
+                        // expected data: role_id: {"permission": true/false}, ...
+
+                        for (Map.Entry<String, Object> entry : permission_data.entrySet()) {
+                            try {
+                                permissions.put(Long.parseLong(String.valueOf(entry.getKey())),
+                                        OverridePermissions((Map<String, Boolean>) entry.getValue()));
+                            } catch (Exception e) {
+                                return null;
+                            }
+                        }
+                        return permissions;
+                    }
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    protected Map<String, Boolean> OverridePermissions(Map<String, Boolean> role_permissions) {
+        for (Map.Entry<String, Boolean> permission_entry : role_permissions.entrySet()) {
+            String name_permission = permission_entry.getKey();
+            if (!role_permissions.containsKey(name_permission)) {
+                // that permission doesn't exist so save it.
+                role_permissions.put(name_permission, permission_entry.getValue());
+
+            } else if (!role_permissions.get(name_permission)) {
+                // the current permission is false | Update it to true
+                role_permissions.put(name_permission, true);
+            }
+        }
+
+        return role_permissions;
+    }
+
+    protected Map<String, Boolean> OverridePermissions(Map<String, Boolean> permissions,
+                                                    Map<String, Boolean> role_permissions) {
+        for (Map.Entry<String, Boolean> permission_entry : role_permissions.entrySet()) {
+            String name_permission = permission_entry.getKey();
+            if (!permissions.containsKey(name_permission)) {
+                // that permission doesn't exist so save it.
+                permissions.put(name_permission, permission_entry.getValue());
+
+            } else if (!permissions.get(name_permission)) {
+                // the current permission is false | Update it to true
+                permissions.put(name_permission, true);
+            }
+        }
+
+        return permissions;
+    }
+
+
+    protected boolean doesUserHavePermissionsInChannel(Map<Long, Map<String, Boolean>> channel_permissions,
+                                                    Map<String, Boolean> user_permissions, List<Long> roles_id,
+                                                    List<String> needed_permissions) {
+        if (channel_permissions == null) { return false; }
+
+        if (channel_permissions.isEmpty()) {
+            // channel has no permission override | Only the user permissions matter
+            short amount_of_matches = 0;
+            for (String n_permission : needed_permissions) {
+                if (user_permissions.containsKey(n_permission) && user_permissions.get(n_permission)) {
+                    amount_of_matches++;
+                }
+            }
+            return amount_of_matches == needed_permissions.size();
+
+        } else {
+            // channel has permission override | Only the channel's permission matter. (ofc after another override)
+            for (long role_id : roles_id) {
+                Map<String, Boolean> role_permissions = channel_permissions.get(role_id);
+                for (Map.Entry<String, Boolean> permission : role_permissions.entrySet()) {
+                    if (needed_permissions.contains(permission.getKey()) && permission.getValue()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+    protected boolean handleMessage(long channel_id, long sender_id, String message, LocalDateTime now,
+                                 ArrayList<Object> emptyArray, long resiver_id) {
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> edit_condition_data = emptyArray;
+            edit_condition_data.add(channel_id);
+
+            Map<String, List<Object>> current_chat_data = getDataSQL(table_chats,
+                    "msg, msg_id, send_by",
+                    "channel_id = ?",
+                    edit_condition_data, null, "send_at DESC", 0);
+
+            if (current_chat_data == null || current_chat_data.get("msg_id") == null ||
+                    current_chat_data.get("send_by") == null || current_chat_data.get("msg") == null) {
+                return false;
+            }
+
+            edit_condition_data.add(sender_id);
+
+            // MESSAGE END -> {"p":true,"r":message_id}   pinned and replying to message id
+            // MESSAGE END -> {"r":message_id}     only replying to message id
+            // MESSAGE END -> {"p":true}                only pinned  (p) is always true
+            // MESSAGE END -> {}                no data at all
+
+            Matcher matcher = Pattern.compile("\\{.*?\\}").matcher(message);
+
+            // Find all matches
+            String lastMatch = null;
+            while (matcher.find()) {
+                try {
+                    lastMatch = matcher.group();
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
+            if (lastMatch == null) {
+                message += "{}";
+            }
+
+            if (!current_chat_data.get("msg").isEmpty()) {
+                List<Object> set_data = emptyArray;
+                set_data.add(message);
+
+                List<Object> chat_data = emptyArray;
+                chat_data.add(channel_id);
+                chat_data.add(message);
+                chat_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+                chat_data.add(sender_id);
+                chat_data.add(generateID(current_chat_data.get("msg_id")));
+                try {
+                    if (Long.parseLong(String.valueOf(current_chat_data.get("send_by").get(0))) == sender_id && message.endsWith("{}")) {
+                        edit_condition_data.add(Long.parseLong(String.valueOf(current_chat_data.get("msg_id").get(0))));
+                        if (editDataSQL(table_chats, postgressql_connection != null ? "msg = msg || ?" :
+                                        "msg = CONCAT(msg, ?)", set_data,
+                                "channel_id = ? AND send_by = ? AND msg_id = ?",
+                                edit_condition_data)) {
+                            return true;
+                        }
+                    }
+
+                    return addDataSQL(DatabaseManager.table_chats, "channel_id, msg, send_at, send_by, msg_id",
+                            "?, ?, ?, ?, ?", chat_data);
+
+                } catch (Exception e) {
+                    return false;
+                }
+
+            } else if (channel_id == 0L) {
+                // no messages in this channel
+
+                Map<String, List<Object>> channel_ids = getDataSQL(table_chats, "channel_id",
+                        "", null, null, "", 0);
+
+                if (channel_ids == null || channel_ids.get("channel_id") == null) {
+                    return false;
+                }
+
+                List<Object> new_chat_data = emptyArray;
+                new_chat_data.add(generateID(channel_ids.get("channel_id")));
+                new_chat_data.add(message);
+                new_chat_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+                new_chat_data.add(sender_id);
+                new_chat_data.add(generateID(current_chat_data.get("msg_id")));
+
+                return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
+                        "?, ?, ?, ?, ?", new_chat_data);
+
+            } else {
+                return false;
+            }
+        } else if ((mongoClient != null && mongoDatabase != null) ||
+                !checkIDExists(sender_id, table_accounts) ||
+                !checkIDExists(resiver_id, table_accounts)) {
+
+            Document convId = new Document("channel_id", channel_id);
+
+            List<Map<String, Object>> chat_data = MongoReadCollectionNoSQL(table_chats,
+                    convId, true, "msgs");
+
+            if (chat_data == null) {
+                return false;
+            }
+
+            String send_at = now.format(formatter);
+            if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
+                return MongoAddDataToCollectionNoSQL(table_chats,
+                        new Document("channel_id", channel_id == 0L ?
+                                generateID(emptyArray) : channel_id)
+                                .append("user1", sender_id)
+                                .append("user2", resiver_id)
+                                .append("msgs",
+                                        Arrays.asList(new Document("msg", message)
+                                                .append("send_by", sender_id)
+                                                .append("send_at", send_at)
+                                                .append("msg_id", generateID(emptyArray)))),
+                        null);
+
+            } else {
+
+                List<Map<String, Object>> chat_msgs = (List<Map<String, Object>>) chat_data.get(0).get("msgs");
+                List<Object> all_ids = extract_all_content(chat_msgs, "msg_id");
+
+                LocalDateTime mostRecentDate = null;
+                Long resent_msg_id = null;
+                String current_message = "";
+                Long message_sender_id = null;
+
+                try {
+                    for (Map<String, Object> map : chat_msgs) {
+                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")), formatter);
+                        if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
+                            mostRecentDate = dateTime;
+                            resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
+                            current_message = String.valueOf(map.get("msg"));
+                            message_sender_id = Long.valueOf(String.valueOf(map.get("send_by")));
+                        }
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+
+                if (message_sender_id == sender_id && message.endsWith("{}")) {
+                    try {
+                        for (int i = 0; i < chat_msgs.size(); i++) {
+                            Map<String, Object> current_msg = chat_msgs.get(i);
+                            if (Long.valueOf(String.valueOf(current_msg.get("send_by"))) == sender_id &&
+                                    Long.valueOf(String.valueOf(current_msg.get("msg_id"))) == resent_msg_id) {
+                                current_msg.put("msg", current_message + message);
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        return false;
+                    }
+
+                } else {
+                    Map<String, Object> new_msg = new HashMap<>();
+                    new_msg.put("send_by", sender_id);
+                    new_msg.put("msg_id", generateID(all_ids));
+                    new_msg.put("send_at", send_at);
+                    new_msg.put("msg", message);
+
+                    chat_msgs.add(new_msg);
+
+                }
+                return MongoUpdateDocumentInCollectionNoSQL(table_chats, convId, new Document("msgs", chat_msgs));
+
+            }
+
+        }
+        return false;
+    }
+
+
+    protected boolean handleReactions(long channel_id, long message_id, String reaction, long actor_id) {
+        Document data = new Document("channel_id", channel_id)
+                .append("reaction", reaction)
+                .append("msg_id", message_id).append("member_id", actor_id);
+
+        List<Map<String, Object>> reaction_data = MongoReadCollectionNoSQL(table_reactions, data, false);
+
+        if (reaction_data == null || !reaction_data.isEmpty() || !reaction_data.get(0).isEmpty()) {
+            return false;
+        }
+
+        return MongoAddDataToCollectionNoSQL(table_reactions, data,null);
     }
 
 }

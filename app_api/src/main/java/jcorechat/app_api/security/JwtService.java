@@ -35,6 +35,12 @@ public class JwtService {
                 getUserClaims(API.cription.UserDecrypt(jwt, key[0]), key[1]);
         return null != all ? new HashMap<>(all) : null;
     }
+
+    public Map<String, Object> getDataNoEncryption(final String jwt) {
+        Claims all = getGlobalClaims(jwt);
+        return null != all ? new HashMap<>(all) : null;
+    }
+
     private Claims getGlobalClaims(final String jwt) {
         if (jwt == null) { return null; }
         Claims claims;
