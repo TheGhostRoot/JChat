@@ -53,7 +53,7 @@ public class DatabaseManager {
 
 
 
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
 
 
 
@@ -103,6 +103,7 @@ public class DatabaseManager {
             group_table.add("banner TEXT NOT NULL, ");
             group_table.add("animations TEXT NOT NULL, ");
             group_table.add("created_at TIMESTAMP NOT NULL, ");
+            group_table.add("group_events TEXT, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
             List<String> group_members_tabls = new ArrayList<>();
@@ -169,6 +170,7 @@ public class DatabaseManager {
             posts_comment_table.add("send_at timestamp NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+            posts_comment_table.add("repl_to TEXT, ");
             posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
             posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
@@ -268,6 +270,7 @@ public class DatabaseManager {
             group_table.add("animations TEXT NOT NULL, ");
             group_table.add("settings TEXT NOT NULL, ");
             group_table.add("created_at TIMESTAMP NOT NULL, ");
+            group_table.add("group_events TEXT, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
             List<String> group_members_tabls = new ArrayList<>();
@@ -333,6 +336,7 @@ public class DatabaseManager {
             posts_comment_table.add("send_at timestamp NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+            posts_comment_table.add("repl_to TEXT, ");
             posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
             posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
@@ -746,14 +750,8 @@ public class DatabaseManager {
         }
     }
 
-    protected long MongoGenerateID(List<Map<String, Object>> post_data) {
-        List<Object> all_posts = new ArrayList<>();
-
-        for (Map<String, Object> data : post_data) {
-            all_posts.addAll(data.values());
-        }
-
-        return generateID(all_posts);
+    protected long MongoGenerateID(List<Map<String, Object>> post_data, String ids) {
+        return generateID(extract_all_content(post_data, ids));
     }
 
 
@@ -985,11 +983,38 @@ public class DatabaseManager {
             return data != null && data.get("id") != null && !data.get("id").isEmpty();
 
         } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> data = getCollectionMongo(table, "id", new Document("id", id));
+            return data != null && !data.isEmpty() && data.get(0) != null && !data.get(0).isEmpty();
+        }
+        return false;
+    }
 
-            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table,
-                    new Document("id", id), true, "id");
+    protected boolean checkRoleExists(long role_id, long group_id) {
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(role_id);
+            condition_data.add(group_id);
 
-            return data != null && data.get(0) != null && data.get(0).get("id") != null;
+            Map<String, List<Object>> data = getDataSQL(table_group_roles, "role_id",
+                    "role_id = ? AND group_id = ?", condition_data, null, "", 0);
+
+            return data != null && data.get("role_id") != null && !data.get("role_id").isEmpty();
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> roles_data = getCollectionMongo(table_groups, "roles",
+                    new Document("id", group_id));
+
+            if (roles_data == null) {
+                return false;
+            }
+
+            for (Map<String, Object> role : roles_data) {
+                if (Long.parseLong(String.valueOf(role.get("role_id"))) == role_id) {
+                    return true;
+                }
+            }
+
+            return false;
         }
         return false;
     }
@@ -1069,7 +1094,9 @@ public class DatabaseManager {
             }
 
             for (String role_id_text : String.valueOf(roles_data.get("roles_id").get(0)).split(",")) {
-                roles.add(Long.parseLong(role_id_text));
+                if (!role_id_text.isBlank()) {
+                    roles.add(Long.parseLong(role_id_text));
+                }
             }
             return roles;
 
@@ -1085,7 +1112,9 @@ public class DatabaseManager {
                 try {
                     if (Long.parseLong(String.valueOf(member.get("member_id"))) == user_id) {
                         for (String role_id_text : String.valueOf(member.get("roles_id")).split(",")) {
-                            roles.add(Long.parseLong(role_id_text));
+                            if (!role_id_text.isBlank()) {
+                                roles.add(Long.parseLong(role_id_text));
+                            }
                         }
                         return roles;
                     }
@@ -1100,6 +1129,10 @@ public class DatabaseManager {
 
     protected Map<String, Boolean> calculateRolePermissions(List<Long> roles_id, long group_id) {
         // name of permission : does the roles provide it?
+        if (roles_id == null) {
+            return null;
+        }
+
         Map<String, Boolean> permissions = new HashMap<>();
         if (postgressql_connection != null || mysql_connection != null) {
             List<Object> condition_data = new ArrayList<>();
@@ -1118,6 +1151,8 @@ public class DatabaseManager {
 
                 Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(String.valueOf(role_data
                         .get("permissions").get(0))); // jwt token
+
+                // expected {"permission_name": true/false, ...}
 
                 if (permission_data == null) {
                     return null;
@@ -1287,14 +1322,15 @@ public class DatabaseManager {
 
     protected boolean doesUserHavePermissionsInChannel(Map<Long, Map<String, Boolean>> channel_permissions,
                                                     Map<String, Boolean> user_permissions, List<Long> roles_id,
-                                                    List<String> needed_permissions) {
-        if (channel_permissions == null) { return false; }
-
+                                                    List<String> needed_permissions, long user_id, long group_id) {
+        if (channel_permissions == null || roles_id == null || user_permissions == null) { return false; }
+        if (checkOwner(user_id, group_id)) { return true; }
         if (channel_permissions.isEmpty()) {
             // channel has no permission override | Only the user permissions matter
             short amount_of_matches = 0;
             for (String n_permission : needed_permissions) {
-                if (user_permissions.containsKey(n_permission) && user_permissions.get(n_permission)) {
+                if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
+                        user_permissions.get(n_permission)) {
                     amount_of_matches++;
                 }
             }
@@ -1305,13 +1341,28 @@ public class DatabaseManager {
             for (long role_id : roles_id) {
                 Map<String, Boolean> role_permissions = channel_permissions.get(role_id);
                 for (Map.Entry<String, Boolean> permission : role_permissions.entrySet()) {
-                    if (needed_permissions.contains(permission.getKey()) && permission.getValue()) {
+                    String key = permission.getKey();
+                    if (!key.isBlank() && needed_permissions.contains(key) && permission.getValue()) {
                         return true;
                     }
                 }
             }
         }
         return false;
+    }
+
+    protected boolean doesUserHavePermissions(Map<String, Boolean> user_permissions,
+                                                       List<String> needed_permissions, long user_id, long group_id) {
+        if (user_permissions == null) { return false; }
+        if (checkOwner(user_id, group_id)) { return true; }
+        short matcher = 0;
+        for (String n_permission : needed_permissions) {
+            if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
+                    user_permissions.get(n_permission)) {
+                matcher++;
+            }
+        }
+        return matcher == needed_permissions.size();
     }
 
 
@@ -1361,7 +1412,7 @@ public class DatabaseManager {
                 List<Object> chat_data = emptyArray;
                 chat_data.add(channel_id);
                 chat_data.add(message);
-                chat_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+                chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 chat_data.add(sender_id);
                 chat_data.add(generateID(current_chat_data.get("msg_id")));
                 try {
@@ -1444,7 +1495,8 @@ public class DatabaseManager {
 
                 try {
                     for (Map<String, Object> map : chat_msgs) {
-                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")), formatter);
+                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")),
+                                formatter);
                         if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
                             mostRecentDate = dateTime;
                             resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
@@ -1501,6 +1553,169 @@ public class DatabaseManager {
         }
 
         return MongoAddDataToCollectionNoSQL(table_reactions, data,null);
+    }
+
+    protected Map<String, Boolean> calculateGroupSettings(long group_id) {
+        Map<String, Boolean> settings = new HashMap<>();
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(group_id);
+
+            Map<String, List<Object>> group_settings = getDataSQL(table_groups, "settings",
+                    "id = ?", condition_data, null, "", 0);
+
+            if (group_settings == null || group_settings.isEmpty()) {
+                return null;
+            }
+
+            if (group_settings.get("settings") == null || group_settings.get("settings").isEmpty()) {
+                return settings;
+            }
+
+            String settings_value_text = String.valueOf(group_settings.get("settings").get(0));
+            if (settings_value_text.isBlank() || settings_value_text.equals("null")) {
+                return settings;
+            }
+
+            Map<String, Object> settings_data = API.jwtService.getData(settings_value_text);
+            if (settings_data == null) {
+                return null;
+            }
+
+            return settings_data.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> (Boolean) entry.getValue(),
+                            (existing, replacement) -> existing,
+                            HashMap::new
+                    ));
+
+
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> group_data = MongoReadCollectionNoSQL(table_groups,
+                    new Document("id", group_id), true, "settings");
+
+            if (group_data == null || group_data.isEmpty() || group_data.get(0) == null) {
+                return null;
+            }
+
+            if (group_data.get(0).isEmpty() || group_data.get(0).get("settings") == null) {
+                return settings;
+            }
+
+            String settings_value_text = String.valueOf(group_data.get(0).get("settings"));
+            if (settings_value_text.isBlank() || settings_value_text.equals("null")) {
+                return settings;
+            }
+
+            Map<String, Object> settings_data = API.jwtService.getData(settings_value_text);
+            if (settings_data == null) {
+                return null;
+            }
+
+            return settings_data.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> (Boolean) entry.getValue(),
+                            (existing, replacement) -> existing,
+                            HashMap::new
+                    ));
+        }
+        return null;
+    }
+
+    protected boolean checkGroupAllows(Map<String, Boolean> group_settings, List<String> need_to_allow) {
+        if (group_settings == null) { return false; }
+        if (group_settings.isEmpty()) {
+            return true;
+        }
+        short match = 0;
+        for (Map.Entry<String, Boolean> settings : group_settings.entrySet()) {
+            if (need_to_allow.contains(settings.getKey()) && settings.getValue()) {
+                match++;
+            }
+        }
+        return match == need_to_allow.size();
+    }
+
+    protected boolean checkOwner(long user_id, long group_id) {
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(group_id);
+
+            Map<String, List<Object>> group_data = getDataSQL(table_groups, "owner_id",
+                    "id = ?", condition_data, null, "", 0);
+
+            try {
+                return Long.parseLong(String.valueOf(group_data.get("owner_id").get(0))) == user_id;
+
+            } catch (Exception e) {
+                return false;
+            }
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+            List<Map<String, Object>> group_data = MongoReadCollectionNoSQL(table_groups,
+                    new Document("id", group_id), true, "owner_id");
+
+            try {
+                return Long.parseLong(String.valueOf(group_data.get(0).get("owner_id"))) == user_id;
+
+            } catch (Exception e) {
+                return false;
+            }
+
+        }
+        return false;
+    }
+
+
+    protected boolean updateGroupLogs(long actor_id, long group_id, String log_message, LocalDateTime now,
+                                    String log_type) {
+        if (postgressql_connection != null || mysql_connection != null) {
+            List<Object> log_data = new ArrayList<>();
+            log_data.add(group_id);
+            log_data.add(actor_id);
+            log_data.add(log_type);
+            log_data.add(log_message);
+            log_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+
+            return addDataSQL(table_group_logs,"group_id, actor_id, log_type, log_message, acted_at",
+                    "?, ?, ?, ?, ?", log_data);
+
+        } else if (mongoClient != null && mongoDatabase != null) {
+
+            List<Map<String, Object>> collection = getCollectionMongo(table_groups, "logs",
+                    new Document("id", group_id));
+
+            Map<String, Object> log = new HashMap<>();
+            log.put("actor_id", actor_id);
+            log.put("log_type", log_type);
+            log.put("log_message", log_message);
+            log.put("acted_at", now.format(formatter));
+
+            collection.add(log);
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_groups,new Document("id", group_id),
+                    new Document("logs", collection));
+        }
+
+        return false;
+    }
+
+    protected boolean handleMemberLeaveGroupMongo(long member_id, long group_id, String leave_type, String log_message,
+                                                  LocalDateTime now, Document filter,
+                                                  List<Map<String, Object>> all_members) {
+        for (int i = 0; i < all_members.size(); i++) {
+            if (Long.valueOf(String.valueOf(all_members.get(i).get("member_id"))) == member_id) {
+                all_members.remove(i);
+                break;
+            }
+        }
+
+        return MongoUpdateDocumentInCollectionNoSQL(table_groups,
+                filter, new Document("members", all_members)) &&
+                updateGroupLogs(member_id, group_id, log_message, now, leave_type);
     }
 
 }
