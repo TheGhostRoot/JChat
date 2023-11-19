@@ -120,7 +120,7 @@ public class DatabaseManager {
             group_channels_tabls.add("name TEXT NOT NULL, ");
             group_channels_tabls.add("permissions TEXT NOT NULL, ");
             group_channels_tabls.add("channel_type TEXT NOT NULL, ");
-            group_channels_tabls.add("category_id BIGINT NOT NULL, ");
+            group_channels_tabls.add("categories_id TEXT NOT NULL, ");
             group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_channels_tabls.add("FOREIGN KEY (category_id) REFERENCES chat_group_categories(category_id)");
 
@@ -128,7 +128,6 @@ public class DatabaseManager {
             group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             group_categories_tabls.add("group_id BIGINT NOT NULL, ");
             group_categories_tabls.add("name TEXT NOT NULL, ");
-            group_categories_tabls.add("permissions TEXT NOT NULL, ");
             group_categories_tabls.add("category_type TEXT NOT NULL, ");
             group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
@@ -287,7 +286,7 @@ public class DatabaseManager {
             group_channels_tabls.add("name TEXT NOT NULL, ");
             group_channels_tabls.add("permissions TEXT NOT NULL, ");
             group_channels_tabls.add("channel_type TEXT NOT NULL, ");
-            group_channels_tabls.add("category_id BIGINT NOT NULL, ");
+            group_channels_tabls.add("categories_id TEXT NOT NULL, ");
             group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_channels_tabls.add("FOREIGN KEY (category_id) REFERENCES chat_group_categories(category_id)");
 
@@ -1716,6 +1715,30 @@ public class DatabaseManager {
         return MongoUpdateDocumentInCollectionNoSQL(table_groups,
                 filter, new Document("members", all_members)) &&
                 updateGroupLogs(member_id, group_id, log_message, now, leave_type);
+    }
+
+
+    protected List<Map<String, Object>> MongoUpdateValueInCollection(List<Map<String, Object>> collection,
+                                                                          String entry_id, long check_id,
+                                                                          String old_value, String new_value,
+                                                                          boolean toRemove) {
+        try {
+            for (int i = 0; i < collection.size(); i++) {
+                Map<String, Object> entry = collection.get(i);
+                if (Long.valueOf(String.valueOf(entry.get(entry_id))) == check_id) {
+                    if (toRemove) {
+                        collection.remove(i);
+                    } else {
+                        entry.put(old_value, new_value);
+                    }
+                    break;
+                }
+            }
+            return collection;
+
+        } catch (Exception e) {
+            return collection;
+        }
     }
 
 }
