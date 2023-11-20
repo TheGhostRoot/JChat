@@ -91,6 +91,8 @@ public class API {
 
     public static Random random = new Random();
 
+    public static final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvxyz";
+
     public static void main(String[] args) {
 
         // The client will handle all the hashing
@@ -121,12 +123,21 @@ public class API {
 
         databaseHandler = new DatabaseHandler(databaseManager);
 
+        long user_id = databaseHandler.createUser("John", "john@mail.com", "YCRTUVYIUHOIOugy",
+                "TCVYBUOINPNHug76", "H7G86F8giuo");
+
+        long user_id2 = databaseHandler.createUser("Boby", "boby@mail.com", "YCRTUVYIUHO2IOugy",
+                "TCVYBUO2INPNHug76", "H7G826F8giuo");
+
+        // account, messages, friends, reactions, captcha, posts, post comments, profiles - work
+        //     +       +                                     +        +
+        // groups
 
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-            //databaseManager.handleCaptchas();
-            //databaseManager.handleSessions();
+            //databaseHandler.handleCaptchas();
+            //databaseHandler.handleSessions();
         }, 0, 1, TimeUnit.SECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -141,6 +152,25 @@ public class API {
     public static String get_IP(HttpServletRequest request) {
         String IP = request.getRemoteAddr();
         return "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
+    }
+
+    public static String generateKey(int big) {
+        StringBuilder sb = new StringBuilder(big);
+
+        for (int i = 0; i < big; i++) {
+            // Math.random();
+            sb.append(AlphaNumericString.charAt((int) (AlphaNumericString.length() * random.nextDouble())));
+        }
+
+        return sb.toString();
+    }
+
+    public static String generateKey(List<String> toContain, int big) {
+        String key = generateKey(big);
+        while (toContain.contains(key)) {
+            key = generateKey(big);
+        }
+        return key;
     }
 
 }

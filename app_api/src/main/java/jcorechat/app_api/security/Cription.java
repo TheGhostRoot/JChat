@@ -25,7 +25,9 @@ public class Cription {
         return Base64.getEncoder().encodeToString(generateSecretKey().getEncoded());
     }
 
+    @Deprecated
     public String generateUserKey() {
+        // todo remove
         String key = generateKey();
         while (API.encryption_user_keys.containsValue(key)) {
             key = generateKey();

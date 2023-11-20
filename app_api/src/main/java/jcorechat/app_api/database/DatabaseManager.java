@@ -323,11 +323,11 @@ public class DatabaseManager {
 
             List<String> posts_table = new ArrayList<>();
             posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_table.add("sender_id BIGINT NOT NULL, ");
+            posts_table.add("send_by BIGINT NOT NULL, ");
             posts_table.add("send_at TIMESTAMP NOT NULL, ");
             posts_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_table.add("background TEXT NULL, ");
-            posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
+            posts_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
             List<String> posts_comment_table = new ArrayList<>();
             posts_comment_table.add("post_id BIGINT NOT NULL, ");
@@ -438,7 +438,7 @@ public class DatabaseManager {
 
     @Deprecated
     protected boolean createTableSQL(String table, List<String> colums) {
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return false;
         }
 
@@ -462,7 +462,7 @@ public class DatabaseManager {
 
     @Deprecated
     protected boolean deleteTableSQL(String table) {
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return false;
         }
 
@@ -482,7 +482,7 @@ public class DatabaseManager {
 
     @Deprecated
     protected boolean MongoCreateCollectionNoSQL(String collectionName) {
-        if (mongoDatabase == null) {
+        if (!isMongo()) {
             return false;
         }
 
@@ -496,7 +496,7 @@ public class DatabaseManager {
     }
     @Deprecated
     protected boolean MongoDeleteCollectionNoSQL(String collectionName) {
-        if (mongoDatabase == null) {
+        if (!isMongo()) {
             return false;
         }
 
@@ -512,7 +512,7 @@ public class DatabaseManager {
 
     protected List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
                                                        boolean expectOne, String... filters) {
-        if (mongoDatabase == null) {
+        if (!isMongo()) {
             return null;
         }
 
@@ -579,7 +579,8 @@ public class DatabaseManager {
         return result;
     }
 
-    protected HashMap<String, Object> FilterHandler(HashMap<String, Object> data_to_add, Document next, List<String> filter_list) {
+    protected HashMap<String, Object> FilterHandler(HashMap<String, Object> data_to_add, Document next,
+                                                    List<String> filter_list) {
         for (Map.Entry<String, Object> entry : next.entrySet()) {
             if (filter_list.contains(entry.getKey())) {
                 data_to_add.put(entry.getKey(), entry.getValue());
@@ -590,6 +591,10 @@ public class DatabaseManager {
     }
 
     protected boolean MongoAddDataToCollectionNoSQL(String collectionName, Document document, Document condition) {
+        if (!isMongo()) {
+            return false;
+        }
+
         try {
             MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
 
@@ -614,7 +619,7 @@ public class DatabaseManager {
 
 
     protected boolean MongoUpdateDocumentInCollectionNoSQL(String collectionName, Document filter, Document updatedDoc) {
-        if (mongoDatabase == null) {
+        if (!isMongo()) {
             return false;
         }
 
@@ -821,7 +826,6 @@ public class DatabaseManager {
                         preparedStatement.setObject(parameterIndex, value);
                         break;
                 }
-
                 parameterIndex++;
             }
         }
@@ -832,7 +836,7 @@ public class DatabaseManager {
     }
 
     protected boolean deleteDataSQL(String table, String condition, List<Object> conditionData) {
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return false;
         }
 
@@ -849,8 +853,7 @@ public class DatabaseManager {
     }
 
     protected boolean addDataSQL(String table, String fields, String values, List<Object> data) {
-
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return false;
         }
 
@@ -870,7 +873,7 @@ public class DatabaseManager {
 
     protected boolean editDataSQL(String table, String set_expression,
                                       List<Object> set_data, String condition, List<Object> conditionData) {
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return false;
         }
 
@@ -892,7 +895,7 @@ public class DatabaseManager {
                                               List<Object> conditionData, Map<String, String> join_data,
                                               String order, int limit) {
 
-        if (postgressql_connection == null && mysql_connection == null) {
+        if (!isSQL()) {
             return null;
         }
 
@@ -972,7 +975,7 @@ public class DatabaseManager {
 
 
     protected boolean checkIDExists(long id, String table) {
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(id);
 
@@ -989,7 +992,7 @@ public class DatabaseManager {
     }
 
     protected boolean checkRoleExists(long role_id, long group_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(role_id);
             condition_data.add(group_id);
@@ -1079,7 +1082,7 @@ public class DatabaseManager {
     protected List<Long> getUserRolesID(long user_id, long group_id) {
         // we assume that user_id and group_id are valid
         List<Long> roles = new ArrayList<>();
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
             condition_data.add(user_id);
@@ -1133,7 +1136,7 @@ public class DatabaseManager {
         }
 
         Map<String, Boolean> permissions = new HashMap<>();
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             for (long role_id : roles_id) {
                 condition_data.clear();
@@ -1206,7 +1209,7 @@ public class DatabaseManager {
 
     protected Map<Long, Map<String, Boolean>> calculateChannelPermissions(long channel_id, long group_id) {
         Map<Long, Map<String, Boolean>> permissions = new HashMap<>();
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(channel_id);
             condition_data.add(group_id);
@@ -1319,12 +1322,18 @@ public class DatabaseManager {
     }
 
 
-    protected boolean doesUserHavePermissionsInChannel(Map<Long, Map<String, Boolean>> channel_permissions,
-                                                    Map<String, Boolean> user_permissions, List<Long> roles_id,
-                                                    List<String> needed_permissions, long user_id, long group_id) {
-        if (channel_permissions == null || roles_id == null || user_permissions == null) { return false; }
+    protected boolean doesUserHavePermissionsInChannel(long channel_id, List<String> needed_permissions,
+                                                       long user_id, long group_id) {
         if (checkOwner(user_id, group_id)) { return true; }
+
+        Map<Long, Map<String, Boolean>> channel_permissions = calculateChannelPermissions(channel_id, group_id);
+        if (channel_permissions == null) { return false; }
+
+        List<Long> roles_id = getUserRolesID(user_id, group_id);
+
         if (channel_permissions.isEmpty()) {
+            Map<String, Boolean> user_permissions = calculateRolePermissions(roles_id, group_id);
+            if (user_permissions == null) { return false; }
             // channel has no permission override | Only the user permissions matter
             short amount_of_matches = 0;
             for (String n_permission : needed_permissions) {
@@ -1350,10 +1359,12 @@ public class DatabaseManager {
         return false;
     }
 
-    protected boolean doesUserHavePermissions(Map<String, Boolean> user_permissions,
-                                                       List<String> needed_permissions, long user_id, long group_id) {
-        if (user_permissions == null) { return false; }
+    protected boolean doesUserHavePermissions(List<String> needed_permissions, long user_id, long group_id) {
         if (checkOwner(user_id, group_id)) { return true; }
+
+        Map<String, Boolean> user_permissions = calculateRolePermissions(getUserRolesID(user_id, group_id), group_id);
+        if (user_permissions == null) { return false; }
+
         short matcher = 0;
         for (String n_permission : needed_permissions) {
             if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
@@ -1366,9 +1377,9 @@ public class DatabaseManager {
 
 
     protected boolean handleMessage(long channel_id, long sender_id, String message, LocalDateTime now,
-                                 ArrayList<Object> emptyArray, long resiver_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
-            List<Object> edit_condition_data = emptyArray;
+                                    long resiver_id) {
+        if (isSQL()) {
+            List<Object> edit_condition_data = new ArrayList<>();
             edit_condition_data.add(channel_id);
 
             Map<String, List<Object>> current_chat_data = getDataSQL(table_chats,
@@ -1388,44 +1399,45 @@ public class DatabaseManager {
             // MESSAGE END -> {"p":true}                only pinned  (p) is always true
             // MESSAGE END -> {}                no data at all
 
-            Matcher matcher = Pattern.compile("\\{.*?\\}").matcher(message);
-
             // Find all matches
-            String lastMatch = null;
-            while (matcher.find()) {
-                try {
-                    lastMatch = matcher.group();
-                } catch (Exception e) {
-                    return false;
-                }
-            }
-
-            if (lastMatch == null) {
-                message += "{}";
+            String message_json = getMessageJson(message);
+            if (message_json == null) {
+                message_json = "{}";
+                message += message_json;
             }
 
             if (!current_chat_data.get("msg").isEmpty()) {
-                List<Object> set_data = emptyArray;
-                set_data.add(message);
-
-                List<Object> chat_data = emptyArray;
+                List<Object> chat_data = new ArrayList<>();
                 chat_data.add(channel_id);
                 chat_data.add(message);
                 chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 chat_data.add(sender_id);
                 chat_data.add(generateID(current_chat_data.get("msg_id")));
                 try {
-                    if (Long.parseLong(String.valueOf(current_chat_data.get("send_by").get(0))) == sender_id && message.endsWith("{}")) {
-                        edit_condition_data.add(Long.parseLong(String.valueOf(current_chat_data.get("msg_id").get(0))));
-                        if (editDataSQL(table_chats, postgressql_connection != null ? "msg = msg || ?" :
-                                        "msg = CONCAT(msg, ?)", set_data,
+                    long msg_id_to_concat = Long.parseLong(String.valueOf(current_chat_data.get("msg_id").get(0)));
+                    String old_message = String.valueOf(current_chat_data.get("msg").get(0));
+                    String old_message_json = getMessageJson(old_message);
+                    if (old_message_json == null) {
+                        old_message_json = "{}";
+                    }
+
+                    if (msg_id_to_concat == sender_id && old_message_json.equals(message_json)) {
+
+                        String new_message = old_message.substring(0, old_message.length() - old_message_json.length())
+                                + message.substring(0, message.length() - 2) + old_message_json;
+
+                        List<Object> set_data = new ArrayList<>();
+                        set_data.add(new_message);
+
+                        edit_condition_data.add(msg_id_to_concat);
+                        if (editDataSQL(table_chats, "msg = ?", set_data,
                                 "channel_id = ? AND send_by = ? AND msg_id = ?",
                                 edit_condition_data)) {
                             return true;
                         }
                     }
 
-                    return addDataSQL(DatabaseManager.table_chats, "channel_id, msg, send_at, send_by, msg_id",
+                    return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
                             "?, ?, ?, ?, ?", chat_data);
 
                 } catch (Exception e) {
@@ -1442,10 +1454,10 @@ public class DatabaseManager {
                     return false;
                 }
 
-                List<Object> new_chat_data = emptyArray;
+                List<Object> new_chat_data = new ArrayList<>();
                 new_chat_data.add(generateID(channel_ids.get("channel_id")));
                 new_chat_data.add(message);
-                new_chat_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+                new_chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 new_chat_data.add(sender_id);
                 new_chat_data.add(generateID(current_chat_data.get("msg_id")));
 
@@ -1455,51 +1467,43 @@ public class DatabaseManager {
             } else {
                 return false;
             }
-        } else if ((mongoClient != null && mongoDatabase != null) ||
-                !checkIDExists(sender_id, table_accounts) ||
-                !checkIDExists(resiver_id, table_accounts)) {
-
+        } else if (isMongo()) {
             Document convId = new Document("channel_id", channel_id);
+            List<Map<String, Object>> chat_msgs = getCollectionMongo(table_chats, "msgs", convId);
 
-            List<Map<String, Object>> chat_data = MongoReadCollectionNoSQL(table_chats,
-                    convId, true, "msgs");
-
-            if (chat_data == null) {
+            if (chat_msgs == null) {
                 return false;
             }
 
             String send_at = now.format(formatter);
-            if (chat_data.isEmpty() || chat_data.get(0).isEmpty()) {
+            if (chat_msgs.isEmpty() || chat_msgs.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
                         new Document("channel_id", channel_id == 0L ?
-                                generateID(emptyArray) : channel_id)
+                                generateID(new ArrayList<>()) : channel_id)
                                 .append("user1", sender_id)
                                 .append("user2", resiver_id)
                                 .append("msgs",
                                         Arrays.asList(new Document("msg", message)
                                                 .append("send_by", sender_id)
                                                 .append("send_at", send_at)
-                                                .append("msg_id", generateID(emptyArray)))),
+                                                .append("msg_id", generateID(new ArrayList<>())))),
                         null);
 
             } else {
-
-                List<Map<String, Object>> chat_msgs = (List<Map<String, Object>>) chat_data.get(0).get("msgs");
                 List<Object> all_ids = extract_all_content(chat_msgs, "msg_id");
 
                 LocalDateTime mostRecentDate = null;
                 Long resent_msg_id = null;
-                String current_message = "";
+                String old_message = "";
                 Long message_sender_id = null;
 
                 try {
                     for (Map<String, Object> map : chat_msgs) {
-                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")),
-                                formatter);
+                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")), formatter);
                         if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
                             mostRecentDate = dateTime;
                             resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
-                            current_message = String.valueOf(map.get("msg"));
+                            old_message = String.valueOf(map.get("msg"));
                             message_sender_id = Long.valueOf(String.valueOf(map.get("send_by")));
                         }
                     }
@@ -1509,11 +1513,17 @@ public class DatabaseManager {
 
                 if (message_sender_id == sender_id && message.endsWith("{}")) {
                     try {
+                        String message_json = getMessageJson(old_message);
+                        if (message_json == null) {
+                            message_json = "{}";
+                        }
+                        String new_message = old_message + message.substring(0, message.length() - 2) + message_json;
+
                         for (int i = 0; i < chat_msgs.size(); i++) {
                             Map<String, Object> current_msg = chat_msgs.get(i);
                             if (Long.valueOf(String.valueOf(current_msg.get("send_by"))) == sender_id &&
                                     Long.valueOf(String.valueOf(current_msg.get("msg_id"))) == resent_msg_id) {
-                                current_msg.put("msg", current_message + message);
+                                current_msg.put("msg", new_message);
                                 break;
                             }
                         }
@@ -1539,6 +1549,19 @@ public class DatabaseManager {
         return false;
     }
 
+    protected String getMessageJson(String message) {
+        String lastMatch = null;
+        Matcher matcher = Pattern.compile("\\{.*?\\}").matcher(message);
+        while (matcher.find()) {
+            try {
+                lastMatch = matcher.group();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return lastMatch;
+    }
+
 
     protected boolean handleReactions(long channel_id, long message_id, String reaction, long actor_id) {
         Document data = new Document("channel_id", channel_id)
@@ -1556,7 +1579,7 @@ public class DatabaseManager {
 
     protected Map<String, Boolean> calculateGroupSettings(long group_id) {
         Map<String, Boolean> settings = new HashMap<>();
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
 
@@ -1639,7 +1662,7 @@ public class DatabaseManager {
     }
 
     protected boolean checkOwner(long user_id, long group_id) {
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
 
@@ -1671,7 +1694,7 @@ public class DatabaseManager {
 
     protected boolean updateGroupLogs(long actor_id, long group_id, String log_message, LocalDateTime now,
                                     String log_type) {
-        if (postgressql_connection != null || mysql_connection != null) {
+        if (isSQL()) {
             List<Object> log_data = new ArrayList<>();
             log_data.add(group_id);
             log_data.add(actor_id);
@@ -1739,6 +1762,14 @@ public class DatabaseManager {
         } catch (Exception e) {
             return collection;
         }
+    }
+
+    protected boolean isSQL() {
+        return postgressql_connection != null || mysql_connection != null;
+    }
+
+    public boolean isMongo() {
+        return mongoClient != null && mongoDatabase != null;
     }
 
 }
