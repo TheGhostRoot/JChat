@@ -30,8 +30,8 @@ public class DatabaseHandler {
             account_details.add(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
 
             if (!databaseManager.addDataSQL(databaseManager.table_accounts,
-                    "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, created_at, friends, chat_groups_,  starts_sub, ends_sub, bookmarks",
-                    "?, ?, ?, ?, ?, NULL, NULL, NULL, ?, '', '', NULL, NULL, ''", account_details)) {
+                    "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, created_at, friends,  starts_sub, ends_sub, bookmarks",
+                    "?, ?, ?, ?, ?, NULL, NULL, NULL, ?, '', NULL, NULL, ''", account_details)) {
                 return null;
             }
 
@@ -85,25 +85,28 @@ public class DatabaseHandler {
 
             long account_ID = databaseManager.generateID(databaseManager.extract_all_content(accounts_id_data, "id"));
 
-            if (!databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_accounts,
+            if (!databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", account_ID).append("name", name)
                             .append("email", email).append("password", password)
                             .append("encryption_key", encryption_key).append("sign_key", sign_key)
                             .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
                             .append("created_at", LocalDateTime.now().format(DatabaseManager.formatter))
                             .append("starts_sub", null).append("ends_sub", null).append("bookmarks", "")
+                            .append("friends", "")
                     , null)) {
 
                 return null;
             }
 
-            if (!databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_profiles, new Document("id", account_ID)
+            if (!databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_profiles,
+                    new Document("id", account_ID)
                     .append("pfp", "Default Pic").append("banner", "Default Banner")
                     .append("pets", null).append("coins", 0).append("badges", "No badges")
                     .append("animations", null), null)) {
 
 
-                databaseManager.MongoDeleteDataFromCollectionNoSQL(databaseManager.table_accounts, new Document("id", account_ID));
+                databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("id", account_ID));
                 return null;
             }
 
@@ -405,8 +408,6 @@ public class DatabaseHandler {
 
     public Long generateSessionID() {
         if (databaseManager.isSQL()) {
-
-
             Map<String, List<Object>> sess_ids =  databaseManager.getDataSQL(DatabaseManager.table_accounts,
                     "session_id", "", null, null, "", 0);
 
@@ -649,76 +650,6 @@ public class DatabaseHandler {
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
                     new Document("friends", friends_value));
-
-        }
-        return false;
-    }
-
-    public boolean addUserGroup(long id, long group_id, String current_groups) {
-        String group = "," + group_id;
-        if (current_groups.contains(group) ||
-                !databaseManager.checkIDExists(group_id, DatabaseManager.table_groups)) {
-            return false;
-        }
-
-        String group_value = new StringBuilder(current_groups).append(group).toString();
-        if (databaseManager.isSQL()) {
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_groups = new ArrayList<>();
-            account_groups.add(group_value);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_accounts,
-                    "chat_groups_ = ?", account_groups, "id = ?", account_where);
-
-            /*
-            return databaseManager.editDataSQL(DatabaseManager.table_accounts,
-                    databaseManager.postgressql_connection != null ? "chat_groups_ = chat_groups_ || ?" :
-                            "chat_groups_ = CONCAT(chat_groups_, ?)", account_friends, "id = ?", account_where);
-
-             */
-
-        } else if (databaseManager.isMongo()) {
-
-
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
-                    new Document("id", id),
-                    new Document("chat_groups_", group_value));
-
-        }
-        return false;
-    }
-
-    public boolean removeUserGroup(long id, long group_id, String current_groups) {
-        String group = "," + group_id;
-        if (!current_groups.contains(group) ||
-                !databaseManager.checkIDExists(group_id, DatabaseManager.table_groups)) {
-            return false;
-        }
-
-        String group_value = current_groups.replace(group, "");
-        if (databaseManager.isSQL()) {
-
-            List<Object> account_where = new ArrayList<>();
-            account_where.add(id);
-
-            List<Object> account_groups = new ArrayList<>();
-            account_groups.add(group_value);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_accounts,
-                    "chat_groups_ = ?", account_groups,
-                    "id = ?", account_where);
-
-            /*
-            return databaseManager.editDataSQL(databaseManager.table_accounts,
-                    "chat_groups_ = REPLACE(chat_groups_, ?, '')", account_groups,
-                    "id = ?", account_where); */
-
-        } else if (databaseManager.isMongo()) {
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_accounts, new Document("id", id),
-                    new Document("chat_groups_", group_value));
 
         }
         return false;
@@ -1643,9 +1574,16 @@ public class DatabaseHandler {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(user_id);
 
-            return databaseManager.getDataSQL(DatabaseManager.table_group_members,
+            Map<String, List<Object>> groups = databaseManager.getDataSQL(DatabaseManager.table_group_members,
                     "group_id", "member_id = ?", condition_data,
                     null, "", amount);
+
+            if (groups == null || !groups.containsKey("group_id")) {
+                return null;
+            }
+
+            groups.put("id", groups.get("group_id"));
+            return groups;
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
@@ -1796,7 +1734,7 @@ public class DatabaseHandler {
 
     public boolean updateGroupSettings(long actor_id, long group_id, String new_settings, String log_message) {
         // can be jwt token
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
                 !databaseManager.doesUserHavePermissions(List.of("update_group_settings"), actor_id, group_id)) {
             return false;
         }
@@ -1822,7 +1760,7 @@ public class DatabaseHandler {
     }
 
     public boolean updateGroupName(long actor_id, long group_id, String new_name, String log_message) {
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
                 !databaseManager.doesUserHavePermissions(List.of("update_group_name"), actor_id, group_id)) {
             return false;
         }
@@ -1849,8 +1787,8 @@ public class DatabaseHandler {
     }
 
     public boolean updateGroupOwner(long new_owner_id, long group_id, long actor_id, String log_message) {
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
-                !databaseManager.checkIDExists(new_owner_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
+                !databaseManager.checkIDExists(new_owner_id, DatabaseManager.table_accounts) ||
                 !databaseManager.checkOwner(actor_id, group_id)) {
             return false;
         }
@@ -1880,7 +1818,7 @@ public class DatabaseHandler {
 
     public boolean updateGroupLogo(String new_logo, long group_id, long actor_id, String log_message) {
         // can be jwt token
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
                 !databaseManager.doesUserHavePermissions(List.of("update_group_logo"), actor_id, group_id)) {
             return false;
         }
@@ -1909,7 +1847,7 @@ public class DatabaseHandler {
 
     public boolean updateGroupBanner(String new_banner, long group_id, long actor_id, String log_message) {
         // can be jwt token
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
                 !databaseManager.doesUserHavePermissions(List.of("update_group_banner"), actor_id, group_id)) {
             return false;
         }
@@ -1937,7 +1875,7 @@ public class DatabaseHandler {
 
     public boolean updateGroupEvents(String new_events, long group_id, long actor_id, String log_message) {
         // can be jwt token
-        if (!databaseManager.checkIDExists(actor_id, "id") ||
+        if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts) ||
                 !databaseManager.doesUserHavePermissions(List.of("update_group_events"), actor_id, group_id)) {
             return false;
         }
@@ -1969,7 +1907,7 @@ public class DatabaseHandler {
             condition_data.add(group_id);
 
             Map<String, List<Object>> group_data = databaseManager.getDataSQL(DatabaseManager.table_groups,
-                    "name, id, owner_id, logo, banner, animations, settings, created_at, group_events",
+                    "*",
                     "id = ?", condition_data, null, "", 0);
 
             if (group_data == null) {
@@ -1977,7 +1915,7 @@ public class DatabaseHandler {
             }
 
             Map<String, List<Object>> members_data = databaseManager.getDataSQL(DatabaseManager.table_group_members,
-                    "member_id, roles_id, nickname",
+                    "*",
                     "group_id = ?", condition_data, null, "", amount);
 
             if (members_data == null) {
@@ -1985,7 +1923,7 @@ public class DatabaseHandler {
             }
 
             Map<String, List<Object>> channels_data = databaseManager.getDataSQL(DatabaseManager.table_group_channels,
-                    "channel_id, name, permissions, channel_type, category_id",
+                    "*",
                     "group_id = ?", condition_data, null, "", amount);
 
             if (channels_data == null) {
@@ -1993,7 +1931,7 @@ public class DatabaseHandler {
             }
 
             Map<String, List<Object>> category_data = databaseManager.getDataSQL(DatabaseManager.table_group_category,
-                    "category_id AS Category_category_id, name AS Category_name, permissions AS Category_permissions, category_type AS Category_category_type",
+                    "*",
                     "group_id = ?", condition_data, null, "", amount);
 
             if (category_data == null) {
@@ -2001,7 +1939,7 @@ public class DatabaseHandler {
             }
 
             Map<String, List<Object>> roles_data = databaseManager.getDataSQL(DatabaseManager.table_group_roles,
-                    "role_id, name, permissions, role_type",
+                    "*",
                     "group_id = ?", condition_data, null, "", amount);
 
             if (roles_data == null) {
@@ -2009,7 +1947,7 @@ public class DatabaseHandler {
             }
 
             Map<String, List<Object>> logs_data = databaseManager.getDataSQL(DatabaseManager.table_group_logs,
-                    "actor_id, log_type, log_message, acted_at",
+                    "*",
                     "group_id = ?", condition_data, null, "", amount);
 
             if (logs_data == null) {
@@ -2059,15 +1997,46 @@ public class DatabaseHandler {
             member_data.add(roles_id);
             member_data.add(nickname);
 
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(group_id);
+
+            Map<String, List<Object>> all_members = databaseManager.getDataSQL(DatabaseManager.table_group_members,
+                    "member_id", "group_id = ?", condition_data, null, "", 0);
+
+            if (all_members == null || !all_members.containsKey("member_id")) {
+                return false;
+            }
+
+            try {
+                for (Object mem_id : all_members.get("member_id")) {
+                    if (Long.parseLong(String.valueOf(mem_id)) == member_id) {
+                        return false;
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+
             return databaseManager.addDataSQL(DatabaseManager.table_group_members,
                     "group_id, member_id, roles_id, nickname", "?, ?, ?, ?", member_data) ?
                     databaseManager.updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group") : false;
 
         } else if (databaseManager.isMongo()) {
+            Document filter = new Document("id", group_id);
             List<Map<String, Object>> all_members = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
-                    "members", new Document("id", group_id));
+                    "members", filter);
 
             if (all_members == null) {
+                return false;
+            }
+
+            try {
+                for (Map<String, Object> mem : all_members) {
+                    if (Long.parseLong(String.valueOf(mem.get("member_id"))) == member_id) {
+                        return false;
+                    }
+                }
+            } catch (Exception e) {
                 return false;
             }
 
@@ -2079,7 +2048,7 @@ public class DatabaseHandler {
             all_members.add(member_data);
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
-                    new Document("id", group_id), new Document("members", all_members)) &&
+                    filter, new Document("members", all_members)) &&
                     databaseManager.updateGroupLogs(member_id, group_id, log_message, now, "Joined The Group");
         }
         return false;
@@ -2108,6 +2077,23 @@ public class DatabaseHandler {
                 return deleteGroup(group_id);
 
             } else {
+
+                boolean inThere = false;
+                try {
+                    for (Object mem_id : all_members.get("member_id")) {
+                        if (Long.parseLong(String.valueOf(mem_id)) == member_id) {
+                            inThere = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+
+                if (!inThere) {
+                    return false;
+                }
+
                 condition_data.add(member_id);
 
                 if ((determent_needed_permissions.isBlank() && leave_type.equals("leave")) ||
@@ -2131,6 +2117,22 @@ public class DatabaseHandler {
             }
 
             try {
+                boolean inThere = false;
+                try {
+                    for (Map<String, Object> mem : all_members) {
+                        if (Long.parseLong(String.valueOf(mem.get("member_id"))) == member_id) {
+                            inThere = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+
+                if (!inThere) {
+                    return false;
+                }
+
                 if (all_members.isEmpty() || all_members.get(0).isEmpty() ||
                         ((List<Map<String, Object>>) all_members.get(0).get("members")).isEmpty() && actor_id == 0L &&
                                 leave_type.equals("leave")) {

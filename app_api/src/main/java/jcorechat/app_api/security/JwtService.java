@@ -43,7 +43,7 @@ public class JwtService {
         Claims claims;
         try {
             claims = Jwts.parser()
-                    .verifyWith((SecretKey) GlobalSignInKey)
+                    .verifyWith(GlobalSignInKey)
                     .build()
                     .parseSignedClaims(jwt)
                     .getPayload();
@@ -71,22 +71,28 @@ public class JwtService {
     public String generateGlobalJwt(final Map<String, Object> claims, final boolean encrypted) {
         return encrypted ? API.cription.GlobalEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(GlobalSignInKey, SignatureAlgorithm.HS512)    // For python we use HS256  , but we will change it to ES512
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)    // For python we use HS256  , but we will change it to ES512
                 .compact()) : Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(GlobalSignInKey, SignatureAlgorithm.HS512)
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)
                 .compact();
 
+    }
+
+    public String generateJwtForDB(final Map<String, Object> claims) {
+        return Jwts.builder().claims(claims)
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String generateUserJwt(final Map<String, Object> claims,
                                   final String SignatureKey, final boolean encrypted, final String... key) {
         return encrypted && key.length == 1 ? API.cription.UserEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact(), key[0]) : Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact();
 
     }

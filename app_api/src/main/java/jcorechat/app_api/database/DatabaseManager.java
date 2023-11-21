@@ -75,7 +75,6 @@ public class DatabaseManager {
             accounts_table.add("last_edit_time timestamp, ");
             accounts_table.add("created_at timestamp NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
-            accounts_table.add("chat_groups_ TEXT NOT NULL, ");
             accounts_table.add("starts_sub TIMESTAMP NULL, ");
             accounts_table.add("ends_sub TIMESTAMP NULL, ");
             accounts_table.add("bookmarks TEXT NOT NULL");
@@ -122,7 +121,6 @@ public class DatabaseManager {
             group_channels_tabls.add("channel_type TEXT NOT NULL, ");
             group_channels_tabls.add("categories_id TEXT NOT NULL, ");
             group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_channels_tabls.add("FOREIGN KEY (category_id) REFERENCES chat_group_categories(category_id)");
 
             List<String> group_categories_tabls = new ArrayList<>();
             group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -240,7 +238,6 @@ public class DatabaseManager {
             accounts_table.add("last_edit_time TIMESTAMP NULL, ");
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");
             accounts_table.add("friends TEXT NOT NULL, ");
-            accounts_table.add("chat_groups_ TEXT NOT NULL, ");
             accounts_table.add("starts_sub TIMESTAMP NULL, ");
             accounts_table.add("ends_sub TIMESTAMP NULL, ");
             accounts_table.add("bookmarks TEXT NOT NULL");
@@ -287,8 +284,7 @@ public class DatabaseManager {
             group_channels_tabls.add("permissions TEXT NOT NULL, ");
             group_channels_tabls.add("channel_type TEXT NOT NULL, ");
             group_channels_tabls.add("categories_id TEXT NOT NULL, ");
-            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_channels_tabls.add("FOREIGN KEY (category_id) REFERENCES chat_group_categories(category_id)");
+            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
             List<String> group_categories_tabls = new ArrayList<>();
             group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -455,6 +451,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception  e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -1217,9 +1214,13 @@ public class DatabaseManager {
             Map<String, List<Object>> channel_data = getDataSQL(table_group_channels, "permissions",
                         "channel_id = ? AND group_id = ?", condition_data, null, "", 0);
 
-            if (channel_data == null || channel_data.isEmpty() || channel_data.get("permissions") == null ||
-                        channel_data.get("permissions").isEmpty()) {
+            if (channel_data == null) {
                 return null;
+            }
+
+            if (channel_data.isEmpty() || channel_data.get("permissions") == null ||
+                    channel_data.get("permissions").isEmpty()) {
+                return permissions;
             }
 
             String channel_permissions_text = String.valueOf(channel_data.get("permissions").get(0));
@@ -1229,10 +1230,10 @@ public class DatabaseManager {
 
             Map<String, Object> permission_data = API.jwtService.getDataNoEncryption(channel_permissions_text); // jwt token
 
-            // expected data: role_id: {"permission": true/false}, ...
+            // expected data: "role_id:: {"permission": true/false}, ...
 
-            if (permission_data == null) {
-                return null;
+            if (permission_data == null || permission_data.isEmpty()) {
+                return permissions;
             }
 
             for (Map.Entry<String, Object> entry : permission_data.entrySet()) {
@@ -1250,7 +1251,7 @@ public class DatabaseManager {
                     new Document("id", group_id));
 
             if (channel_data == null || channel_data.isEmpty() || channel_data.get(0).isEmpty()) {
-                return null;
+                return permissions;
             }
 
             for (Map<String, Object> channel : channel_data) {
@@ -1267,6 +1268,9 @@ public class DatabaseManager {
                             return null;
                         }
 
+                        if (permission_data.isEmpty()) {
+                            return permissions;
+                        }
 
                         // expected data: role_id: {"permission": true/false}, ...
 
@@ -1297,7 +1301,7 @@ public class DatabaseManager {
 
             } else if (!role_permissions.get(name_permission)) {
                 // the current permission is false | Update it to true
-                role_permissions.put(name_permission, true);
+                role_permissions.put(name_permission, permission_entry.getValue());
             }
         }
 
@@ -1314,7 +1318,7 @@ public class DatabaseManager {
 
             } else if (!permissions.get(name_permission)) {
                 // the current permission is false | Update it to true
-                permissions.put(name_permission, true);
+                permissions.put(name_permission, permission_entry.getValue());
             }
         }
 
@@ -1348,6 +1352,9 @@ public class DatabaseManager {
             // channel has permission override | Only the channel's permission matter. (ofc after another override)
             for (long role_id : roles_id) {
                 Map<String, Boolean> role_permissions = channel_permissions.get(role_id);
+                if (role_permissions == null) {
+                    continue;
+                }
                 for (Map.Entry<String, Boolean> permission : role_permissions.entrySet()) {
                     String key = permission.getKey();
                     if (!key.isBlank() && needed_permissions.contains(key) && permission.getValue()) {
@@ -1424,7 +1431,7 @@ public class DatabaseManager {
                     if (msg_id_to_concat == sender_id && old_message_json.equals(message_json)) {
 
                         String new_message = old_message.substring(0, old_message.length() - old_message_json.length())
-                                + message.substring(0, message.length() - 2) + old_message_json;
+                                + message.substring(0, message.length() - message_json.length()) + old_message_json;
 
                         List<Object> set_data = new ArrayList<>();
                         set_data.add(new_message);
@@ -1444,7 +1451,7 @@ public class DatabaseManager {
                     return false;
                 }
 
-            } else if (channel_id == 0L) {
+            } else {
                 // no messages in this channel
 
                 Map<String, List<Object>> channel_ids = getDataSQL(table_chats, "channel_id",
@@ -1464,8 +1471,6 @@ public class DatabaseManager {
                 return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
                         "?, ?, ?, ?, ?", new_chat_data);
 
-            } else {
-                return false;
             }
         } else if (isMongo()) {
             Document convId = new Document("channel_id", channel_id);
@@ -1569,8 +1574,8 @@ public class DatabaseManager {
                 .append("msg_id", message_id).append("member_id", actor_id);
 
         List<Map<String, Object>> reaction_data = MongoReadCollectionNoSQL(table_reactions, data, false);
-
         if (reaction_data == null || !reaction_data.isEmpty() || !reaction_data.get(0).isEmpty()) {
+            // the user already reacted
             return false;
         }
 
@@ -1599,7 +1604,9 @@ public class DatabaseManager {
                 return settings;
             }
 
-            Map<String, Object> settings_data = API.jwtService.getData(settings_value_text);
+            // expecting:  "option": true/false, ..
+
+            Map<String, Object> settings_data = API.jwtService.getDataNoEncryption(settings_value_text);
             if (settings_data == null) {
                 return null;
             }
@@ -1631,7 +1638,7 @@ public class DatabaseManager {
                 return settings;
             }
 
-            Map<String, Object> settings_data = API.jwtService.getData(settings_value_text);
+            Map<String, Object> settings_data = API.jwtService.getDataNoEncryption(settings_value_text);
             if (settings_data == null) {
                 return null;
             }
