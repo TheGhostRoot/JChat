@@ -1335,20 +1335,10 @@ public class DatabaseManager {
 
         List<Long> roles_id = getUserRolesID(user_id, group_id);
 
-        if (channel_permissions.isEmpty()) {
-            Map<String, Boolean> user_permissions = calculateRolePermissions(roles_id, group_id);
-            if (user_permissions == null) { return false; }
-            // channel has no permission override | Only the user permissions matter
-            short amount_of_matches = 0;
-            for (String n_permission : needed_permissions) {
-                if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
-                        user_permissions.get(n_permission)) {
-                    amount_of_matches++;
-                }
-            }
-            return amount_of_matches == needed_permissions.size();
+        Map<String, Boolean> user_permissions = calculateRolePermissions(roles_id, group_id);
+        if (user_permissions == null) { return false; }
 
-        } else {
+        if (!channel_permissions.isEmpty()) {
             // channel has permission override | Only the channel's permission matter. (ofc after another override)
             for (long role_id : roles_id) {
                 Map<String, Boolean> role_permissions = channel_permissions.get(role_id);
@@ -1357,13 +1347,26 @@ public class DatabaseManager {
                 }
                 for (Map.Entry<String, Boolean> permission : role_permissions.entrySet()) {
                     String key = permission.getKey();
-                    if (!key.isBlank() && needed_permissions.contains(key) && permission.getValue()) {
-                        return true;
+                    if (!key.isBlank() && needed_permissions.contains(key)) {
+                        return permission.getValue();
                     }
                 }
             }
+
+            // channel has no override for the user's role so use the role permissions.
         }
-        return false;
+        return validateRolesPermissions(needed_permissions, user_permissions);
+    }
+
+    private static boolean validateRolesPermissions(List<String> needed_permissions, Map<String, Boolean> user_permissions) {
+        short amount_of_matches = 0;
+        for (String n_permission : needed_permissions) {
+            if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
+                    user_permissions.get(n_permission)) {
+                amount_of_matches++;
+            }
+        }
+        return amount_of_matches == needed_permissions.size();
     }
 
     protected boolean doesUserHavePermissions(List<String> needed_permissions, long user_id, long group_id) {
@@ -1372,14 +1375,7 @@ public class DatabaseManager {
         Map<String, Boolean> user_permissions = calculateRolePermissions(getUserRolesID(user_id, group_id), group_id);
         if (user_permissions == null) { return false; }
 
-        short matcher = 0;
-        for (String n_permission : needed_permissions) {
-            if (!n_permission.isBlank() && user_permissions.containsKey(n_permission) &&
-                    user_permissions.get(n_permission)) {
-                matcher++;
-            }
-        }
-        return matcher == needed_permissions.size();
+        return validateRolesPermissions(needed_permissions, user_permissions);
     }
 
 
@@ -1462,7 +1458,7 @@ public class DatabaseManager {
                 }
 
                 List<Object> new_chat_data = new ArrayList<>();
-                new_chat_data.add(generateID(channel_ids.get("channel_id")));
+                new_chat_data.add(channel_id == 0L ? generateID(channel_ids.get("channel_id")) : channel_id);
                 new_chat_data.add(message);
                 new_chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 new_chat_data.add(sender_id);

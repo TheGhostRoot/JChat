@@ -788,7 +788,7 @@ public class DatabaseHandler {
                 return databaseManager.deleteDataSQL(DatabaseManager.table_chats,
                         "channel_id = ? AND msg_id = ? AND send_by = ?", condition_data);
 
-            } else if (sender_id != actor_id) {
+            } else {
                 Map<String, List<Object>> message_data = databaseManager.getDataSQL(DatabaseManager.table_chats,
                         "msg_id", "channel_id = ? AND msg_id = ? AND send_by = ?", condition_data,
                         null, "", 0);

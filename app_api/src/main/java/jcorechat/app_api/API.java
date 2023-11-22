@@ -162,8 +162,8 @@ public class API {
 
         // account, messages, friends, reactions, captcha, posts, post comments, profiles,  - work
         // general groups, groups add/remove member, general role, group channels, group categories - work
-        // all permissions(need more test),  - work
-        //
+        // all permissions, - work
+        // shop
 
         databaseHandler.createGroup(user_id, "My Group", "Logo", "Banner", "");
         long group_id = (long) databaseHandler.getAllGroupsWithUser(user_id, 1).get("id").get(0);
@@ -209,7 +209,7 @@ public class API {
         admin_role.put("send_message", true);
 
         Map<String, Object> member_role = new HashMap<>();
-        member_role.put("react", true);
+        member_role.put("react", false);
         member_role.put("delete_own_message", true);
         member_role.put("send_message", false);
 
@@ -239,21 +239,6 @@ public class API {
         long text_channel_id = (long) databaseHandler.createGroupChannel(group_id, user_id2,
                 "text", "My Text Channel", jwtService.generateJwtForDB(new HashMap<>()),
                 "Admin created text channel", ","+category_id);
-
-        Map<String, Object> channel_permissions2 = new HashMap<>();
-
-        Map<String, Boolean> member_role_override2 = new HashMap<>();
-        member_role_override2.put("react", true);
-        member_role_override2.put("delete_own_message", true);
-        member_role_override2.put("send_message", false);
-
-        channel_permissions2.put(String.valueOf(member_id), member_role_override2);
-
-        long text_channel_id2 = (long) databaseHandler.createGroupChannel(group_id, user_id2,
-                "text", "My Text Channel 2", jwtService.generateJwtForDB(channel_permissions2),
-                "Admin created text channel 2", ","+category_id);
-
-        // todo add more testing with messages and reactions in groups to test channel permission override and role permissions.
 
 
 
