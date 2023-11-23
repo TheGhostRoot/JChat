@@ -82,7 +82,7 @@ public class DatabaseManager {
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
-            chats_table.add("send_at timestamp NOT NULL, ");
+            chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             chats_table.add("send_by BIGINT NOT NULL, ");
             chats_table.add("msg_id BIGINT NOT NULL");
             chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
@@ -101,7 +101,7 @@ public class DatabaseManager {
             group_table.add("logo TEXT NOT NULL, ");
             group_table.add("banner TEXT NOT NULL, ");
             group_table.add("animations TEXT NOT NULL, ");
-            group_table.add("created_at TIMESTAMP NOT NULL, ");
+            group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
             group_table.add("group_events TEXT, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
@@ -142,7 +142,7 @@ public class DatabaseManager {
             group_logs_tabls.add("actor_id BIGINT, ");
             group_logs_tabls.add("log_type TEXT NOT NULL, ");
             group_logs_tabls.add("log_message TEXT NOT NULL, ");
-            group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
+            group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
             group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
@@ -150,13 +150,12 @@ public class DatabaseManager {
             captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
             captchas_table.add("answer TEXT NOT NULL, ");
             captchas_table.add("time smallint NOT NULL, ");
-            captchas_table.add("last_edit_time TEXT NOT NULL, ");
-            captchas_table.add("failed smallint NOT NULL");
+            captchas_table.add("last_edit_time TEXT NOT NULL");
 
             List<String> posts_table = new ArrayList<>();
             posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
             posts_table.add("sender_id BIGINT NOT NULL, ");
-            posts_table.add("send_at timestamp NOT NULL, ");
+            posts_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             posts_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_table.add("background TEXT NOT NULL, ");
             posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
@@ -164,7 +163,7 @@ public class DatabaseManager {
             List<String> posts_comment_table = new ArrayList<>();
             posts_comment_table.add("post_id BIGINT NOT NULL, ");
             posts_comment_table.add("send_by BIGINT NOT NULL, ");
-            posts_comment_table.add("send_at timestamp NOT NULL, ");
+            posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             posts_comment_table.add("repl_to TEXT, ");
@@ -184,8 +183,10 @@ public class DatabaseManager {
             List<String> shop_table = new ArrayList<>();
             shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
             shop_table.add("item_name TEXT NOT NULL, ");
+            shop_table.add("item_type TEXT NOT NULL, ");
             shop_table.add("item_price INT NOT NULL, ");
-            shop_table.add("seller_id BIGINT NOT NULL");
+            shop_table.add("seller_id BIGINT NOT NULL, ");
+            shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_shop);
@@ -245,7 +246,7 @@ public class DatabaseManager {
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
-            chats_table.add("send_at TIMESTAMP NOT NULL, ");
+            chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             chats_table.add("send_by BIGINT NOT NULL, ");
             chats_table.add("msg_id BIGINT NOT NULL, ");
             chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
@@ -265,7 +266,7 @@ public class DatabaseManager {
             group_table.add("banner TEXT NOT NULL, ");
             group_table.add("animations TEXT NOT NULL, ");
             group_table.add("settings TEXT NOT NULL, ");
-            group_table.add("created_at TIMESTAMP NOT NULL, ");
+            group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
             group_table.add("group_events TEXT, ");
             group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
@@ -306,7 +307,7 @@ public class DatabaseManager {
             group_logs_tabls.add("actor_id BIGINT, ");
             group_logs_tabls.add("log_type TEXT NOT NULL, ");
             group_logs_tabls.add("log_message TEXT NOT NULL, ");
-            group_logs_tabls.add("acted_at TIMESTAMP NOT NULL, ");
+            group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
             group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
             group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
@@ -314,8 +315,7 @@ public class DatabaseManager {
             captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             captchas_table.add("answer TEXT NOT NULL, ");
             captchas_table.add("time SMALLINT NOT NULL, ");
-            captchas_table.add("last_edit_time TIMESTAMP NOT NULL, ");
-            captchas_table.add("failed SMALLINT NOT NULL");
+            captchas_table.add("last_edit_time TIMESTAMP(6) NOT NULL");
 
             List<String> posts_table = new ArrayList<>();
             posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
@@ -328,7 +328,7 @@ public class DatabaseManager {
             List<String> posts_comment_table = new ArrayList<>();
             posts_comment_table.add("post_id BIGINT NOT NULL, ");
             posts_comment_table.add("send_by BIGINT NOT NULL, ");
-            posts_comment_table.add("send_at timestamp NOT NULL, ");
+            posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
             posts_comment_table.add("repl_to TEXT, ");
@@ -348,8 +348,10 @@ public class DatabaseManager {
             List<String> shop_table = new ArrayList<>();
             shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
             shop_table.add("item_name TEXT NOT NULL, ");
+            shop_table.add("item_type TEXT NOT NULL, ");
             shop_table.add("item_price INT NOT NULL, ");
-            shop_table.add("seller_id BIGINT NOT NULL");
+            shop_table.add("seller_id BIGINT NOT NULL, ");
+            shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_shop);

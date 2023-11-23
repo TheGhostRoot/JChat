@@ -160,85 +160,11 @@ public class API {
         long user_id3 = databaseHandler.createUser("MC", "mc@mail.com", "YCR1TUVYIUHO2IOugy",
                 "TCVYB1UO2INPNHug76", "H7G1826F8giuo");
 
+
         // account, messages, friends, reactions, captcha, posts, post comments, profiles,  - work
         // general groups, groups add/remove member, general role, group channels, group categories - work
-        // all permissions, - work
-        // shop
-
-        databaseHandler.createGroup(user_id, "My Group", "Logo", "Banner", "");
-        long group_id = (long) databaseHandler.getAllGroupsWithUser(user_id, 1).get("id").get(0);
-
-        Map<String, Object> group_settings = new HashMap<>();
-        group_settings.put("join_group", true);
-
-        databaseHandler.updateGroupSettings(user_id, group_id,
-                jwtService.generateJwtForDB(group_settings), "Updated group settings");
-
-        databaseHandler.addGroupMember(user_id2, group_id, "", "", "Welcome to the group User");
-        databaseHandler.addGroupMember(user_id3, group_id, "", "", "Welcome to the group User");
-
-        Map<String, Object> admin_role = new HashMap<>();
-        admin_role.put("update_group_settings", true);
-        admin_role.put("update_group_name", true);
-        admin_role.put("update_group_logo", true);
-        admin_role.put("update_group_banner", true);
-        admin_role.put("update_group_settings", true);
-        admin_role.put("update_group_events", true);
-        admin_role.put("kick", true);
-        admin_role.put("ban", true);
-        admin_role.put("update_member_roles", true);
-        admin_role.put("update_member_nickname", true);
-        admin_role.put("create_channel", true);
-        admin_role.put("delete_channel", true);
-        admin_role.put("update_channel_name", true);
-        admin_role.put("update_channel_permissions", true);
-        admin_role.put("update_channel_type", true);
-        admin_role.put("update_channel_category", true);
-        admin_role.put("create_role", true);
-        admin_role.put("delete_role", true);
-        admin_role.put("update_role_name", true);
-        admin_role.put("update_role_permissions", true);
-        admin_role.put("update_role_type", true);
-        admin_role.put("create_category", true);
-        admin_role.put("delete_category", true);
-        admin_role.put("update_category_name", true);
-        admin_role.put("update_category_type", true);
-        admin_role.put("react", true);
-        admin_role.put("delete_others_message", true);
-        admin_role.put("delete_own_message", true);
-        admin_role.put("send_message", true);
-
-        Map<String, Object> member_role = new HashMap<>();
-        member_role.put("react", false);
-        member_role.put("delete_own_message", true);
-        member_role.put("send_message", false);
-
-        long admin_id = databaseHandler.createGroupRole(user_id, group_id, "Admin", jwtService.generateJwtForDB(admin_role),
-                "admin", "Owner created Admin Role");
-
-        long member_id = databaseHandler.createGroupRole(user_id, group_id, "Member", jwtService.generateJwtForDB(member_role),
-                "default", "Owner created Member Role");
-
-        databaseHandler.updateMemberRoles(user_id2, group_id, admin_id, user_id, true,
-                "Owner gave admin to member");
-
-        databaseHandler.updateMemberRoles(user_id3, group_id, member_id, user_id2, true,
-                "Admin gave member role to member");
-
-
-        // user3  -> member
-        // user2  -> admin
-        // user   -> owner
-
-        databaseHandler.createGroupCategory(user_id2, group_id, "My category", "for you",
-                "Admin created new category");
-
-        long category_id = (long) getDataFromMap(databaseHandler.getAllStuffFromGroupSQL(group_id, 0),
-                "category_name", "My category").get("category_category_id");
-
-        long text_channel_id = (long) databaseHandler.createGroupChannel(group_id, user_id2,
-                "text", "My Text Channel", jwtService.generateJwtForDB(new HashMap<>()),
-                "Admin created text channel", ","+category_id);
+        // all permissions, shop - work
+        // mongo
 
 
 

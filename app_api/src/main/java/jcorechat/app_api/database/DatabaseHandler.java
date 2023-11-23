@@ -964,8 +964,8 @@ public class DatabaseHandler {
             values.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
 
             return databaseManager.addDataSQL(DatabaseManager.table_captchas,
-                    "id, answer, time, last_edit_time, failed",
-                    "?, ?, 10, ?, 0", values) ? id : null;
+                    "id, answer, time, last_edit_time",
+                    "?, ?, 10, ?", values) ? id : null;
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
@@ -979,7 +979,7 @@ public class DatabaseHandler {
 
             return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_captchas, new Document("id", id)
                             .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()
-                                    .format(DatabaseManager.formatter)).append("failed", 0),
+                                    .format(DatabaseManager.formatter)),
                     null) ? id : null;
 
         }
@@ -992,7 +992,7 @@ public class DatabaseHandler {
             condition_data.add(id);
 
             Map<String, List<Object>> captcha_data = databaseManager.getDataSQL(DatabaseManager.table_captchas,
-                    "answer, time, failed",
+                    "answer, time",
                     "id = ?", condition_data, null, "", 0);
 
             if (captcha_data == null) {
@@ -1004,33 +1004,21 @@ public class DatabaseHandler {
                     // solved!
                     return databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
 
-                } else if (3 <= Short.valueOf(String.valueOf(captcha_data.get("failed").get(0))) ||
-                        (0 >= Short.valueOf(String.valueOf(captcha_data.get("time").get(0))))) {
-                    // extended fails or time
+                } else if (!captcha_data.get("time").isEmpty() &&
+                        0 >= Short.valueOf(String.valueOf(captcha_data.get("time").get(0)))) {
+                    // extended time
 
-                    databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
+                    return databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
 
-                    return false;
-
-                } else {
-                    // the captcha was not solved and the user has more time and didn't failed 3 times
-
-                    if (!(captcha_data.get("time").isEmpty() || captcha_data.get("failed").isEmpty())) {
-
-                        databaseManager.editDataSQL(DatabaseManager.table_captchas, "failed = failed + 1",
-                                null, "id = ?",
-                                condition_data);
-
-                    }
-                    return false;
                 }
             } catch (Exception e) {
                 return false;
             }
+
         } else if (databaseManager.isMongo()) {
             Document captcha_id = new Document("id", id);
-            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas, captcha_id,
-                    true, "answer", "time", "failed");
+            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
+                    captcha_id,true, "answer", "time");
 
             if (captcha_data == null || captcha_data.isEmpty()) {
                 return false;
@@ -1038,10 +1026,8 @@ public class DatabaseHandler {
 
             Map<String, Object> data = captcha_data.get(0);
             Short time;
-            Short failed;
             try {
                 time = Short.valueOf(String.valueOf(data.get("time")));
-                failed = Short.valueOf(String.valueOf(data.get("failed")));
             } catch (Exception e) {
                 return false;
             }
@@ -1050,7 +1036,7 @@ public class DatabaseHandler {
                 // solved!
                 return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
 
-            } else if ((time <= 0) || (failed >= 3)) {
+            } else if (time <= 0) {
                 // didn't solved the captcha
                 databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
                 return false;
@@ -1058,7 +1044,7 @@ public class DatabaseHandler {
             } else {
                 // the captcha was not solved and the user has more time and didn't failed 3 times
                 databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_captchas,
-                        captcha_id, new Document("time", --time).append("failed", ++failed));
+                        captcha_id, new Document("time", --time));
 
                 return false;
 
@@ -1105,8 +1091,8 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             Document captcha_id = new Document("id", id);
-            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(databaseManager.table_captchas, captcha_id,
-                    true, "last_edit_time", "time");
+            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
+                    captcha_id,true, "last_edit_time", "time");
 
             if (captcha_data == null || captcha_data.get(0).isEmpty()) {
                 return false;
@@ -1123,11 +1109,11 @@ public class DatabaseHandler {
 
                 if (time <= 0) {
                     // expired
-                    return databaseManager.MongoDeleteDataFromCollectionNoSQL(databaseManager.table_captchas, captcha_id);
+                    return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
 
                 }
 
-                return databaseManager.MongoUpdateDocumentInCollectionNoSQL(databaseManager.table_captchas, captcha_id,
+                return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_captchas, captcha_id,
                         new Document("last_edit_time",
                                 LocalDateTime.now().format(DatabaseManager.formatter))
                                 .append("time", --time));
@@ -2972,6 +2958,164 @@ public class DatabaseHandler {
 
         return false;
 
+    }
+
+
+
+    public boolean addItemToShop(String item_type, String item_name, int item_price, long seller_id) {
+        if (seller_id != 0 && !databaseManager.checkIDExists(seller_id, DatabaseManager.table_accounts)) {
+            return false;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (databaseManager.isSQL()) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(item_type);
+            condition_data.add(seller_id);
+
+            Map<String, List<Object>> seller_data = databaseManager.getDataSQL(DatabaseManager.table_shop,
+                    "id", "item_type = ? AND seller_id = ?", condition_data,
+                    null, "", 0);
+
+            if (seller_data == null || !seller_data.get("id").isEmpty()) {
+                // he has this item already
+                return false;
+            }
+
+            condition_data.add(item_name);
+            condition_data.add(item_price);
+            condition_data.add(now.truncatedTo(ChronoUnit.MILLIS));
+
+            return databaseManager.addDataSQL(DatabaseManager.table_shop,
+                    "item_type, seller_id, item_name, item_price, sell_at", "?, ?, ?, ?, ?", condition_data);
+
+
+        } else if (databaseManager.isMongo()) {
+            Document data = new Document("item_type", item_type).append("seller_id", seller_id);
+            List<Map<String, Object>> seller_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
+                    data, false, "id");
+
+            if (seller_data == null || !seller_data.isEmpty() || seller_data.get(0) == null ||
+                    !seller_data.get(0).isEmpty()) {
+                // he has this item already
+                return false;
+            }
+
+            List<Map<String, Object>> all_ids = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
+                    null, false, "id");
+
+            if (all_ids == null) {
+                return false;
+            }
+
+            data.append("id", databaseManager.MongoGenerateID(all_ids, "id"));
+            data.append("item_name", item_name);
+            data.append("item_price", item_price);
+            data.append("sell_at", now.format(DatabaseManager.formatter));
+
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_shop, data, null);
+        }
+        return false;
+    }
+
+    public boolean removeItemToShop(long id) {
+        if (databaseManager.isSQL()) {
+            List<Object> data = new ArrayList<>();
+            data.add(id);
+
+            return databaseManager.deleteDataSQL(DatabaseManager.table_shop, "id = ?", data);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_shop,
+                    new Document("id", id));
+
+        }
+        return false;
+    }
+
+    public boolean updateItemNameInShop(long id, String item_name) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(id);
+
+            List<Object> data = new ArrayList<>();
+            data.add(item_name);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_name = ?", data,
+                    "id = ?", condition);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
+                    new Document("id", id), new Document("item_name", item_name));
+
+        }
+        return false;
+    }
+
+    public boolean updateItemPriceInShop(long id, long item_price) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(id);
+
+            List<Object> data = new ArrayList<>();
+            data.add(item_price);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_price = ?", data,
+                    "id = ?", condition);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
+                    new Document("id", id), new Document("item_price", item_price));
+
+        }
+        return false;
+    }
+
+    public boolean updateItemTypeInShop(long id, String item_type) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(id);
+
+            List<Object> data = new ArrayList<>();
+            data.add(item_type);
+
+            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_type = ?", data,
+                    "id = ?", condition);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
+                    new Document("id", id), new Document("item_type", item_type));
+
+        }
+        return false;
+    }
+
+    public Map<String, List<Object>> getItemsFromShop(int amount) {
+        if (databaseManager.isSQL()) {
+
+            return databaseManager.getDataSQL(DatabaseManager.table_shop, "*", "", null,
+                    null, "sell_at DESC", amount);
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
+                    null, false);
+
+            if (mongoData == null) {
+                return null;
+            }
+
+            Map<String, List<Object>> result = new HashMap<>();
+            result.put("id", new ArrayList<>());
+            result.put("item_name", new ArrayList<>());
+            result.put("item_type", new ArrayList<>());
+            result.put("item_price", new ArrayList<>());
+            result.put("seller_id", new ArrayList<>());
+            result.put("sell_at", new ArrayList<>());
+
+            return databaseManager.transformMongoToSQL(amount, mongoData, result);
+
+        }
+        return null;
     }
 
 }
