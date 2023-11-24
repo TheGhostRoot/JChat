@@ -6,7 +6,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.0'
 }
 
-group = 'jcorechat.app_api'
+group = 'jchat.app_api'
 version = '0.1'
 sourceCompatibility = '17'
 
@@ -63,12 +63,12 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'jcorechat.app_api.API'
+    mainClass = 'jchat.app_api.API'
 }
 
 
 springBoot {
-    mainClass = 'jcorechat.app_api.API'
+    mainClass = 'jchat.app_api.API'
 
 }
 
@@ -77,13 +77,13 @@ test {
 }
 
 tasks.named("bootJar") {
-    mainClass = 'jcorechat.app_api.API'
+    mainClass = 'jchat.app_api.API'
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'jcorechat.app_api.API'
+        attributes 'Main-Class': 'jchat.app_api.API'
     }
 }
 

@@ -16,7 +16,7 @@ repositories {
     }
 }
 
-group = 'jcorechat.load_balancer'
+group = 'jchat.load_balancer'
 version = '0.1'
 sourceCompatibility = '17'
 
@@ -36,11 +36,11 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'jcorechat.load_balancer.LoadBalancer'
+    mainClass = 'jchat.load_balancer.LoadBalancer'
 }
 
 springBoot {
-    mainClass = 'jcorechat.load_balancer.LoadBalancer'
+    mainClass = 'jchat.load_balancer.LoadBalancer'
 
 }
 
@@ -49,13 +49,13 @@ test {
 }
 
 tasks.named("bootJar") {
-    mainClass = 'jcorechat.load_balancer.LoadBalancer'
+    mainClass = 'jchat.load_balancer.LoadBalancer'
 }
 
 jar {
     manifest {
 
-        attributes 'Main-Class': 'jcorechat.load_balancer.LoadBalancer'
+        attributes 'Main-Class': 'jchat.load_balancer.LoadBalancer'
     }
 }
 
