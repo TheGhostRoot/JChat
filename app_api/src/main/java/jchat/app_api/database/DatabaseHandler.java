@@ -888,7 +888,8 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean addReaction(long channel_id, long message_id, String reaction, long actor_id, long group_id) {
+    public boolean addReaction(long channel_id, long message_id, long post_id, String reaction, long actor_id,
+                               long group_id) {
         if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts)) {
             return false;
         }
@@ -896,38 +897,26 @@ public class DatabaseHandler {
         if (databaseManager.isSQL()) {
             if (group_id == 0L) {
                 // dm
-                return handleReactionsSQL(channel_id, message_id, reaction, actor_id);
+                return databaseManager.handleReactionsSQL(channel_id, message_id, post_id, reaction, actor_id);
 
             } else if (databaseManager.doesUserHavePermissionsInChannel(channel_id, List.of("react"),
                         actor_id, group_id)) {
 
-                return handleReactionsSQL(channel_id, message_id, reaction, actor_id);
+                return databaseManager.handleReactionsSQL(channel_id, message_id, post_id, reaction, actor_id);
             }
 
         } else if (databaseManager.isMongo() &&
                 (group_id == 0 || databaseManager.doesUserHavePermissionsInChannel(channel_id, List.of("react"),
                         actor_id, group_id))) {
 
-            return databaseManager.handleReactionsMongo(channel_id, message_id, reaction, actor_id);
+            return databaseManager.handleReactionsMongo(channel_id, message_id, post_id, reaction, actor_id);
         }
 
         return false;
 
     }
 
-    private boolean handleReactionsSQL(long channel_id, long message_id, String reaction, long actor_id) {
-        List<Object> addData = new ArrayList<>();
-        addData.add(channel_id);
-        addData.add(reaction);
-        addData.add(message_id);
-        addData.add(actor_id);
-
-        return databaseManager.addDataSQL(DatabaseManager.table_reactions,
-                "channel_id, reaction, msg_id, member_id",
-                "?, ?, ?, ?", addData);
-    }
-
-    public boolean removeReaction(long channel_id, long message_id, String reaction, long actor_id) {
+    public boolean removeReaction(long channel_id, long message_id, long post_id, String reaction, long actor_id) {
         if (!databaseManager.checkIDExists(actor_id, DatabaseManager.table_accounts)) {
             return false;
         }
@@ -937,15 +926,17 @@ public class DatabaseHandler {
             condition_data3.add(channel_id);
             condition_data3.add(reaction);
             condition_data3.add(message_id);
+            condition_data3.add(post_id);
             condition_data3.add(actor_id);
 
             return databaseManager.deleteDataSQL(DatabaseManager.table_reactions,
-                    "channel_id = ? AND reaction = ? AND msg_id = ? AND member_id = ?", condition_data3);
+                    "channel_id = ? AND reaction = ? AND msg_id = ? AND post_id = ? AND member_id = ?",
+                    condition_data3);
 
         } else if (databaseManager.isMongo()) {
             return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
                     new Document("channel_id", channel_id).append("reaction", reaction)
-                            .append("msg_id", message_id).append("member_id", actor_id));
+                            .append("msg_id", message_id).append("member_id", actor_id).append("post_id", post_id));
 
         }
         return false;
@@ -1179,8 +1170,16 @@ public class DatabaseHandler {
             data.add(msg);
             data.add(background);
 
-            return databaseManager.addDataSQL(DatabaseManager.table_posts, "send_by, send_at, msg, background",
-                    "?, ?, ?, ?", data);
+            if (databaseManager.checkIDExists(1l, DatabaseManager.table_posts)) {
+                return databaseManager.addDataSQL(DatabaseManager.table_posts, "send_by, send_at, msg, background",
+                        "?, ?, ?, ?", data);
+            } else {
+                databaseManager.addDataSQL(DatabaseManager.table_posts, "send_by, send_at, msg, background",
+                        "?, ?, ?, ?", data);
+
+                return addCommentToPost(sender_id, 1l, "Welcome to the comment section", "");
+
+            }
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> post_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_posts,
@@ -1190,12 +1189,24 @@ public class DatabaseHandler {
                 return false;
             }
 
-            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_posts,
-                    new Document("id", databaseManager.MongoGenerateID(post_data, "id"))
-                            .append("send_by", sender_id)
-                            .append("msg", msg).append("send_at",
-                                    LocalDateTime.now().format(DatabaseManager.formatter))
-                            .append("background", background).append("comments", Arrays.asList()), null);
+            if (databaseManager.checkIDExists(1l, DatabaseManager.table_posts)) {
+
+                return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_posts,
+                        new Document("id", databaseManager.MongoGenerateID(post_data, "id"))
+                                .append("send_by", sender_id)
+                                .append("msg", msg).append("send_at",
+                                        LocalDateTime.now().format(DatabaseManager.formatter))
+                                .append("background", background).append("comments", Arrays.asList()), null);
+            } else {
+                databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_posts,
+                        new Document("id", databaseManager.MongoGenerateID(post_data, "id"))
+                                .append("send_by", sender_id)
+                                .append("msg", msg).append("send_at",
+                                        LocalDateTime.now().format(DatabaseManager.formatter))
+                                .append("background", background).append("comments", Arrays.asList()), null);
+
+                return addCommentToPost(sender_id, 1l, "Welcome to the comment section", "");
+            }
 
         }
         return false;
@@ -1231,26 +1242,9 @@ public class DatabaseHandler {
             List<Object> idk = new ArrayList<>();
             idk.add(post_id);
 
-            Map<String, List<Object>> all_comments = databaseManager.getDataSQL(DatabaseManager.table_post_comments,
-                    "msg_id","post_id = ?", idk, null, "", 0);
-
-            if (all_comments == null) {
-                return false;
-            }
-
-            try {
-                for (Object msg_id : all_comments.get("msg_id")) {
-                        List<Object> condition_data3 = new ArrayList<>();
-                        condition_data3.add(Long.parseLong(String.valueOf(msg_id)));
-
-                        databaseManager.deleteDataSQL(DatabaseManager.table_reactions, "channel_id = 0 AND msg_id = ?",
-                                condition_data3);
-                }
-            } catch (Exception e) {
-                return false;
-            }
-
+            databaseManager.deleteDataSQL(DatabaseManager.table_reactions, "channel_id = 0 AND post_id = ?", idk);
             databaseManager.deleteDataSQL(DatabaseManager.table_post_comments, "post_id = ?", idk);
+
             idk.add(sender_id);
 
             return databaseManager.deleteDataSQL(DatabaseManager.table_posts,
@@ -1260,26 +1254,11 @@ public class DatabaseHandler {
                 databaseManager.checkIDExists(sender_id, DatabaseManager.table_accounts) &&
                 databaseManager.checkIDExists(post_id, DatabaseManager.table_posts)) {
 
-            Document post_filter = new Document("id", post_id);
-
-            List<Map<String, Object>> all_comments = databaseManager.getCollectionMongo(DatabaseManager.table_posts,
-                    "comments", post_filter);
-
-            if (all_comments == null) {
-                return false;
-            }
-
-            try {
-                for (Object msg_id : databaseManager.extract_all_content(all_comments, "msg_id")) {
-                    databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
-                            new Document("msg_id", Long.parseLong(String.valueOf(msg_id))));
-                }
-            } catch (Exception e) {
-                return false;
-            }
+            databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
+                            new Document("post_id", post_id));
 
             return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_posts,
-                    post_filter.append("send_by", sender_id));
+                    new Document("id", post_id).append("send_by", sender_id));
 
         }
         return false;
@@ -1314,7 +1293,8 @@ public class DatabaseHandler {
 
     public boolean addCommentToPost(long sender_id, long post_id, String message, String reply_to) {
         if (!databaseManager.checkIDExists(sender_id, DatabaseManager.table_accounts) ||
-                !databaseManager.checkIDExists(post_id, DatabaseManager.table_posts)) {
+                !databaseManager.checkIDExists(post_id, DatabaseManager.table_posts) ||
+                reply_to.contains(","+post_id)) {
             return false;
         }
 
@@ -1388,14 +1368,56 @@ public class DatabaseHandler {
 
     public boolean deleteCommentFromPost(long post_id, long sender_id, long message_id) {
         if (databaseManager.isSQL()) {
-
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(post_id);
-            condition_data.add(sender_id);
+
+
+            Map<String, List<Object>> comment_repl = databaseManager.getDataSQL(DatabaseManager.table_post_comments,
+                    "repl_to, msg_id", "post_id = ?", condition_data, null, "", 0);
+
+            if (comment_repl == null) {
+                return false;
+            }
+
+
+            List<Long> msg_ids_repl = new ArrayList<>();
+            List<Object> replies_list = comment_repl.get("repl_to");
+            List<Object> message_ids = comment_repl.get("msg_id");
+            for (int i = 0; i < replies_list.size(); i++) {
+                if (String.valueOf(replies_list.get(i)).contains(String.valueOf(message_id))) {
+                    msg_ids_repl.add(Long.parseLong(String.valueOf(message_ids.get(i))));
+                }
+            }
+
+            if (!msg_ids_repl.isEmpty()) {
+                // this comment have replies
+                try {
+                    List<Object> idk_cond = new ArrayList<>();
+                    for (Long repl_comment_id : msg_ids_repl) {
+                        idk_cond.clear();
+                        idk_cond.add(post_id);
+                        idk_cond.add(repl_comment_id);
+
+                        databaseManager.deleteDataSQL(DatabaseManager.table_reactions,
+                                "post_id = ? AND msg_id = ?", idk_cond);
+
+                        databaseManager.deleteDataSQL(DatabaseManager.table_post_comments,
+                                "post_id = ? AND msg_id = ?", idk_cond);
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+
             condition_data.add(message_id);
 
+            databaseManager.deleteDataSQL(DatabaseManager.table_reactions, "post_id = ? AND msg_id = ?",
+                    condition_data);
+
+            condition_data.add(sender_id);
+
             return databaseManager.deleteDataSQL(DatabaseManager.table_post_comments,
-                    "post_id = ? AND send_by = ? AND msg_id = ?", condition_data);
+                    "post_id = ? AND msg_id = ? AND send_by = ?", condition_data);
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> comment_data = databaseManager.getCollectionMongo(DatabaseManager.table_posts,
@@ -1407,8 +1429,29 @@ public class DatabaseHandler {
 
             try {
                 for (int i = 0; i < comment_data.size(); i++) {
-                    if (Long.valueOf(String.valueOf(comment_data.get(i).get("msg_id"))) == message_id) {
+
+                    Map<String, Object> map = comment_data.get(i);
+                    if (Long.valueOf(String.valueOf(map.get("msg_id"))) == message_id) {
+
+                        databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
+                                new Document("channel_id", 0l)
+                                        .append("msg_id", message_id)
+                                        .append("post_id", post_id));
+
                         comment_data.remove(i);
+                        //List<String> repl_comm_id = Arrays.stream(String.valueOf(map.get("reply_to")).split(",")).toList();
+                        for (int i2 = 0; i2 < comment_data.size(); i2++) {
+
+                            if (String.valueOf(comment_data.get(i2).get("reply_to")).contains(","+message_id)) {
+                                databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
+                                        new Document("channel_id", 0l)
+                                                .append("msg_id", Long.parseLong(String.valueOf(comment_data.get(i2)
+                                                        .get("msg_id"))))
+                                                .append("post_id", post_id));
+
+                                comment_data.remove(i2);
+                            }
+                        }
                         break;
                     }
                 }
@@ -1712,7 +1755,8 @@ public class DatabaseHandler {
                             .append("settings", "").append("members",
                                     Arrays.asList(new Document("member_id", owner_id)
                                             .append("roles_id", "").append("nickname", null)))
-                            .append("group_events", ""), null);
+                            .append("group_events", "")
+                            .append("roles", Arrays.asList()), null);
 
         }
         return false;
@@ -1824,7 +1868,16 @@ public class DatabaseHandler {
 
         LocalDateTime now = LocalDateTime.now();
         if (databaseManager.isSQL()) {
+            List<Object> check_data = new ArrayList<>();
+            check_data.add(new_owner_id);
+            check_data.add(group_id);
 
+            Map<String, List<Object>> owner_data = databaseManager.getDataSQL(DatabaseManager.table_group_members, "member_id",
+                    "member_id = ? AND group_id = ?", check_data, null, "", 0);
+
+            if (owner_data == null || owner_data.get("member_id").isEmpty()) {
+                return false;
+            }
 
             List<Object> search_data = new ArrayList<>();
             search_data.add(group_id);
@@ -1837,8 +1890,16 @@ public class DatabaseHandler {
                     databaseManager.updateGroupLogs(actor_id, group_id, log_message, now, "Changed Owner");
 
         } else if (databaseManager.isMongo()) {
+            Document group_filter = new Document("id", group_id);
+            List<Map<String, Object>> owner_data = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
+                    "members", group_filter);
+
+            if (owner_data == null || databaseManager.checkNotUniqueWithStream(owner_data, "member_id", new_owner_id)) {
+                return false;
+            }
+
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
-                    new Document("id", group_id), new Document("owner_id", new_owner_id)) &&
+                    group_filter, new Document("owner_id", new_owner_id)) &&
                     databaseManager.updateGroupLogs(actor_id, group_id, log_message, now, "Changed Owner");
 
         }
@@ -2100,7 +2161,7 @@ public class DatabaseHandler {
                 return false;
             }
 
-            if ((all_members.isEmpty() || all_members.get("member_id").isEmpty()) && leave_type.equals("leave")
+            if (all_members.get("member_id").isEmpty() && leave_type.equals("leave")
                     && actor_id == 0L) {
                 // the group is empty | delete the group
                 return deleteGroup(group_id);
@@ -2146,24 +2207,11 @@ public class DatabaseHandler {
             }
 
             try {
-                boolean inThere = false;
-                try {
-                    for (Map<String, Object> mem : all_members) {
-                        if (Long.parseLong(String.valueOf(mem.get("member_id"))) == member_id) {
-                            inThere = true;
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
+                if (databaseManager.checkNotUniqueWithStream(all_members, "member_id", member_id)) {
                     return false;
                 }
 
-                if (!inThere) {
-                    return false;
-                }
-
-                if (all_members.isEmpty() || all_members.get(0).isEmpty() ||
-                        ((List<Map<String, Object>>) all_members.get(0).get("members")).isEmpty() && actor_id == 0L &&
+                if (all_members.isEmpty() && actor_id == 0L &&
                                 leave_type.equals("leave")) {
                     // last member left | delete the group
                     return deleteGroup(group_id);
@@ -2218,7 +2266,7 @@ public class DatabaseHandler {
 
 
         } else if (databaseManager.isMongo()) {
-            Document filter = new Document("group_id", group_id);
+            Document filter = new Document("id", group_id);
             List<Map<String, Object>> members = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
                     "members", filter);
 
@@ -2269,7 +2317,7 @@ public class DatabaseHandler {
                     databaseManager.updateGroupLogs(actor_id, group_id, log_message, now, "Updated Nickname");
 
         } else if (databaseManager.isMongo()) {
-            Document filter = new Document("group_id", group_id);
+            Document filter = new Document("id", group_id);
             List<Map<String, Object>> members = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
                     "members", filter);
 
@@ -2277,12 +2325,8 @@ public class DatabaseHandler {
                 return false;
             }
 
-            for (Map<String, Object> mem : members) {
-                if (Long.valueOf(String.valueOf(mem.get("member_id"))) == member_id) {
-                    mem.put("nickname", new_nickname);
-                    break;
-                }
-            }
+            members = databaseManager.MongoUpdateValueInCollection(members, "member_id",
+                    member_id, "nickname", new_nickname, false);
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
                     filter, new Document("members", members)) &&
@@ -2686,13 +2730,38 @@ public class DatabaseHandler {
                 return false;
             }
 
+            List<Map<String, Object>> all_members = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
+                    "members", filter);
+
+            if (all_members == null || all_members.isEmpty()) {
+                return false;
+            }
+
             all_roles = databaseManager.MongoUpdateValueInCollection(all_roles,
                     "role_id", role_id, null, null, true);
 
+            try {
+                for (int i = 0; i < all_members.size(); i++) {
+
+                    Map<String, Object> map = all_members.get(i);
+                    Object Member_roles = map.get("roles_id");
+                    if (String.valueOf(Member_roles).contains(","+role_id)) {
+                        map.put("roles_id", String.valueOf(Member_roles).replace(","+role_id, ""));
+                        break;
+                    }
+                }
+
+            } catch (Exception e) {
+                return false;
+            }
+
+            databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, new Document("roles", all_roles));
+
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
-                    filter, new Document("roles", all_roles)) &&
+                    filter, new Document("members", all_members)) &&
                     databaseManager.updateGroupLogs(actor_id, group_id, log_message, now,
-                            "Deleted Role");
+                    "Deleted Role");
 
         }
         return false;

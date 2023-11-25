@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JCoreChat.iml" filepath="$PROJECT_DIR$/.idea/modules/JCoreChat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/JChat.App_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/JChat.App_API.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" />
@@ -18,7 +18,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Util/JCoreChat.Util.test.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/jcorechat.app_api.JCoreChat.App_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/jcorechat.app_api.JCoreChat.App_API.main.iml" />
     </modules>
   </component>
 </project>

@@ -91,6 +91,7 @@ public class DatabaseManager {
             reactions_table.add("channel_id BIGINT NOT NULL, ");
             reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
             reactions_table.add("msg_id BIGINT NOT NULL, ");
+            reactions_table.add("post_id BIGINT NOT NULL, ");
             reactions_table.add("member_id BIGINT NOT NULL, ");
             reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
@@ -166,7 +167,7 @@ public class DatabaseManager {
             posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_comment_table.add("repl_to TEXT, ");
+            posts_comment_table.add("repl_to TEXT NOT NULL, ");
             posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
             posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
@@ -255,6 +256,7 @@ public class DatabaseManager {
             reactions_table.add("channel_id BIGINT NOT NULL, ");
             reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
             reactions_table.add("msg_id BIGINT NOT NULL, ");
+            reactions_table.add("post_id BIGINT NOT NULL, ");
             reactions_table.add("member_id BIGINT NOT NULL, ");
             reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
@@ -331,7 +333,7 @@ public class DatabaseManager {
             posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
             posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_comment_table.add("repl_to TEXT, ");
+            posts_comment_table.add("repl_to TEXT NOT NULL, ");
             posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
             posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
@@ -612,6 +614,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -735,6 +738,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -1569,7 +1573,7 @@ public class DatabaseManager {
 
     protected boolean messageDeletionMongo(long channel_id, List<Map<String, Object>> the_messages, long msg_id) {
         MongoDeleteDataFromCollectionNoSQL(table_reactions, new Document("channel_id", channel_id)
-                .append("msg_id", msg_id));
+                .append("msg_id", msg_id).append("post_id", 0l));
 
         return MongoUpdateDocumentInCollectionNoSQL(table_chats, new Document("channel_id", channel_id),
                 new Document("msgs", the_messages));
@@ -1580,7 +1584,7 @@ public class DatabaseManager {
         condition_data.add(channel_id);
         condition_data.add(message_id);
 
-        deleteDataSQL(table_reactions, "channel_id = ? AND msg_id = ?", condition_data);
+        deleteDataSQL(table_reactions, "channel_id = ? AND msg_id = ? AND post_id = 0", condition_data);
 
         condition_data.clear();
         condition_data.add(channel_id);
@@ -1590,14 +1594,18 @@ public class DatabaseManager {
         return deleteDataSQL(table_chats,"channel_id = ? AND msg_id = ? AND send_by = ?", condition_data);
     }
 
-    protected boolean handleReactionsMongo(long channel_id, long message_id, String reaction, long actor_id) {
+    protected boolean handleReactionsMongo(long channel_id, long message_id, long post_id, String reaction, long actor_id) {
         Document data = new Document("channel_id", channel_id)
                 .append("reaction", reaction)
-                .append("msg_id", message_id).append("member_id", actor_id);
+                .append("msg_id", message_id).append("post_id", post_id).append("member_id", actor_id);
 
         List<Map<String, Object>> reaction_data = MongoReadCollectionNoSQL(table_reactions, data, false);
-        if (reaction_data == null || !reaction_data.isEmpty()) {
-            // the user already reacted
+        try {
+            if (!reaction_data.isEmpty()) {
+                reaction_data.get(0).get("reaction");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
 
@@ -1799,6 +1807,31 @@ public class DatabaseManager {
 
     public boolean isMongo() {
         return mongoClient != null && mongoDatabase != null;
+    }
+
+    protected boolean handleReactionsSQL(long channel_id, long message_id, long post_id, String reaction, long actor_id) {
+        List<Object> addData = new ArrayList<>();
+        addData.add(channel_id);
+        addData.add(reaction);
+        addData.add(message_id);
+        addData.add(post_id);
+        addData.add(actor_id);
+
+        /*
+        Map<String, List<Object>> reaction_data = getDataSQL(table_reactions,
+                "reaction",
+                "channel_id = ? AND reaction = ? AND msg_id = ? AND post_id = ? AND member_id = ?", addData,
+                null, "", 0);
+
+        if (reaction_data == null || !reaction_data.get("reaction").isEmpty()) {
+            // user already reacted
+            return false;
+        }
+
+         */
+
+        return addDataSQL(table_reactions, "channel_id, reaction, msg_id, post_id, member_id",
+                "?, ?, ?, ?, ?", addData);
     }
 
 }

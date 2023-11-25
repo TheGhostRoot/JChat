@@ -110,8 +110,8 @@ public class API {
         //  /api/v{VERSION}/account
 
         // the post channel is 0
-        // the post message is the post id
-        // for SQL the reaction MUST end with "{post_id}" to see that are you reacting to.
+        // the first ever post will have 1 comment to avoid msg_id: 1 post_id: 1
+        // group's animations and rules will be in the settings
 
         /*
         * Map<String, Object> admin_role = new HashMap<>();
@@ -161,13 +161,14 @@ public class API {
         long user_id3 = databaseHandler.createUser("MC", "mc@mail.com", "YCR1TUVYIUHO2IOugy",
                 "TCVYB1UO2INPNHug76", "H7G1826F8giuo");
 
-        /*
+        /* MongoDB
         databaseHandler.addMessage(0l, user_id, user_id2, "Yes", 0L);
         long dm_channel_id = databaseHandler.getDMChannelID(user_id, user_id2);
         long msg_id = (long) ((List<Map<String, Object>>) databaseHandler.getMessages(dm_channel_id, 1).get("msgs").get(0)).get(0).get("msg_id");
         long msg_id = (long) databaseHandler.getMessages(dm_channel_id, 1).get("msg_id").get(0);
-        databaseHandler.addReaction(dm_channel_id, msg_id, "Cool", user_id2, 0l);
-        databaseHandler.deleteMessage(user_id, dm_channel_id, msg_id, user_id, 0l); */
+        databaseHandler.addReaction(dm_channel_id, msg_id, 0l, "Cool", user_id2, 0l);
+        databaseHandler.deleteMessage(user_id, dm_channel_id, msg_id, user_id, 0l);*/
+
 
         databaseHandler.createGroup(user_id, "My group", "logo", "banner", "animations");
         long group_id = (long) databaseHandler.getAllGroupsWithUser(user_id, 1).get("id").get(0);
@@ -216,11 +217,31 @@ public class API {
                 "Owner updated settings");
 
 
+        databaseHandler.addGroupMember(user_id2, group_id, "", null, "Joined the server");
+        databaseHandler.addGroupMember(user_id3, group_id, "", null, "Joined the server");
+
+        long admin_role_id = databaseHandler.createGroupRole(user_id, group_id, "Admin",
+                jwtService.generateJwtForDB(admin_role),
+                "admin", "Owner created admin role");
+
+        long member_role_id = databaseHandler.createGroupRole(user_id, group_id, "Member",
+                jwtService.generateJwtForDB(member_role),
+                "default", "Owner created member role");
+
+        databaseHandler.updateMemberRoles(user_id2, group_id, admin_role_id, user_id, true, "Owner gave admin");
+        databaseHandler.updateMemberRoles(user_id3, group_id, member_role_id, user_id2, true, "Admin gave member");
+
+        // user - owner
+        // user2 - admin
+        // user3 - member
+
+        databaseHandler.deleteGroupRole(member_role_id, group_id, user_id2, "Admin deleted role admin");
+
 
         // messages(group), reactions(group),
-        // general groups, groups add/remove member, general role, group channels, group categories
+        // general role, group channels, group categories
         // all permissions
-        // delete: post / post comments / messages
+        // delete: group channel, group category, group roles
         // mongo
 
 
