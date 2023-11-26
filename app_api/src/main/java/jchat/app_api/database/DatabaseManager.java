@@ -1252,7 +1252,7 @@ public class DatabaseManager {
             }
             return permissions;
 
-        } else if (mongoClient != null && mongoDatabase != null) {
+        } else if (isMongo()) {
             List<Map<String, Object>> channel_data = getCollectionMongo(table_groups, "channels",
                     new Document("id", group_id));
 
@@ -1260,8 +1260,8 @@ public class DatabaseManager {
                 return permissions;
             }
 
-            for (Map<String, Object> channel : channel_data) {
-                try {
+            try {
+                for (Map<String, Object> channel : channel_data) {
                     if (Long.parseLong(String.valueOf(channel.get("channel_id"))) == channel_id) {
                         String channel_permissions_text = String.valueOf(channel.get("permissions"));
                         if (channel_permissions_text.isBlank()) {
@@ -1290,9 +1290,9 @@ public class DatabaseManager {
                         }
                         return permissions;
                     }
-                } catch (Exception e) {
-                    return null;
                 }
+            } catch (Exception e) {
+                return null;
             }
         }
         return null;
@@ -1483,6 +1483,12 @@ public class DatabaseManager {
             }
 
             String send_at = now.format(formatter);
+            String message_json = getMessageJson(message);
+            if (message_json == null) {
+                message_json = "{}";
+                message += message_json;
+            }
+
             if (chat_msgs.isEmpty() || chat_msgs.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
                         new Document("channel_id", channel_id == 0L ?
@@ -1516,12 +1522,6 @@ public class DatabaseManager {
                     }
                 } catch (Exception e) {
                     return false;
-                }
-
-                String message_json = getMessageJson(message);
-                if (message_json == null) {
-                    message_json = "{}";
-                    message += message_json;
                 }
 
                 if (message_sender_id == sender_id && message_json.equals("{}")) {

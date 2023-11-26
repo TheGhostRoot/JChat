@@ -1756,7 +1756,8 @@ public class DatabaseHandler {
                                     Arrays.asList(new Document("member_id", owner_id)
                                             .append("roles_id", "").append("nickname", null)))
                             .append("group_events", "")
-                            .append("roles", Arrays.asList()), null);
+                            .append("roles", Arrays.asList()).append("categories", Arrays.asList())
+                            .append("channels", Arrays.asList()), null);
 
         }
         return false;
@@ -1767,16 +1768,50 @@ public class DatabaseHandler {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
 
+            Map<String, List<Object>> all_channels = databaseManager.getDataSQL(DatabaseManager.table_group_channels,
+                    "channel_id", "group_id = ?", condition_data, null, "", 0);
+
+            if (all_channels == null || all_channels.isEmpty()) {
+                return false;
+            }
+
+            List<Object> all_channel_ids = all_channels.get("channel_id");
+            if (!all_channel_ids.isEmpty()) {
+                for (Object channel : all_channel_ids) {
+                    long channel_id = Long.parseLong(String.valueOf(channel));
+                    List<Object> condition_data2 = new ArrayList<>();
+                    condition_data2.add(channel_id);
+
+                    Map<String, List<Object>> messages = databaseManager.getDataSQL(DatabaseManager.table_chats,
+                            "msg_id, send_by", "channel_id = ?", condition_data2, null, "", 0);
+
+                    if (messages == null || messages.get("msg_id").isEmpty() || messages.get("send_by").isEmpty()) {
+                        return false;
+                    }
+
+                    try {
+                        for (int i = 0; i < messages.get("msg_id").size(); i++) {
+                            databaseManager.messageDeletionSQL(channel_id,
+                                    Long.parseLong(String.valueOf(messages.get("msg_id").get(i))),
+                                    Long.parseLong(String.valueOf(messages.get("send_by").get(i))));
+                        }
+                    } catch (Exception e) {
+                        return false;
+                    }
+
+                    condition_data2.add(group_id);
+
+                    databaseManager.deleteDataSQL(DatabaseManager.table_group_channels,
+                            "channel_id = ? AND group_id = ?",
+                            condition_data2);
+                }
+            }
+
             if (!databaseManager.deleteDataSQL(DatabaseManager.table_group_logs,
                     "group_id = ?", condition_data)) {
                 return false;
             }
 
-
-            if (!databaseManager.deleteDataSQL(DatabaseManager.table_group_channels,
-                    "group_id = ?", condition_data)) {
-                return false;
-            }
 
             if (!databaseManager.deleteDataSQL(DatabaseManager.table_group_category,
                     "group_id = ?", condition_data)) {
@@ -1797,9 +1832,29 @@ public class DatabaseHandler {
                     "id = ?", condition_data);
 
         } else if (databaseManager.isMongo()) {
+            Document filter = new Document("id", group_id);
+
+            List<Map<String, Object>> all_channels = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
+                    "channels", filter);
+
+            if (all_channels == null) {
+                return false;
+            }
+
+            if (!all_channels.isEmpty()) {
+                for (Object channel : databaseManager.extract_all_content(all_channels, "channel_id")) {
+                    long channel_id = Long.parseLong(String.valueOf(channel));
+
+                    databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
+                            new Document("channel_id", channel_id).append("post_id", 0l));
+
+                    databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_chats,
+                            new Document("channel_id", channel_id));
+                }
+            }
 
             return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_groups,
-                    new Document("id", group_id));
+                    filter);
 
         }
         return false;
@@ -2432,11 +2487,29 @@ public class DatabaseHandler {
         LocalDateTime now = LocalDateTime.now();
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
-            condition_data.add(group_id);
             condition_data.add(channel_id);
 
+            Map<String, List<Object>> messages = databaseManager.getDataSQL(DatabaseManager.table_chats,
+                    "msg_id, send_by", "channel_id = ?", condition_data, null, "", 0);
+
+            if (messages == null || messages.get("msg_id").isEmpty() || messages.get("send_by").isEmpty()) {
+                return false;
+            }
+
+            try {
+                for (int i = 0; i < messages.get("msg_id").size(); i++) {
+                    databaseManager.messageDeletionSQL(channel_id,
+                            Long.parseLong(String.valueOf(messages.get("msg_id").get(i))),
+                            Long.parseLong(String.valueOf(messages.get("send_by").get(i))));
+                }
+            } catch (Exception e) {
+                return false;
+            }
+
+            condition_data.add(group_id);
+
             return databaseManager.deleteDataSQL(DatabaseManager.table_group_channels,
-                    "group_id = ? AND channel_id = ?",
+                    "channel_id = ? AND group_id = ?",
                     condition_data) &&
                     databaseManager.updateGroupLogs(actor_id, group_id, log_message, now, "Deleted Channel");
 
@@ -2451,6 +2524,12 @@ public class DatabaseHandler {
 
             all_channels = databaseManager.MongoUpdateValueInCollection(all_channels,
                     "channel_id", channel_id, null, null, true);
+
+            databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_reactions,
+                    new Document("channel_id", channel_id).append("post_id", 0l));
+
+            databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_chats,
+                    new Document("channel_id", channel_id));
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
                     filter, new Document("channels", all_channels)) &&
@@ -2715,6 +2794,39 @@ public class DatabaseHandler {
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
+
+            Map<String, List<Object>> members = databaseManager.getDataSQL(DatabaseManager.table_group_members,
+                    "roles_id, member_id", "group_id = ?", condition_data, null, "", 0);
+
+            if (members == null || members.get("roles_id").isEmpty() || members.get("member_id").isEmpty()) {
+                return false;
+            }
+
+            List<Object> set_data = new ArrayList<>();
+
+            try {
+                for (int i = 0; i < members.get("roles_id").size(); i++) {
+                    String mem_role_id = String.valueOf(members.get("roles_id").get(i));
+                    long mem_id = Long.parseLong(String.valueOf(members.get("member_id").get(i)));
+                    if (mem_role_id.contains("," + role_id)) {
+                        condition_data.clear();
+                        condition_data.add(group_id);
+                        condition_data.add(mem_id);
+
+                        set_data.clear();
+                        set_data.add(mem_role_id.replace("," + role_id, ""));
+
+                        databaseManager.editDataSQL(DatabaseManager.table_group_members,
+                                "roles_id = ?", set_data,
+                                "group_id = ? AND member_id = ?", condition_data);
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+            condition_data.clear();
+
+            condition_data.add(group_id);
             condition_data.add(role_id);
 
             return databaseManager.deleteDataSQL(DatabaseManager.table_group_roles,
@@ -2955,6 +3067,40 @@ public class DatabaseHandler {
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(group_id);
+
+            Map<String, List<Object>> channels_id = databaseManager.getDataSQL(DatabaseManager.table_group_channels,
+                    "channel_id, categories_id", "group_id = ?", condition_data,
+                    null, "", 0);
+
+            if (channels_id == null || channels_id.get("channel_id").isEmpty() || channels_id.get("categories_id").isEmpty()) {
+                return false;
+            }
+
+            List<Object> set_data = new ArrayList<>();
+
+            try {
+                for (int i = 0; i < channels_id.get("categories_id").size(); i++) {
+                    String chan_catego_id = String.valueOf(channels_id.get("categories_id").get(i));
+                    long chan_id = Long.parseLong(String.valueOf(channels_id.get("channel_id").get(i)));
+                    if (chan_catego_id.contains("," + category_id)) {
+                        condition_data.clear();
+                        condition_data.add(group_id);
+                        condition_data.add(chan_id);
+
+                        set_data.clear();
+                        set_data.add(chan_catego_id.replace("," + category_id, ""));
+
+                        databaseManager.editDataSQL(DatabaseManager.table_group_channels,
+                                "categories_id = ?", set_data,
+                                "group_id = ? AND channel_id = ?", condition_data);
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+
+            condition_data.clear();
+            condition_data.add(group_id);
             condition_data.add(category_id);
 
             return databaseManager.deleteDataSQL(DatabaseManager.table_group_category,
@@ -2971,8 +3117,33 @@ public class DatabaseHandler {
                 return false;
             }
 
+            List<Map<String, Object>> all_channels = databaseManager.getCollectionMongo(DatabaseManager.table_groups,
+                    "channels", filter);
+
+            if (all_channels == null || all_channels.isEmpty()) {
+                return false;
+            }
+
+            try {
+                for (int i = 0; i < all_channels.size(); i++) {
+
+                    Map<String, Object> map = all_channels.get(i);
+                    String Channel_categories_id = String.valueOf(map.get("categories_id"));
+                    if (Channel_categories_id.contains(","+category_id)) {
+                        map.put("categories_id", Channel_categories_id.replace(","+category_id, ""));
+                        break;
+                    }
+                }
+
+            } catch (Exception e) {
+                return false;
+            }
+
             collection = databaseManager.MongoUpdateValueInCollection(collection,
                     "category_id", category_id, null, null, true);
+
+            databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
+                    filter, new Document("channels", all_channels));
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_groups,
                     filter, new Document("categories", collection)) &&
