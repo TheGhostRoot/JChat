@@ -30,6 +30,7 @@ public class DatabaseManager {
     protected static final String table_post_comments = "post_comments";
     protected static final String table_profiles = "profiles";
     protected static final String table_shop = "shop";
+    protected static final String table_friend_requests = "friend_requests";
 
 
     protected final String postgressql_url = "jdbc:postgresql://localhost:5433/jcorechat-db";
@@ -189,7 +190,14 @@ public class DatabaseManager {
             shop_table.add("seller_id BIGINT NOT NULL, ");
             shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
+            List<String> friends_table = new ArrayList<>();
+            friends_table.add("id BIGINT NOT NULL, ");
+            friends_table.add("id2 BIGINT NOT NULL, ");
+            friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
+            friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
@@ -218,6 +226,7 @@ public class DatabaseManager {
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
             createTableSQL(table_shop, shop_table);
+            createTableSQL(table_friend_requests, friends_table);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -355,7 +364,14 @@ public class DatabaseManager {
             shop_table.add("seller_id BIGINT NOT NULL, ");
             shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
+            List<String> friends_table = new ArrayList<>();
+            friends_table.add("id BIGINT NOT NULL, ");
+            friends_table.add("id2 BIGINT NOT NULL, ");
+            friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
+            friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
@@ -384,6 +400,7 @@ public class DatabaseManager {
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
             createTableSQL(table_shop, shop_table);
+            createTableSQL(table_friend_requests, friends_table);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -413,6 +430,7 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
             MongoCreateCollectionNoSQL(table_shop);
+            MongoCreateCollectionNoSQL(table_friend_requests);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -455,7 +473,6 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception  e) {
-            e.printStackTrace();
             return false;
         }
     }
@@ -1252,7 +1269,7 @@ public class DatabaseManager {
             }
             return permissions;
 
-        } else if (mongoClient != null && mongoDatabase != null) {
+        } else if (isMongo()) {
             List<Map<String, Object>> channel_data = getCollectionMongo(table_groups, "channels",
                     new Document("id", group_id));
 
@@ -1260,8 +1277,8 @@ public class DatabaseManager {
                 return permissions;
             }
 
-            for (Map<String, Object> channel : channel_data) {
-                try {
+            try {
+                for (Map<String, Object> channel : channel_data) {
                     if (Long.parseLong(String.valueOf(channel.get("channel_id"))) == channel_id) {
                         String channel_permissions_text = String.valueOf(channel.get("permissions"));
                         if (channel_permissions_text.isBlank()) {
@@ -1290,9 +1307,9 @@ public class DatabaseManager {
                         }
                         return permissions;
                     }
-                } catch (Exception e) {
-                    return null;
                 }
+            } catch (Exception e) {
+                return null;
             }
         }
         return null;
@@ -1483,6 +1500,12 @@ public class DatabaseManager {
             }
 
             String send_at = now.format(formatter);
+            String message_json = getMessageJson(message);
+            if (message_json == null) {
+                message_json = "{}";
+                message += message_json;
+            }
+
             if (chat_msgs.isEmpty() || chat_msgs.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
                         new Document("channel_id", channel_id == 0L ?
@@ -1516,12 +1539,6 @@ public class DatabaseManager {
                     }
                 } catch (Exception e) {
                     return false;
-                }
-
-                String message_json = getMessageJson(message);
-                if (message_json == null) {
-                    message_json = "{}";
-                    message += message_json;
                 }
 
                 if (message_sender_id == sender_id && message_json.equals("{}")) {
@@ -1833,5 +1850,6 @@ public class DatabaseManager {
         return addDataSQL(table_reactions, "channel_id, reaction, msg_id, post_id, member_id",
                 "?, ?, ?, ?, ?", addData);
     }
+
 
 }

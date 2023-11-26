@@ -152,6 +152,7 @@ public class API {
 
         databaseHandler = new DatabaseHandler(databaseManager);
 
+        /*
         long user_id = databaseHandler.createUser("John", "john@mail.com", "YCRTUVYIUHOIOugy",
                 "TCVYBUOINPNHug76", "H7G86F8giuo");
 
@@ -161,13 +162,26 @@ public class API {
         long user_id3 = databaseHandler.createUser("MC", "mc@mail.com", "YCR1TUVYIUHO2IOugy",
                 "TCVYB1UO2INPNHug76", "H7G1826F8giuo");
 
-        /* MongoDB
         databaseHandler.addMessage(0l, user_id, user_id2, "Yes", 0L);
         long dm_channel_id = databaseHandler.getDMChannelID(user_id, user_id2);
         long msg_id = (long) ((List<Map<String, Object>>) databaseHandler.getMessages(dm_channel_id, 1).get("msgs").get(0)).get(0).get("msg_id");
         long msg_id = (long) databaseHandler.getMessages(dm_channel_id, 1).get("msg_id").get(0);
         databaseHandler.addReaction(dm_channel_id, msg_id, 0l, "Cool", user_id2, 0l);
-        databaseHandler.deleteMessage(user_id, dm_channel_id, msg_id, user_id, 0l);*/
+        databaseHandler.deleteMessage(user_id, dm_channel_id, msg_id, user_id, 0l);
+
+        Map<String, Object> channel_override = new HashMap<>();
+
+        Map<String, Object> member_override = new HashMap<>();
+        member_override.put("react", false);
+        member_override.put("delete_others_message", false);
+        member_override.put("delete_own_message", false);
+        member_override.put("send_message", true);
+
+        channel_override.put(String.valueOf(admin_role_id), member_override);
+
+        long channel_id_overrides = databaseHandler.createGroupChannel(group_id, user_id, "default", "Override channel",
+                jwtService.generateJwtForDB(channel_override), "Owner created channel", ","+category_id);
+
 
 
         databaseHandler.createGroup(user_id, "My group", "logo", "banner", "animations");
@@ -235,22 +249,37 @@ public class API {
         // user2 - admin
         // user3 - member
 
-        databaseHandler.deleteGroupRole(member_role_id, group_id, user_id2, "Admin deleted role admin");
+        databaseHandler.createGroupCategory(user_id2, group_id, "My category", "default",
+                "Admin created category");
+
+        long category_id = (long) ((List<Map<String, Object>>) databaseHandler.getAllGroupsWithUser(user_id3,
+                1).get("categories").get(0)).get(0).get("category_id");
+
+        //long category_id = (long) databaseHandler.getAllStuffFromGroupSQL(group_id, 1).get("category_category_id").get(0);
 
 
-        // messages(group), reactions(group),
-        // general role, group channels, group categories
-        // all permissions
-        // delete: group channel, group category, group roles
-        // mongo
+        long channel_id = databaseHandler.createGroupChannel(group_id, user_id, "default", "My channel",
+                "", "Owner created channel", ","+category_id);
+        databaseHandler.addMessage(channel_id, user_id, 0L,"Hello :)", group_id);
 
+        long msg_id = (long) ((List<Map<String, Object>>) databaseHandler.getMessages(channel_id, 1).get("msgs").get(0)).get(0).get("msg_id");
+        //long msg_id = (long) databaseHandler.getMessages(channel_id, 1).get("msg_id").get(0);
 
+        databaseHandler.addReaction(channel_id, msg_id, 0l, "Lol", user_id2, group_id);
+        databaseHandler.deleteGroup(group_id);
 
+        databaseHandler.createFriendRequest(user_id, user_id2);
+
+        logger.info(databaseHandler.checkFriendRequest(user_id, user_id2));
+
+        databaseHandler.deleteFriendRequest(user_id2, user_id);
+
+        logger.info(databaseHandler.checkFriendRequest(user_id, user_id2)); */
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-            //databaseHandler.handleCaptchas();
-            //databaseHandler.handleSessions();
+            databaseHandler.handleCaptchas();
+            databaseHandler.handleSessions();
         }, 0, 1, TimeUnit.SECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
