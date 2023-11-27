@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController()
@@ -19,38 +18,43 @@ public class CaptchaController {
 
     @GetMapping()
     public String getCaptcha(HttpServletRequest request) {
-        final String auth = request.getHeader("Authorization");
-        if (null == API.jwtService.getData(auth)) { return null; }
-        return CaptahaManager.GlobalEncoded_get_and_start_Captcha_Session();
+        Long captcha_id = API.databaseHandler.startCaptcha("123");
+        if (captcha_id == null) {
+            return null;
+        }
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("i", captcha_id);
+        return API.jwtService.generateGlobalJwt(claims, true);
     }
 
 
     @PostMapping()
     public String solveCaptcha(HttpServletRequest request) {
-        final String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
+        String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
         if (null == GlobalEncodedCaptchaID) { return null; }
 
         Long captcha_id = null;
         try {
-            captcha_id = Long.valueOf(API.cription.GlobalDecrypt(GlobalEncodedCaptchaID));
+            captcha_id = Long.parseLong(API.criptionService.GlobalDecrypt(GlobalEncodedCaptchaID));
         } catch (Exception e) { return null; }
 
-        HashSet<String> answers = null;
-        try {
-            answers = API.captcha_results.get(captcha_id);
-        } catch (Exception e) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
-
-        if (null == answers) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
-
-        final String jwt = request.getHeader("Authorization");
-        if (null == jwt) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+        String jwt = request.getHeader("Authorization");
+        if (jwt == null) { return null; }
 
         Map<String, Object> data = API.jwtService.getData(jwt);
+        if (data == null || !data.containsKey("a")) {
+            return null;
+        }
 
-        if (null == data) { return CaptahaManager.handleFaildCaptcha(captcha_id); }
+        if (API.databaseHandler.solveCaptcha(captcha_id, String.valueOf(data.get("a")))) {
+            // solved!
+            Map<String, Object> c = new HashMap<>();
+            c.put("s", true);
+            return API.jwtService.generateGlobalJwt(c, true);
 
-        final HashSet<String> given_answers = new HashSet<>((List<String>) data.get("c"));
-        return CaptahaManager.solvedCaptcha(answers, given_answers, captcha_id);
+        }
+
+        return null;
 
     }
 

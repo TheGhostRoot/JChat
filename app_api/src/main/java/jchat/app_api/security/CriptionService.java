@@ -11,11 +11,11 @@ import java.util.Base64;
 
 
 @Service
-public class Cription {
+public class CriptionService {
 
     private SecretKey GlobalEncription_Key = null;
 
-    public Cription() {
+    public CriptionService() {
         // GlobalEncription_Key = generateSecretKey();
         GlobalEncription_Key = getKeyFromString("P918nfQtYhbUzJVbmSQfZw==");
         API.logger.info("Global Encryption Key: "+Base64.getEncoder().encodeToString(GlobalEncription_Key.getEncoded()));
@@ -23,16 +23,6 @@ public class Cription {
 
     public String generateKey() {
         return Base64.getEncoder().encodeToString(generateSecretKey().getEncoded());
-    }
-
-    @Deprecated
-    public String generateUserKey() {
-        // todo remove
-        String key = generateKey();
-        while (API.encryption_user_keys.containsValue(key)) {
-            key = generateKey();
-        }
-        return key;
     }
 
     public SecretKey getKeyFromString(String key) {

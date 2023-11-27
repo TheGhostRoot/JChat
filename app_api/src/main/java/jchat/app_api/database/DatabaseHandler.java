@@ -118,6 +118,118 @@ public class DatabaseHandler {
         return null;
     }
 
+    public Long getUserByDetails(String email, String password) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(email);
+            condition.add(password);
+
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                        "id", "email = ? AND password = ?", condition, null, "" ,0).get("id").get(0)));
+            } catch (Exception e) {
+                return null;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("email", email).append("password", password), true, "id")));
+            } catch (Exception e) {
+                return null;
+            }
+
+        }
+        return null;
+    }
+
+    public boolean checkIfUserExists(long id) {
+        return databaseManager.checkIDExists(id, DatabaseManager.table_accounts);
+    }
+
+    public boolean checkIfSessionExists(long sess_id) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(sess_id);
+
+            try {
+                return !String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                        "session_id", "session_id = ?", condition, null, "", 0)
+                        .get("session_id").get(0)).equals("null");
+            } catch (Exception e) {
+                return false;
+            }
+        } else if (databaseManager.isMongo()) {
+            try {
+                return !String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("session_id", sess_id), true, "session_id")
+                        .get(0).get("session_id")).equals("null");
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    public Long getUserIDbySessionID(long sess_id, String ip) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(sess_id);
+            condition.add(ip);
+
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                        "id", "session_id = ? AND ip_address = ?", condition, null,
+                        "", 0).get("id").get(0)));
+            } catch (Exception e) {
+                return null;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("session_id", sess_id).append("ip_address", ip), true, "id")
+                        .get(0).get("id")));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public Map<String, Object> getUserByID(long id) {
+        if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts)) {
+            return null;
+        }
+
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(id);
+
+            Map<String, List<Object>> user_data = databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                    "*", "id = ?", condition, null, "", 0);
+
+            if (user_data == null) {
+                return null;
+            }
+
+            Map<String, Object> res = new HashMap<>();
+
+            for (Map.Entry<String, List<Object>> entry : user_data.entrySet()) {
+                res.put(entry.getKey(), entry.getValue().get(0));
+            }
+
+            return res;
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", id), true).get(0);
+        }
+        return null;
+    }
+
     public boolean updateUserEmail(long id, String new_email) {
         if (databaseManager.isSQL()) {
             List<Object> account_set = new ArrayList<>();
@@ -400,38 +512,44 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean startUserSessionID(long id, String ip) {
+    public Long startUserSessionID(long id, String ip) {
         Long session_id = generateSessionID();
-        if (session_id == null) { return false; }
+        if (session_id == null) { return null; }
 
         if (databaseManager.isSQL()) {
             List<Object> account_set = new ArrayList<>();
-            account_set.add(ip);
             account_set.add(session_id);
+            account_set.add(ip);
             account_set.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
 
             List<Object> account_where = new ArrayList<>();
             account_where.add(id);
 
-            return databaseManager.editDataSQL(DatabaseManager.table_accounts,
+            if (databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     "session_id = ?, ip_address = ?, session_expire = 3, last_edit_time = ?", account_set,
-                    "id = ?", account_where);
+                    "id = ?", account_where)) {
+                return session_id;
+            }
+            return null;
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     null, false, "session_id");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "session_id", session_id)) {
-                return false;
+                return null;
             }
 
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
+            if (databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
                     new Document("session_id", session_id).append("session_expire", 3)
-                            .append("last_edit_time", LocalDateTime.now()).append("ip_address", ip));
+                            .append("last_edit_time", LocalDateTime.now()).append("ip_address", ip))) {
+                return session_id;
+            }
+            return null;
 
         }
-        return false;
+        return null;
     }
 
     public Long generateSessionID() {
@@ -1044,9 +1162,9 @@ public class DatabaseHandler {
             }
 
             Map<String, Object> data = captcha_data.get(0);
-            Short time;
+            short time;
             try {
-                time = Short.valueOf(String.valueOf(data.get("time")));
+                time = Short.parseShort(String.valueOf(data.get("time")));
             } catch (Exception e) {
                 return false;
             }
@@ -1060,12 +1178,12 @@ public class DatabaseHandler {
                 return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_captchas,
                         captcha_id, new Document("answer", ""));
 
-            } else {
+            }//else {
                 // the captcha was not solved
                 //databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
-                return false;
+               // return false;
 
-            }
+            //}
 
         }
         return false;
@@ -1076,23 +1194,18 @@ public class DatabaseHandler {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(id);
 
-            Map<String, List<Object>> captcha_data = databaseManager.getDataSQL(DatabaseManager.table_captchas,
-                    "answer", "id = ?", condition_data, null, "", 0);
-
             try {
-                return captcha_data != null && !captcha_data.get("answer").isEmpty() &&
-                        String.valueOf(captcha_data.get("answer").get(0)).isBlank();
+                return String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_captchas,
+                        "answer", "id = ?", condition_data, null, "", 0)
+                        .get("answer").get(0)).isBlank();
             } catch (Exception e) {
                 return false;
             }
 
         } else if (databaseManager.isMongo()) {
-            Document captcha_id = new Document("id", id);
-            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
-                    captcha_id,true, "answer");
-
             try {
-                return captcha_data != null && !captcha_data.isEmpty() && String.valueOf(captcha_data.get(0).get("answer")).isBlank();
+                return String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
+                        new Document("id", id), true, "answer").get(0).get("answer")).isBlank();
             } catch (Exception e) {
                 return false;
             }

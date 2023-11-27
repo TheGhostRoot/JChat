@@ -69,10 +69,10 @@ public class DatabaseManager {
             accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
             accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
             accounts_table.add("password VARCHAR(100) NOT NULL, ");
-            accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
-            accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
+            accounts_table.add("encryption_key VARCHAR(50) UNIQUE NOT NULL, ");
+            accounts_table.add("sign_key VARCHAR(50) UNIQUE NOT NULL, ");
             accounts_table.add("session_id BIGINT UNIQUE, ");
-            accounts_table.add("ip_address TEXT UNIQUE, ");
+            accounts_table.add("ip_address TEXT, ");
             accounts_table.add("session_expire smallint, ");
             accounts_table.add("last_edit_time timestamp, ");
             accounts_table.add("created_at timestamp NOT NULL, ");
@@ -243,10 +243,10 @@ public class DatabaseManager {
             accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
             accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
             accounts_table.add("password VARCHAR(100) NOT NULL, ");
-            accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
-            accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
+            accounts_table.add("encryption_key VARCHAR(50) UNIQUE NOT NULL, ");
+            accounts_table.add("sign_key VARCHAR(50) UNIQUE NOT NULL, ");
             accounts_table.add("session_id BIGINT UNIQUE, ");
-            accounts_table.add("ip_address TEXT UNIQUE, ");
+            accounts_table.add("ip_address TEXT, ");
             accounts_table.add("session_expire SMALLINT, ");
             accounts_table.add("last_edit_time TIMESTAMP NULL, ");
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");

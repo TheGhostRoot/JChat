@@ -2,18 +2,15 @@ package jchat.app_api;
 
 
 import jakarta.servlet.http.HttpServletRequest;
-import jchat.app_api.accounts.AccountManager;
-import jchat.app_api.captchas.CaptahaManager;
 import jchat.app_api.database.DatabaseHandler;
 import jchat.app_api.database.DatabaseManager;
-import jchat.app_api.security.Cription;
+import jchat.app_api.security.CriptionService;
 import jchat.app_api.security.JwtService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -27,11 +24,7 @@ public class API {
 
     public static JwtService jwtService;
 
-    public static Cription cription;
-
-    public static AccountManager accountManager;
-
-    public static CaptahaManager captahaManager;
+    public static CriptionService criptionService;
 
     public static DatabaseManager databaseManager;
 
@@ -96,9 +89,7 @@ public class API {
         * */
 
         jwtService = new JwtService();
-        cription = new Cription();
-        accountManager = new AccountManager();
-        captahaManager = new CaptahaManager();
+        criptionService = new CriptionService();
         databaseManager = new DatabaseManager();
 
         databaseManager.setupMongoDB();
@@ -287,6 +278,15 @@ public class API {
         }
 
         return resultMap;
+    }
+
+    public Object get_Key_By_Value(HashMap<?, ?> map, Object val) {
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (entry.getValue().equals(val)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
 

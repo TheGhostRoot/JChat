@@ -25,20 +25,20 @@ public class JwtService {
         API.logger.info("Global Sign Key: "+Base64.getEncoder().encodeToString(GlobalSignInKey.getEncoded()));
     }
 
-    public Map<String, Object> getData(final String jwt, final String... key) {
+    public Map<String, Object> getData(String jwt, String... key) {
         // key[0]  - user encryption key
         // key[1]  - user sign key
-        Claims all = key.length != 2 ? getGlobalClaims(API.cription.GlobalDecrypt(jwt)) :
-                getUserClaims(API.cription.UserDecrypt(jwt, key[0]), key[1]);
+        Claims all = key.length != 2 ? getGlobalClaims(API.criptionService.GlobalDecrypt(jwt)) :
+                getUserClaims(API.criptionService.UserDecrypt(jwt, key[0]), key[1]);
         return null != all ? new HashMap<>(all) : null;
     }
 
-    public Map<String, Object> getDataNoEncryption(final String jwt) {
+    public Map<String, Object> getDataNoEncryption(String jwt) {
         Claims all = getGlobalClaims(jwt);
         return null != all ? new HashMap<>(all) : null;
     }
 
-    private Claims getGlobalClaims(final String jwt) {
+    private Claims getGlobalClaims(String jwt) {
         if (jwt == null) { return null; }
         Claims claims;
         try {
@@ -53,7 +53,7 @@ public class JwtService {
         return claims;
     }
 
-    private Claims getUserClaims(final String jwt, final String SignKey) {
+    private Claims getUserClaims(String jwt, String SignKey) {
         if (jwt == null) { return null; }
         Claims claims;
         try {
@@ -68,8 +68,8 @@ public class JwtService {
         return claims;
     }
 
-    public String generateGlobalJwt(final Map<String, Object> claims, final boolean encrypted) {
-        return encrypted ? API.cription.GlobalEncrypt(Jwts.builder().claims(claims)
+    public String generateGlobalJwt(Map<String, Object> claims, boolean encrypted) {
+        return encrypted ? API.criptionService.GlobalEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)    // For python we use HS256  , but we will change it to ES512
                 .compact()) : Jwts.builder().claims(claims)
@@ -79,15 +79,15 @@ public class JwtService {
 
     }
 
-    public String generateJwtForDB(final Map<String, Object> claims) {
+    public String generateJwtForDB(Map<String, Object> claims) {
         return Jwts.builder().claims(claims)
                 .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String generateUserJwt(final Map<String, Object> claims,
-                                  final String SignatureKey, final boolean encrypted, final String... key) {
-        return encrypted && key.length == 1 ? API.cription.UserEncrypt(Jwts.builder().claims(claims)
+    public String generateUserJwt(Map<String, Object> claims,
+                                  String SignatureKey, boolean encrypted, String... key) {
+        return encrypted && key.length == 1 ? API.criptionService.UserEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact(), key[0]) : Jwts.builder().claims(claims)
@@ -95,17 +95,6 @@ public class JwtService {
                 .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
                 .compact();
 
-    }
-
-
-    @Deprecated
-    public String generateRandomUserKey() {
-        // todo remove
-        String key = API.generateKey(50);
-        while (API.sign_user_keys.containsValue(key)) {
-            key = API.generateKey(50);
-        }
-        return key;
     }
 
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
 
 
 @Component
@@ -21,17 +22,17 @@ public class RequestFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        String authHeader = request.getHeader("Authorization");
 
-        if (null == authHeader) {
+        if (authHeader == null) {
             response.sendError(403);
             return;
         }
 
-        final String GlobalEncodedSessID = request.getHeader("SessionID");
+        String GlobalEncodedSessID = request.getHeader("SessionID");
 
-        if (null != GlobalEncodedSessID) {
-            final String given_user_session_id_str = API.cription.GlobalDecrypt(GlobalEncodedSessID);
+        if (GlobalEncodedSessID != null) {
+            String given_user_session_id_str = API.criptionService.GlobalDecrypt(GlobalEncodedSessID);
             if (null == given_user_session_id_str) {
                 response.sendError(403);
                 return;
@@ -39,24 +40,32 @@ public class RequestFilter extends OncePerRequestFilter {
 
             long given_user_session_id;
             try {
-                given_user_session_id = Long.valueOf(given_user_session_id_str);
+                given_user_session_id = Long.parseLong(given_user_session_id_str);
             } catch (Exception e) {
                 response.sendError(403);
                 return;
             }
 
-
-
-            final Long user_id = API.accountManager.get_UserID_By_AppSessionID(given_user_session_id);
-            if (null == user_id) {
+            Long user_id = API.databaseHandler.getUserIDbySessionID(given_user_session_id, API.get_IP(request));
+            if (user_id == null) {
                 response.sendError(403);
                 return;
             }
 
-            try {
-                API.jwtService.getData(authHeader, API.accountManager.get_EncryptionKey_By_UserID(user_id),
-                        API.accountManager.get_SignKey_By_UserID(user_id));
-            } catch (Exception e) {
+            Map<String, Object> userByID = API.databaseHandler.getUserByID(user_id);
+            if (userByID == null) {
+                response.sendError(403);
+                return;
+            }
+
+            Map<String, Object> data = API.jwtService.getData(authHeader,
+                    String.valueOf(userByID.get("encryption_key")), String.valueOf(userByID.get("sign_key")));
+            if (data == null) {
+                response.sendError(403);
+                return;
+            }
+
+            if (data.isEmpty()) {
                 response.sendError(403);
                 return;
             }
@@ -68,12 +77,12 @@ public class RequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
         try {
-            if (GlobalEncodedCaptchaID != null && !API.captcha_results.containsKey(Long.valueOf(API.cription.GlobalDecrypt(GlobalEncodedCaptchaID)))) {
-                response.sendError(403);
-                return;
+            String decr = API.criptionService.GlobalDecrypt(request.getHeader("CapctchaID"));
+            if (decr == null) {
+                throw new Exception();
             }
+            Long.parseLong(decr);
         } catch (Exception e) {
             response.sendError(403);
             return;
