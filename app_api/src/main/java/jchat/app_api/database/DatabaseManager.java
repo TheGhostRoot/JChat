@@ -72,6 +72,7 @@ public class DatabaseManager {
             accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
             accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
             accounts_table.add("session_id BIGINT UNIQUE, ");
+            accounts_table.add("ip_address TEXT UNIQUE, ");
             accounts_table.add("session_expire smallint, ");
             accounts_table.add("last_edit_time timestamp, ");
             accounts_table.add("created_at timestamp NOT NULL, ");
@@ -245,6 +246,7 @@ public class DatabaseManager {
             accounts_table.add("encryption_key VARCHAR(100) UNIQUE NOT NULL, ");
             accounts_table.add("sign_key VARCHAR(100) UNIQUE NOT NULL, ");
             accounts_table.add("session_id BIGINT UNIQUE, ");
+            accounts_table.add("ip_address TEXT UNIQUE, ");
             accounts_table.add("session_expire SMALLINT, ");
             accounts_table.add("last_edit_time TIMESTAMP NULL, ");
             accounts_table.add("created_at TIMESTAMP NOT NULL, ");
@@ -1499,7 +1501,6 @@ public class DatabaseManager {
                 return false;
             }
 
-            String send_at = now.format(formatter);
             String message_json = getMessageJson(message);
             if (message_json == null) {
                 message_json = "{}";
@@ -1515,7 +1516,7 @@ public class DatabaseManager {
                                 .append("msgs",
                                         Arrays.asList(new Document("msg", message)
                                                 .append("send_by", sender_id)
-                                                .append("send_at", send_at)
+                                                .append("send_at", now)
                                                 .append("msg_id", generateID(new ArrayList<>())))),
                         null);
 
@@ -1529,7 +1530,7 @@ public class DatabaseManager {
 
                 try {
                     for (Map<String, Object> map : chat_msgs) {
-                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")), formatter);
+                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")));
                         if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
                             mostRecentDate = dateTime;
                             resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
@@ -1561,7 +1562,7 @@ public class DatabaseManager {
                     Map<String, Object> new_msg = new HashMap<>();
                     new_msg.put("send_by", sender_id);
                     new_msg.put("msg_id", generateID(all_ids));
-                    new_msg.put("send_at", send_at);
+                    new_msg.put("send_at", now);
                     new_msg.put("msg", message);
 
                     chat_msgs.add(new_msg);
@@ -1668,7 +1669,7 @@ public class DatabaseManager {
 
 
 
-        } else if (mongoClient != null && mongoDatabase != null) {
+        } else if (isMongo()) {
             List<Map<String, Object>> group_data = MongoReadCollectionNoSQL(table_groups,
                     new Document("id", group_id), true, "settings");
 
@@ -1754,7 +1755,7 @@ public class DatabaseManager {
             log_data.add(actor_id);
             log_data.add(log_type);
             log_data.add(log_message);
-            log_data.add(now.truncatedTo(ChronoUnit.MINUTES));
+            log_data.add(now);
 
             return addDataSQL(table_group_logs,"group_id, actor_id, log_type, log_message, acted_at",
                     "?, ?, ?, ?, ?", log_data);
@@ -1768,7 +1769,7 @@ public class DatabaseManager {
             log.put("actor_id", actor_id);
             log.put("log_type", log_type);
             log.put("log_message", log_message);
-            log.put("acted_at", now.format(formatter));
+            log.put("acted_at", now);
 
             collection.add(log);
 

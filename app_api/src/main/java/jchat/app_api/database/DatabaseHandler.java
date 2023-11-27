@@ -91,7 +91,7 @@ public class DatabaseHandler {
                             .append("email", email).append("password", password)
                             .append("encryption_key", encryption_key).append("sign_key", sign_key)
                             .append("session_id", null).append("session_expire", null).append("last_edit_time", null)
-                            .append("created_at", LocalDateTime.now().format(DatabaseManager.formatter))
+                            .append("created_at", LocalDateTime.now())
                             .append("starts_sub", null).append("ends_sub", null).append("bookmarks", "")
                             .append("friends", "")
                     , null)) {
@@ -341,6 +341,33 @@ public class DatabaseHandler {
         return false;
     }
 
+    public boolean updateUserSessionIP(long id, String ip) {
+        if (databaseManager.isSQL()) {
+            List<Object> account_set = new ArrayList<>();
+            account_set.add(ip);
+
+            List<Object> account_where = new ArrayList<>();
+            account_where.add(id);
+
+            return databaseManager.editDataSQL(databaseManager.table_accounts, "ip_address = ?", account_set,
+                    "id = ?", account_where);
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    null, false, "ip_address");
+
+            if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "ip_address", ip)) {
+                return false;
+            }
+
+            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", id),
+                    new Document("ip_address", ip));
+
+        }
+        return false;
+    }
+
     public boolean updateUserSignKey(long id) {
         String new_sign_key = generateUserSignKey();
         if (new_sign_key == null) {
@@ -373,12 +400,13 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean startUserSessionID(long id) {
+    public boolean startUserSessionID(long id, String ip) {
         Long session_id = generateSessionID();
         if (session_id == null) { return false; }
 
         if (databaseManager.isSQL()) {
             List<Object> account_set = new ArrayList<>();
+            account_set.add(ip);
             account_set.add(session_id);
             account_set.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
 
@@ -386,7 +414,7 @@ public class DatabaseHandler {
             account_where.add(id);
 
             return databaseManager.editDataSQL(DatabaseManager.table_accounts,
-                    "session_id = ?, session_expire = 3, last_edit_time = ?", account_set,
+                    "session_id = ?, ip_address = ?, session_expire = 3, last_edit_time = ?", account_set,
                     "id = ?", account_where);
 
         } else if (databaseManager.isMongo()) {
@@ -400,8 +428,7 @@ public class DatabaseHandler {
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
                     new Document("session_id", session_id).append("session_expire", 3)
-                            .append("last_edit_time",
-                                    LocalDateTime.now().format(DatabaseManager.formatter)));
+                            .append("last_edit_time", LocalDateTime.now()).append("ip_address", ip));
 
         }
         return false;
@@ -536,7 +563,7 @@ public class DatabaseHandler {
             if (session_expire <= 0) {
                 // session expired. END IT
                 return databaseManager.editDataSQL(DatabaseManager.table_accounts,
-                        "session_expire = NULL, session_id = NULL, last_edit_time = NULL",
+                        "session_expire = NULL, ip_address = NULL, session_id = NULL, last_edit_time = NULL",
                         null, "id = ?", account_where);
             }
 
@@ -573,15 +600,14 @@ public class DatabaseHandler {
                 // remove the session
                 return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts, filter,
                         new Document("session_expire", null).append("last_edit_time", null)
-                                .append("session_id", null));
+                                .append("session_id", null).append("ip_address", null));
             }
 
             session_expire--;
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts, filter,
                     new Document("session_expire", session_expire)
-                            .append("last_edit_time",
-                                    LocalDateTime.now().format(DatabaseManager.formatter)));
+                            .append("last_edit_time", LocalDateTime.now()));
 
         }
         return false;
@@ -957,7 +983,7 @@ public class DatabaseHandler {
             List<Object> values = new ArrayList<>();
             values.add(id);
             values.add(answer);
-            values.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+            values.add(LocalDateTime.now());
 
             return databaseManager.addDataSQL(DatabaseManager.table_captchas,
                     "id, answer, time, last_edit_time",
@@ -974,15 +1000,14 @@ public class DatabaseHandler {
             long id = databaseManager.generateID(databaseManager.extract_all_content(data, "id"));
 
             return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_captchas, new Document("id", id)
-                            .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()
-                                    .format(DatabaseManager.formatter)),
+                            .append("answer", answer).append("time", 10).append("last_edit_time", LocalDateTime.now()),
                     null) ? id : null;
 
         }
         return null;
     }
 
-    public boolean verifyCaptcha(long id, String given_answer) {
+    public boolean solveCaptcha(long id, String given_answer) {
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(id);
@@ -996,15 +1021,13 @@ public class DatabaseHandler {
             }
 
             try {
-                if (String.valueOf(captcha_data.get("answer").get(0)).equals(given_answer)) {
-                    // solved!
-                    return databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
+                if ((!captcha_data.get("time").isEmpty() &&
+                        0 >= Short.valueOf(String.valueOf(captcha_data.get("time").get(0)))) ||
+                        (String.valueOf(captcha_data.get("answer").get(0)).equals(given_answer))) {
 
-                } else if (!captcha_data.get("time").isEmpty() &&
-                        0 >= Short.valueOf(String.valueOf(captcha_data.get("time").get(0)))) {
-                    // extended time
-
-                    return databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
+                    //return databaseManager.deleteDataSQL(DatabaseManager.table_captchas, "id = ?", condition_data);
+                    return databaseManager.editDataSQL(DatabaseManager.table_captchas,
+                            "answer = ''", new ArrayList<>(), "id = ?", condition_data);
 
                 }
             } catch (Exception e) {
@@ -1028,22 +1051,51 @@ public class DatabaseHandler {
                 return false;
             }
 
-            if (time <= 0) {
+            if ((time <= 0) || (String.valueOf(data.get("answer")).equals(given_answer))) {
                 // expired
-                databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
-                return false;
-
-            } else if (String.valueOf(data.get("answer")).equals(given_answer)) {
+                //databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
+                //return false;
                 // solved!
-                return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
+                //return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
+                return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_captchas,
+                        captcha_id, new Document("answer", ""));
 
             } else {
                 // the captcha was not solved
-                databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
+                //databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
                 return false;
 
             }
 
+        }
+        return false;
+    }
+
+    public boolean checkIfSolvedCaptcha(long id) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition_data = new ArrayList<>();
+            condition_data.add(id);
+
+            Map<String, List<Object>> captcha_data = databaseManager.getDataSQL(DatabaseManager.table_captchas,
+                    "answer", "id = ?", condition_data, null, "", 0);
+
+            try {
+                return captcha_data != null && !captcha_data.get("answer").isEmpty() &&
+                        String.valueOf(captcha_data.get("answer").get(0)).isBlank();
+            } catch (Exception e) {
+                return false;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            Document captcha_id = new Document("id", id);
+            List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
+                    captcha_id,true, "answer");
+
+            try {
+                return captcha_data != null && !captcha_data.isEmpty() && String.valueOf(captcha_data.get(0).get("answer")).isBlank();
+            } catch (Exception e) {
+                return false;
+            }
         }
         return false;
     }
@@ -1077,7 +1129,7 @@ public class DatabaseHandler {
             }
 
             List<Object> set_data = new ArrayList<>();
-            set_data.add(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+            set_data.add(LocalDateTime.now());
 
             return databaseManager.editDataSQL(DatabaseManager.table_captchas,
                     "last_edit_time = ?, time = time - 1", set_data,
@@ -1108,9 +1160,7 @@ public class DatabaseHandler {
                 }
 
                 return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_captchas, captcha_id,
-                        new Document("last_edit_time",
-                                LocalDateTime.now().format(DatabaseManager.formatter))
-                                .append("time", --time));
+                        new Document("last_edit_time", LocalDateTime.now()).append("time", --time));
 
             } catch (Exception e) {
                 return false;
@@ -1166,7 +1216,7 @@ public class DatabaseHandler {
             // there is no custom background if empty
             List<Object> data = new ArrayList<>();
             data.add(sender_id);
-            data.add(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            data.add(LocalDateTime.now());
             data.add(msg);
             data.add(background);
 
@@ -1194,15 +1244,13 @@ public class DatabaseHandler {
                 return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_posts,
                         new Document("id", databaseManager.MongoGenerateID(post_data, "id"))
                                 .append("send_by", sender_id)
-                                .append("msg", msg).append("send_at",
-                                        LocalDateTime.now().format(DatabaseManager.formatter))
+                                .append("msg", msg).append("send_at", LocalDateTime.now())
                                 .append("background", background).append("comments", Arrays.asList()), null);
             } else {
                 databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_posts,
                         new Document("id", databaseManager.MongoGenerateID(post_data, "id"))
                                 .append("send_by", sender_id)
-                                .append("msg", msg).append("send_at",
-                                        LocalDateTime.now().format(DatabaseManager.formatter))
+                                .append("msg", msg).append("send_at", LocalDateTime.now())
                                 .append("background", background).append("comments", Arrays.asList()), null);
 
                 return addCommentToPost(sender_id, 1l, "Welcome to the comment section", "");
@@ -1303,7 +1351,7 @@ public class DatabaseHandler {
             List<Object> addData = new ArrayList<>();
             addData.add(post_id);
             addData.add(sender_id);
-            addData.add(now.truncatedTo(ChronoUnit.MICROS));
+            addData.add(now);
             addData.add(message);
             addData.add(reply_to);
 
@@ -1321,7 +1369,7 @@ public class DatabaseHandler {
             Map<String, Object> comment = new HashMap<>();
             comment.put("post_id", post_id);
             comment.put("send_by", sender_id);
-            comment.put("send_at", now.format(DatabaseManager.formatter));
+            comment.put("send_at", now);
             comment.put("msg", message);
             comment.put("msg_id", databaseManager.generateID(databaseManager.extract_all_content(collection,
                     "msg_id")));
@@ -3267,7 +3315,7 @@ public class DatabaseHandler {
 
             condition_data.add(item_name);
             condition_data.add(item_price);
-            condition_data.add(now.truncatedTo(ChronoUnit.MILLIS));
+            condition_data.add(now);
 
             return databaseManager.addDataSQL(DatabaseManager.table_shop,
                     "item_type, seller_id, item_name, item_price, sell_at", "?, ?, ?, ?, ?", condition_data);
@@ -3293,7 +3341,7 @@ public class DatabaseHandler {
             data.append("id", databaseManager.MongoGenerateID(all_ids, "id"));
             data.append("item_name", item_name);
             data.append("item_price", item_price);
-            data.append("sell_at", now.format(DatabaseManager.formatter));
+            data.append("sell_at", now);
 
             return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_shop, data, null);
         }

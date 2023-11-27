@@ -38,54 +38,7 @@ public class API {
     public static DatabaseHandler databaseHandler;
 
 
-
-
-
-
-    // user id : email
-    public static HashMap<Long, String> emails = new HashMap<>();
-
-    // user id : user name
-
-    public static HashMap<Long, String> names = new HashMap<>();
-
-    // user id : password
-
-    public static HashMap<Long, String> passwords = new HashMap<>();
-
-
-    // user ID : session ID
-    public static HashMap<Long, Long> sessions = new HashMap<>();
-
-    // user id : encryption key
-    public static HashMap<Long, String> encryption_user_keys = new HashMap<>();
-
-
-
-    // user id : sign key
-    public static HashMap<Long, String> sign_user_keys = new HashMap<>();
-
-    // captcha ID : Captcha answer
-    public static HashMap<Long, HashSet<String>> captcha_results = new HashMap<>();
-
-
-    // captcha ID : 30 seconds expire
-    public static HashMap<Long, Short> captcha_expire = new HashMap<>();
-
-
-    // captcha ID : 3 fails to remove captcha
-    public static HashMap<Long, Short> captcha_fails = new HashMap<>();
-
-    // session ID : expiration time
-    public static HashMap<Long, Short> session_expire = new HashMap<>();
-
-
-
-
-
-
-    // session ID : is it suspended
-    public static HashMap<Long, Boolean> session_suspention = new HashMap<>();
+    
 
     public static Random random = new Random();
 

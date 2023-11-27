@@ -28,7 +28,7 @@ public class AccountController {
         try {
             captch_id = Long.parseLong(API.cription.GlobalDecrypt(captcha_id_str));
         } catch (Exception e) { return null; }
-
+        
         try {
             if (!API.captcha_results.get(captch_id).isEmpty()) {
                 return null;
@@ -52,25 +52,11 @@ public class AccountController {
 
             Map<String, Object> map = new HashMap<>();
 
-            if (API.names.containsValue(user)) {
-                map.put("e", "n");
-                return API.jwtService.generateGlobalJwt(map, true);
+            Long user_id = API.databaseHandler.createUser(user, email, password,
+                    API.cription.GlobalEncrypt(API.databaseHandler.generateUserEncryptionKey()),
+                    API.cription.GlobalEncrypt(API.databaseHandler.generateUserSignKey()));
 
-            } else if (API.emails.containsValue(password)) {
-                map.put("e", "e");
-                return API.jwtService.generateGlobalJwt(map, true);
-            }
-
-            long user_id = API.accountManager.generate_UserID();
-            API.names.put(user_id, user);
-            API.passwords.put(user_id, password);
-            API.emails.put(user_id, email);
-            API.sign_user_keys.put(user_id, API.jwtService.generateRandomUserKey());
-            API.encryption_user_keys.put(user_id, API.cription.generateUserKey());
-
-            map.put("i", user_id);
-            return API.jwtService.generateGlobalJwt(map, true);
-
+            map.put("i", user_id == null ? 0l : user_id);
 
         } else {
             return null;
