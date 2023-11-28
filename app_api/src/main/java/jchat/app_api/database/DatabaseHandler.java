@@ -861,6 +861,27 @@ public class DatabaseHandler {
         return false;
     }
 
+    public boolean editMessage(long message_id, long channel_id, long sender_id, String new_message, long group_id) {
+        if (new_message.isBlank()) {
+            return deleteMessage(sender_id, channel_id, message_id, sender_id, group_id);
+        }
+
+        if ((databaseManager.isSQL() || databaseManager.isMongo()) &&
+                databaseManager.checkIDExists(sender_id, DatabaseManager.table_accounts)) {
+
+            if (group_id == 0L) {
+
+                return databaseManager.handleEditMessage(message_id, new_message, channel_id);
+
+            } else if (databaseManager.doesUserHavePermissionsInChannel(channel_id,
+                    List.of("edit_own_message"), sender_id, group_id)) {
+
+                return databaseManager.handleEditMessage(message_id, new_message, channel_id);
+            }
+        }
+        return false;
+    }
+
     public Long getDMChannelID(long user_id, long user_id2) {
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
@@ -911,8 +932,13 @@ public class DatabaseHandler {
             result.put("user2", new ArrayList<>());
             result.put("channel_id", new ArrayList<>());
 
-            return databaseManager.transformMongoToSQL(amount, mongoData, result);
+            Map<String, List<Object>> transformed = databaseManager.transformMongoToSQL(amount, mongoData, result);
+            List<Map<String, Object>> messages = (List<Map<String, Object>>) transformed.get("msgs").get(0);
 
+            messages.sort((map1, map2) -> ((LocalDateTime) map2.get("send_at")).compareTo(((LocalDateTime) map1.get("send_at"))));
+            transformed.put("msgs", Collections.singletonList(messages));
+
+            return transformed;
         }
         return null;
     }
@@ -3556,6 +3582,37 @@ public class DatabaseHandler {
             result.put("sell_at", new ArrayList<>());
 
             return databaseManager.transformMongoToSQL(amount, mongoData, result);
+
+        }
+        return null;
+    }
+
+    public Long getItemFromShopByDetails(long seller_id, String item_name, String item_type, long item_price) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(seller_id);
+            condition.add(item_name);
+            condition.add(item_type);
+            condition.add(item_price);
+
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_shop, "id",
+                        "seller_id = ? AND item_name = ? AND item_type = ? AND item_price = ?",
+                        condition,null, "", 0).get("id").get(0)));
+            } catch (Exception e) {
+                return null;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
+                        new Document("seller_id", seller_id)
+                                .append("item_name", item_name)
+                                .append("item_type", item_type)
+                                .append("item_price", item_price), true, "id").get(0).get("id")));
+            } catch (Exception e) {
+                return null;
+            }
 
         }
         return null;

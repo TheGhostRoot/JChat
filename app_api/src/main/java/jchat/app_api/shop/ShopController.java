@@ -1,23 +1,24 @@
-package jchat.app_api.friends.chats;
+package jchat.app_api.shop;
+
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+ API.API_VERSION+"/friend/chat")
-public class ChatsController {
+@RequestMapping(path = "/api/v"+ API.API_VERSION+"/shop")
+public class ShopController {
+
 
     @GetMapping
-    public String getMessagesFromDM(HttpServletRequest request) {
-        // c -> channel id
-        // m -> channel messages
-        // a -> amount of latest messages
+    public String getItemsFromShop(HttpServletRequest request) {
+        // i -> all items
+        // a -> amount
 
+        // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -37,30 +38,28 @@ public class ChatsController {
             return null;
         }
 
-        long channel_id;
         int amount;
         try {
-            channel_id = Long.parseLong(String.valueOf(data.get("c")));
-            amount = Integer.parseInt(String.valueOf(data.get("a")));
+            amount = Integer.parseInt((String) data.get("a"));
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("m", API.databaseHandler.getMessages(channel_id, amount));
+        claims.put("i", API.databaseHandler.getItemsFromShop(amount));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 
-    @PostMapping
-    public String sendDM(HttpServletRequest request) {
-        // s -> sender ID
-        // c -> channel ID
-        // r -> other member ID
-        // m -> message
-        // s -> server stats
-        // i -> message ID
 
+    @PostMapping
+    public String addItemToShop(HttpServletRequest request) {
+        // n -> item name
+        // t -> item type
+        // p -> item price
+        // i -> item ID
+
+        // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -76,58 +75,44 @@ public class ChatsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("m")) {
+        if (data == null || !data.containsKey("n") || !data.containsKey("t")) {
             return null;
         }
 
-        long sender_id;
-        long channel_id;
-        long other_member;
-        String message = String.valueOf(data.get("m"));
+        String item_name = String.valueOf(data.get("n"));
+        String item_type = String.valueOf(data.get("t"));
+        int item_price;
         try {
-            sender_id = Long.parseLong(String.valueOf(data.get("s")));
-            channel_id = Long.parseLong(String.valueOf(data.get("c")));
-            other_member = Long.parseLong(String.valueOf(data.get("r")));
+            item_price = Integer.parseInt(String.valueOf(data.get("p")));
         } catch (Exception e) {
             return null;
         }
 
-        if (API.databaseHandler.addMessage(channel_id, sender_id, other_member, message, 0L)) {
-            long message_id;
-            try {
-                if (API.databaseManager.isSQL()) {
-                    message_id = Long.parseLong(String.valueOf(API.databaseHandler.getMessages(channel_id, 1)
-                            .get("msg_id")));
-
-                } else if (API.databaseManager.isMongo()) {
-                    message_id = (long) ((List<Map<String, Object>>) API.databaseHandler
-                            .getMessages(channel_id, 0).get("msgs").get(0)).get(0).get("msg_id");
-
-                } else {
-                    return null;
-                }
-            } catch (Exception e) {
+        if (API.databaseHandler.addItemToShop(item_type, item_name, item_price, user_id)) {
+            Long item_id = API.databaseHandler.getItemFromShopByDetails(user_id, item_name, item_type, item_price);
+            if (item_id == null) {
                 return null;
             }
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("s", true);
-            claims.put("i", message_id);
+            claims.put("i", item_id);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
-
         return null;
     }
 
-    @PatchMapping
-    public String editMessageFromDM(HttpServletRequest request) {
-        // m -> edited message
-        // f -> sender ID
-        // c -> channel ID
-        // i -> message ID
-        // s -> server stats
 
+    @PatchMapping
+    public String updateItemFromShop(HttpServletRequest request) {
+        // m -> what to be updated about the item
+        // i -> item ID
+        // s -> server stats
+        // n -> updated name
+        // p -> updated price
+        // t -> updated type
+
+        // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -147,36 +132,53 @@ public class ChatsController {
             return null;
         }
 
-        long sender_id;
-        long channel_id;
-        long message_id;
-        String message = String.valueOf(data.get("m"));
+        long item_id;
         try {
-            sender_id = Long.parseLong(String.valueOf(data.get("f")));
-            channel_id = Long.parseLong(String.valueOf(data.get("c")));
-            message_id = Long.parseLong(String.valueOf(data.get("i")));
+            item_id = Long.parseLong(String.valueOf(data.get("i")));
         } catch (Exception e) {
             return null;
         }
 
-        if (API.databaseHandler.editMessage(message_id, channel_id, sender_id, message, 0L)) {
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("s", true);
+        switch (String.valueOf(data.get("m"))) {
+            case "n" -> {
+                // update item name
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("s", API.databaseHandler.updateItemNameInShop(item_id, String.valueOf(data.get("n"))));
 
-            return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
+            case "t" -> {
+                // update item type
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("s", API.databaseHandler.updateItemTypeInShop(item_id, String.valueOf(data.get("t"))));
 
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
+            case "p" -> {
+                // update item price
+                int item_price;
+                try {
+                    item_price = Integer.parseInt(String.valueOf(data.get("p")));
+                } catch (Exception e) {
+                    return null;
+                }
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("s", API.databaseHandler.updateItemPriceInShop(item_id, item_price));
+
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
+            default -> {
+                return null;
+            }
         }
-
-        return null;
     }
 
+
     @DeleteMapping
-    public String deleteMessageFromDM(HttpServletRequest request) {
-        // f -> sender ID
-        // c -> channel ID
-        // m -> message ID
-        // a -> actor ID | AKA who is doing this?
+    public String deleteItemFromShop(HttpServletRequest request) {
+        // only session
         // s -> server stats
+        // i -> item ID
 
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -197,26 +199,19 @@ public class ChatsController {
             return null;
         }
 
-        long sender_id;
-        long channel_id;
-        long message_id;
-        long actor_id;
+        long item_id;
         try {
-            sender_id = Long.parseLong(String.valueOf(data.get("f")));
-            channel_id = Long.parseLong(String.valueOf(data.get("c")));
-            message_id = Long.parseLong(String.valueOf(data.get("m")));
-            actor_id = Long.parseLong(String.valueOf(data.get("a")));
+            item_id = Long.parseLong(String.valueOf(data.get("i")));
         } catch (Exception e) {
             return null;
         }
 
-        if (API.databaseHandler.deleteMessage(sender_id, channel_id, message_id, actor_id, 0L)) {
+        if (API.databaseHandler.removeItemToShop(item_id)) {
             Map<String, Object> claims = new HashMap<>();
             claims.put("s", true);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
-
         return null;
     }
 }

@@ -15,4 +15,4 @@ plugins {
 
 
 rootProject.name = 'JChat'
-include('App_API', "Load_Balancer", "App")
+include('App_API', "Load_Balancer")

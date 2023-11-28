@@ -22,14 +22,13 @@ public class RequestFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
-
+        String authHeader = request.getHeader(API.REQ_HEADER_AUTH);
         if (authHeader == null) {
             response.sendError(403);
             return;
         }
 
-        String GlobalEncodedSessID = request.getHeader("SessionID");
+        String GlobalEncodedSessID = request.getHeader(API.REQ_HEADER_SESS);
 
         if (GlobalEncodedSessID != null) {
             String given_user_session_id_str = API.criptionService.GlobalDecrypt(GlobalEncodedSessID);
@@ -59,7 +58,7 @@ public class RequestFilter extends OncePerRequestFilter {
             }
 
             Map<String, Object> data = API.jwtService.getData(authHeader,
-                    String.valueOf(userByID.get("encryption_key")), String.valueOf(userByID.get("sign_key")));
+                    String.valueOf(userByID.get(API.DB_ENCRYP_KEY)), String.valueOf(userByID.get(API.DB_SIGN_KEY)));
             if (data == null) {
                 response.sendError(403);
                 return;
@@ -69,16 +68,13 @@ public class RequestFilter extends OncePerRequestFilter {
                 response.sendError(403);
                 return;
             }
-        }
-
-
-        if (null == API.jwtService.getData(authHeader)) {
+        } else if (null == API.jwtService.getData(authHeader, null, null)) {
             response.sendError(403);
             return;
         }
 
         try {
-            String decr = API.criptionService.GlobalDecrypt(request.getHeader("CapctchaID"));
+            String decr = API.criptionService.GlobalDecrypt(request.getHeader(API.REQ_HEADER_CAPTCHA));
             if (decr == null) {
                 throw new Exception();
             }

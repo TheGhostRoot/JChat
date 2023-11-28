@@ -31,6 +31,14 @@ public class API {
     public static DatabaseHandler databaseHandler;
 
 
+
+    public static String DB_SIGN_KEY = "sign_key";
+    public static String DB_ENCRYP_KEY = "encryption_key";
+    public static String REQ_HEADER_AUTH = "Authorization";
+    public static String REQ_HEADER_SESS = "SessionID";
+    public static String REQ_HEADER_CAPTCHA = "CapctchaID";
+
+
     
 
     public static Random random = new Random();
@@ -60,7 +68,6 @@ public class API {
         // group's animations and rules will be in the settings
 
         /*
-        * Map<String, Object> admin_role = new HashMap<>();
         admin_role.put("update_group_settings", true);
         admin_role.put("update_group_name", true);
         admin_role.put("update_group_logo", true);
@@ -86,6 +93,11 @@ public class API {
         admin_role.put("delete_category", true);
         admin_role.put("update_category_name", true);
         admin_role.put("update_category_type", true);
+        admin_role.put("react", true);
+        admin_role.put("delete_others_message", true);
+        admin_role.put("delete_own_message", true);
+        admin_role.put("send_message", true);
+        admin_role.put("edit_own_message", true);
         * */
 
         jwtService = new JwtService();
@@ -289,5 +301,24 @@ public class API {
         return null;
     }
 
+    public static Long getUserID_SessionOnly(HttpServletRequest request) {
+        // only session
+        String header_sess_id = request.getHeader(REQ_HEADER_SESS);
+        if (header_sess_id == null) {
+            return null;
+        }
 
+        return databaseHandler.getUserIDbySessionID(Long.parseLong(criptionService.GlobalDecrypt(header_sess_id)),
+                get_IP(request));
+    }
+
+
+    public static boolean checkIfSolvedCaptcha(HttpServletRequest request) {
+        long captch_id;
+        try {
+            captch_id = Long.parseLong(criptionService.GlobalDecrypt(request.getHeader(REQ_HEADER_CAPTCHA)));
+        } catch (Exception e) { return false; }
+
+        return API.databaseHandler.checkIfSolvedCaptcha(captch_id);
+    }
 }

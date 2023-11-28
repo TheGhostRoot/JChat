@@ -1090,7 +1090,7 @@ public class DatabaseManager {
                     result.get(key).add(data.getValue());
                 }
             }
-            i++;
+            ++i;
             if (i >= amount) {
                 break;
             }
@@ -1798,16 +1798,16 @@ public class DatabaseManager {
 
     protected List<Map<String, Object>> MongoUpdateValueInCollection(List<Map<String, Object>> collection,
                                                                           String entry_id, long check_id,
-                                                                          String old_value, String new_value,
+                                                                          String key_value, String new_value,
                                                                           boolean toRemove) {
         try {
             for (int i = 0; i < collection.size(); i++) {
                 Map<String, Object> entry = collection.get(i);
-                if (Long.valueOf(String.valueOf(entry.get(entry_id))) == check_id) {
+                if (Long.parseLong(String.valueOf(entry.get(entry_id))) == check_id) {
                     if (toRemove) {
                         collection.remove(i);
                     } else {
-                        entry.put(old_value, new_value);
+                        entry.put(key_value, new_value);
                     }
                     break;
                 }
@@ -1819,7 +1819,7 @@ public class DatabaseManager {
         }
     }
 
-    protected boolean isSQL() {
+    public boolean isSQL() {
         return postgressql_connection != null || mysql_connection != null;
     }
 
@@ -1853,4 +1853,31 @@ public class DatabaseManager {
     }
 
 
+    public boolean handleEditMessage(long msg_id, String new_message, long channel_id) {
+        if (isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(msg_id);
+            condition.add(channel_id);
+
+            List<Object> set_data = new ArrayList<>();
+            set_data.add(new_message);
+
+            return editDataSQL(table_chats, "msg = ?", set_data,
+                    "msg_id = ? AND channel_id = ?", condition);
+
+        } else if (isMongo()) {
+            Document filter = new Document("channel_id", channel_id);
+            List<Map<String, Object>> all_msgs = getCollectionMongo(table_chats, "msgs", filter);
+
+            if (all_msgs == null || all_msgs.isEmpty()) {
+                return false;
+            }
+
+            return MongoUpdateDocumentInCollectionNoSQL(table_chats, filter,
+                    new Document("msgs", MongoUpdateValueInCollection(all_msgs, "msg_id", msg_id,
+                    "msg", new_message, false)));
+        }
+
+        return false;
+    }
 }

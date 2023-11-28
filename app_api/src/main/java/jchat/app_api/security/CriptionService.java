@@ -63,7 +63,7 @@ public class CriptionService {
     }
 
     public String GlobalDecrypt(String cipherText)  {
-        if (null == GlobalEncription_Key ) { return null; }
+        if (null == GlobalEncription_Key || null == cipherText) { return null; }
 
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");

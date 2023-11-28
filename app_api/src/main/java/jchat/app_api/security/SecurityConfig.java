@@ -18,9 +18,20 @@ public class SecurityConfig {
     private final String API_PREFIX = "/api/v"+ API.API_VERSION;
 
     private final String[] paths = {
-            API_PREFIX+"/account",
-            API_PREFIX+"/captcha"
-
+            API_PREFIX + "/account",
+            API_PREFIX + "/captcha",
+            API_PREFIX + "/friend",
+            API_PREFIX + "/friend/chat",
+            API_PREFIX + "/profile",
+            API_PREFIX + "/posts",
+            API_PREFIX + "/update",
+            API_PREFIX + "/shop",
+            API_PREFIX + "/group",
+            API_PREFIX + "/group/role",
+            API_PREFIX + "/group/channel",
+            API_PREFIX + "/group/category",
+            API_PREFIX + "/group/member",
+            API_PREFIX + "/group/chat"
     };
 
 

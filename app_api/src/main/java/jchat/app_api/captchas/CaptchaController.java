@@ -18,6 +18,8 @@ public class CaptchaController {
 
     @GetMapping()
     public String getCaptcha(HttpServletRequest request) {
+        // i -> captcha ID
+
         Long captcha_id = API.databaseHandler.startCaptcha("123");
         if (captcha_id == null) {
             return null;
@@ -30,7 +32,10 @@ public class CaptchaController {
 
     @PostMapping()
     public String solveCaptcha(HttpServletRequest request) {
-        String GlobalEncodedCaptchaID = request.getHeader("CapctchaID");
+        // a -> answer for the captcha
+        // s -> server stats
+
+        String GlobalEncodedCaptchaID = request.getHeader(API.REQ_HEADER_CAPTCHA);
         if (null == GlobalEncodedCaptchaID) { return null; }
 
         Long captcha_id = null;
@@ -38,10 +43,10 @@ public class CaptchaController {
             captcha_id = Long.parseLong(API.criptionService.GlobalDecrypt(GlobalEncodedCaptchaID));
         } catch (Exception e) { return null; }
 
-        String jwt = request.getHeader("Authorization");
+        String jwt = request.getHeader(API.REQ_HEADER_AUTH);
         if (jwt == null) { return null; }
 
-        Map<String, Object> data = API.jwtService.getData(jwt);
+        Map<String, Object> data = API.jwtService.getData(jwt, null, null);
         if (data == null || !data.containsKey("a")) {
             return null;
         }
