@@ -1,4 +1,4 @@
-package jchat.app_api.posts;
+package jchat.app_api.posts.comments;
 
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,11 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+ API.API_VERSION+"/posts")
-public class PostsController {
+@RequestMapping(path = "/api/v"+ API.API_VERSION+"/posts/comment")
+public class PostCommentController {
+
 
     @GetMapping
-    public String getLatestPosts(HttpServletRequest request) {
+    public String getCommentsOnPost(HttpServletRequest request) {
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -35,20 +36,22 @@ public class PostsController {
         }
 
         int amount;
+        long post_id;
         try {
             amount = Integer.parseInt(String.valueOf(data.get("amount")));
+            post_id = Long.parseLong(String.valueOf(data.get("post_id")));
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("posts", API.databaseHandler.getLatestPosts(amount));
+        claims.put("comments", API.databaseHandler.getCommentsOnPost(post_id, amount));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 
     @PostMapping
-    public String createPost(HttpServletRequest request) {
+    public String createCommentOnPost(HttpServletRequest request) {
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -65,25 +68,43 @@ public class PostsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("message") || !data.containsKey("background")) {
+        if (data == null) {
             return null;
         }
 
-        if (API.databaseHandler.createPost(user_id, String.valueOf(data.get("message")),
-                String.valueOf(data.get("background")))) {
+        long post_id;
+        long message_id;
+        try {
+            post_id = Long.parseLong(String.valueOf(data.get("post_id")));
+            message_id = Long.parseLong(String.valueOf(data.get("message_id")));
+        } catch (Exception e) {
+            return null;
+        }
+
+        if (!data.containsKey("message") || !data.containsKey("repl")) {
+            return null;
+        }
+
+        String message = String.valueOf(data.get("message"));
+        String repl = String.valueOf(data.get("repl"));
+        if (API.databaseHandler.addCommentToPost(user_id, post_id, message, repl)) {
+            Long msg_id = API.databaseHandler.getCommentID(post_id, user_id, message, repl);
+            if (msg_id == null) {
+                return null;
+            }
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("stats", true);
+            claims.put("message_id", msg_id);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
-
         return null;
+
     }
 
 
     @PatchMapping
-    public String updatePost(HttpServletRequest request) {
+    public String updateCommentOnPost(HttpServletRequest request) {
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -104,35 +125,28 @@ public class PostsController {
             return null;
         }
 
-        int post_id;
+        long post_id;
+        long message_id;
         try {
-            post_id = Integer.parseInt(String.valueOf(data.get("id")));
+            post_id = Long.parseLong(String.valueOf(data.get("post_id")));
+            message_id = Long.parseLong(String.valueOf(data.get("message_id")));
         } catch (Exception e) {
             return null;
         }
 
-        String message = null;
-        String background = null;
-        if (data.containsKey("message")) {
-            message = String.valueOf(data.get("message"));
-        }
-        if (data.containsKey("background")) {
-            background = String.valueOf(data.get("background"));
+        if (!data.containsKey("message")) {
+            return null;
         }
 
-        if (API.databaseHandler.editPost(user_id, post_id, message, background)) {
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("stats", true);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("stats", API.databaseHandler.updateCommentMessage(post_id, user_id, message_id,
+                String.valueOf(data.get("message"))));
 
-            return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-        }
-
-        return null;
+        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 
-
     @DeleteMapping
-    public String deletePost(HttpServletRequest request) {
+    public String deleteCommentOnPost(HttpServletRequest request) {
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -153,14 +167,16 @@ public class PostsController {
             return null;
         }
 
-        int post_id;
+        long post_id;
+        long message_id;
         try {
-            post_id = Integer.parseInt(String.valueOf(data.get("id")));
+            post_id = Long.parseLong(String.valueOf(data.get("post_id")));
+            message_id = Long.parseLong(String.valueOf(data.get("message_id")));
         } catch (Exception e) {
             return null;
         }
 
-        if (API.databaseHandler.deletePost(user_id, post_id)) {
+        if (API.databaseHandler.deleteCommentFromPost(post_id, message_id, user_id)) {
             Map<String, Object> claims = new HashMap<>();
             claims.put("stats", true);
 

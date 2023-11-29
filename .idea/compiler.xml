@@ -8,7 +8,6 @@
         <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/../../../../GradleHome/.gradle/wrapper/dists/gradle-8.1.1-bin/9wiye5v2saajue4irfo8ybqfp/gradle-8.1.1/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.30/f195ee86e6c896ea47a1d39defbe20eb59cd149d/lombok-1.18.30.jar" />
         </processorPath>
-        <module name="JChat.App.main" />
         <module name="JChat.App_API.main" />
       </profile>
     </annotationProcessing>

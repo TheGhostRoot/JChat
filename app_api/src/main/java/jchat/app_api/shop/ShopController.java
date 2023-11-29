@@ -15,9 +15,6 @@ public class ShopController {
 
     @GetMapping
     public String getItemsFromShop(HttpServletRequest request) {
-        // i -> all items
-        // a -> amount
-
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -40,13 +37,13 @@ public class ShopController {
 
         int amount;
         try {
-            amount = Integer.parseInt((String) data.get("a"));
+            amount = Integer.parseInt((String) data.get("amount"));
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("i", API.databaseHandler.getItemsFromShop(amount));
+        claims.put("items", API.databaseHandler.getItemsFromShop(amount));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
@@ -54,11 +51,6 @@ public class ShopController {
 
     @PostMapping
     public String addItemToShop(HttpServletRequest request) {
-        // n -> item name
-        // t -> item type
-        // p -> item price
-        // i -> item ID
-
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -75,15 +67,15 @@ public class ShopController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("n") || !data.containsKey("t")) {
+        if (data == null || !data.containsKey("name") || !data.containsKey("type")) {
             return null;
         }
 
-        String item_name = String.valueOf(data.get("n"));
-        String item_type = String.valueOf(data.get("t"));
+        String item_name = String.valueOf(data.get("name"));
+        String item_type = String.valueOf(data.get("type"));
         int item_price;
         try {
-            item_price = Integer.parseInt(String.valueOf(data.get("p")));
+            item_price = Integer.parseInt(String.valueOf(data.get("price")));
         } catch (Exception e) {
             return null;
         }
@@ -95,7 +87,7 @@ public class ShopController {
             }
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("i", item_id);
+            claims.put("item_id", item_id);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
@@ -105,13 +97,6 @@ public class ShopController {
 
     @PatchMapping
     public String updateItemFromShop(HttpServletRequest request) {
-        // m -> what to be updated about the item
-        // i -> item ID
-        // s -> server stats
-        // n -> updated name
-        // p -> updated price
-        // t -> updated type
-
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -128,42 +113,51 @@ public class ShopController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("m")) {
+        if (data == null || !data.containsKey("modif")) {
             return null;
         }
 
         long item_id;
         try {
-            item_id = Long.parseLong(String.valueOf(data.get("i")));
+            item_id = Long.parseLong(String.valueOf(data.get("id")));
         } catch (Exception e) {
             return null;
         }
 
-        switch (String.valueOf(data.get("m"))) {
-            case "n" -> {
+        switch (String.valueOf(data.get("modif"))) {
+            case "name" -> {
                 // update item name
+                if (!data.containsKey("name")) {
+                    return null;
+                }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.updateItemNameInShop(item_id, String.valueOf(data.get("n"))));
+                claims.put("stats", API.databaseHandler.updateItemNameInShop(item_id, String.valueOf(data.get("name"))));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
-            case "t" -> {
+            case "type" -> {
                 // update item type
+                if (!data.containsKey("type")) {
+                    return null;
+                }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.updateItemTypeInShop(item_id, String.valueOf(data.get("t"))));
+                claims.put("stats", API.databaseHandler.updateItemTypeInShop(item_id, String.valueOf(data.get("type"))));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
-            case "p" -> {
+            case "price" -> {
                 // update item price
+                if (!data.containsKey("price")) {
+                    return null;
+                }
                 int item_price;
                 try {
-                    item_price = Integer.parseInt(String.valueOf(data.get("p")));
+                    item_price = Integer.parseInt(String.valueOf(data.get("price")));
                 } catch (Exception e) {
                     return null;
                 }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.updateItemPriceInShop(item_id, item_price));
+                claims.put("stats", API.databaseHandler.updateItemPriceInShop(item_id, item_price));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
@@ -177,9 +171,6 @@ public class ShopController {
     @DeleteMapping
     public String deleteItemFromShop(HttpServletRequest request) {
         // only session
-        // s -> server stats
-        // i -> item ID
-
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -201,14 +192,14 @@ public class ShopController {
 
         long item_id;
         try {
-            item_id = Long.parseLong(String.valueOf(data.get("i")));
+            item_id = Long.parseLong(String.valueOf(data.get("id")));
         } catch (Exception e) {
             return null;
         }
 
         if (API.databaseHandler.removeItemToShop(item_id)) {
             Map<String, Object> claims = new HashMap<>();
-            claims.put("s", true);
+            claims.put("stats", true);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }

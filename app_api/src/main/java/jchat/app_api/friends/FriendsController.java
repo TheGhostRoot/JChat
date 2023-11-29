@@ -15,8 +15,7 @@ public class FriendsController {
     @GetMapping()
     public String getFriends(HttpServletRequest request) {
         // only session
-
-        // f -> list of all friends like ",12412,1245235,555"
+        // friends like ",12412,1245235,555"
 
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -29,21 +28,16 @@ public class FriendsController {
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("f", user_data.get("friends"));
+        claims.put("friends", user_data.get("friends"));
 
-        return API.jwtService.generateUserJwt(claims, (String) user_data.get(API.DB_SIGN_KEY),
-                (String) user_data.get(API.DB_ENCRYP_KEY));
+        return API.jwtService.generateUserJwt(claims, String.valueOf(user_data.get(API.DB_SIGN_KEY)),
+                String.valueOf(user_data.get(API.DB_ENCRYP_KEY)));
     }
 
     @PatchMapping
     public String handleFriendRequest(HttpServletRequest request) {
         // only session
-
-        // m  -> modification in the friend request like accept, deny or create
-        // c  -> current friends like ",12,2141,45235"  the list of IDs in that format
-        // f  -> the friend ID
-        // i  -> issuer AKA who send it
-        // s  -> server stats
+        // current friends like ",12,2141,45235"
 
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -60,43 +54,44 @@ public class FriendsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("m") || !data.containsKey("c")) {
+        if (data == null || !data.containsKey("modif")) {
             return null;
         }
 
         long user_id1;
-        long user_id2;
         try {
-            user_id1 = Long.parseLong((String) data.get("f"));
-            user_id2 = Long.parseLong((String) data.get("i"));
+            user_id1 = Long.parseLong((String) data.get("friend_id"));
         } catch (Exception e) {
             return null;
         }
 
-        String modification = String.valueOf(data.get("m"));
+        String modification = String.valueOf(data.get("modif"));
 
         switch (modification) {
-            case "a" -> {
+            case "accept" -> {
                 // the request was accepted
+                if (!data.containsKey("friends")) {
+                    return null;
+                }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.deleteFriendRequest(user_id1, user_id2) &&
-                        API.databaseHandler.addUserFriend(user_id1, user_id2, String.valueOf(data.get("c"))));
+                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id1, user_id) &&
+                        API.databaseHandler.addUserFriend(user_id1, user_id, String.valueOf(data.get("friends"))));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 
             }
-            case "d" -> {
+            case "deny" -> {
                 // the request was denied
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.deleteFriendRequest(user_id1, user_id2));
+                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id1, user_id));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 
             }
-            case "s" -> {
+            case "new" -> {
                 // send friend request
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("s", API.databaseHandler.createFriendRequest(user_id1, user_id2));
+                claims.put("stats", API.databaseHandler.createFriendRequest(user_id1, user_id));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 
@@ -111,10 +106,7 @@ public class FriendsController {
     public String removeFriend(HttpServletRequest request) {
         // only session
 
-        // c -> list of IDs of current friends like ",1,1231241,35256"   'c' like current
-        // f -> the friend id    'f' like friend
-        // i -> who sends it?    'i' issuer
-        // s -> server response with stats  's'  stats
+        // current friends like ",1,1231241,35256"
 
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
@@ -131,21 +123,19 @@ public class FriendsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("c")) {
+        if (data == null || !data.containsKey("friends")) {
             return null;
         }
 
         long user_id1;
-        long user_id2;
         try {
-            user_id1 = Long.parseLong((String) data.get("f"));
-            user_id2 = Long.parseLong((String) data.get("i"));
+            user_id1 = Long.parseLong((String) data.get("friend_id"));
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("s", API.databaseHandler.removeUserFriend(user_id1, user_id2, String.valueOf(data.get("c"))));
+        claims.put("stats", API.databaseHandler.removeUserFriend(user_id1, user_id, String.valueOf(data.get("friends"))));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }

@@ -83,6 +83,7 @@ public class DatabaseManager {
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
+            chats_table.add("group_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
             chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             chats_table.add("send_by BIGINT NOT NULL, ");
@@ -257,6 +258,7 @@ public class DatabaseManager {
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
+            chats_table.add("group_id BIGINT NOT NULL, ");
             chats_table.add("msg VARCHAR(2000) NOT NULL, ");
             chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
             chats_table.add("send_by BIGINT NOT NULL, ");
@@ -1086,7 +1088,7 @@ public class DatabaseManager {
         for (Map<String, Object> map : mongoData) {
             for (Map.Entry<String, Object> data : map.entrySet()) {
                 String key = data.getKey();
-                if (!key.equals("_id")) {
+                if (!key.equals("_id") && result.containsKey(key)) {
                     result.get(key).add(data.getValue());
                 }
             }
@@ -1405,14 +1407,15 @@ public class DatabaseManager {
 
 
     protected boolean handleMessage(long channel_id, long sender_id, String message, LocalDateTime now,
-                                    long resiver_id) {
+                                    long resiver_id, long group_id) {
         if (isSQL()) {
             List<Object> edit_condition_data = new ArrayList<>();
             edit_condition_data.add(channel_id);
+            edit_condition_data.add(group_id);
 
             Map<String, List<Object>> current_chat_data = getDataSQL(table_chats,
                     "msg, msg_id, send_by",
-                    "channel_id = ?",
+                    "channel_id = ? AND group_id = ?",
                     edit_condition_data, null, "send_at DESC", 0);
 
             if (current_chat_data == null || current_chat_data.get("msg_id") == null ||
@@ -1437,6 +1440,7 @@ public class DatabaseManager {
             if (!current_chat_data.get("msg").isEmpty()) {
                 List<Object> chat_data = new ArrayList<>();
                 chat_data.add(channel_id);
+                chat_data.add(group_id);
                 chat_data.add(message);
                 chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 chat_data.add(sender_id);
@@ -1459,14 +1463,14 @@ public class DatabaseManager {
 
                         edit_condition_data.add(msg_id_to_concat);
                         if (editDataSQL(table_chats, "msg = ?", set_data,
-                                "channel_id = ? AND send_by = ? AND msg_id = ?",
+                                "channel_id = ? AND group_id = ? AND send_by = ? AND msg_id = ?",
                                 edit_condition_data)) {
                             return true;
                         }
                     }
 
-                    return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
-                            "?, ?, ?, ?, ?", chat_data);
+                    return addDataSQL(table_chats, "channel_id, group_id, msg, send_at, send_by, msg_id",
+                            "?, ?, ?, ?, ?, ?", chat_data);
 
                 } catch (Exception e) {
                     return false;
@@ -1474,9 +1478,11 @@ public class DatabaseManager {
 
             } else {
                 // no messages in this channel
+                List<Object> condition_1 = new ArrayList<>();
+                condition_1.add(group_id);
 
                 Map<String, List<Object>> channel_ids = getDataSQL(table_chats, "channel_id",
-                        "", null, null, "", 0);
+                        "group_id = ?", null, null, "", 0);
 
                 if (channel_ids == null || channel_ids.get("channel_id") == null) {
                     return false;
@@ -1484,17 +1490,18 @@ public class DatabaseManager {
 
                 List<Object> new_chat_data = new ArrayList<>();
                 new_chat_data.add(channel_id == 0L ? generateID(channel_ids.get("channel_id")) : channel_id);
+                new_chat_data.add(group_id);
                 new_chat_data.add(message);
                 new_chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 new_chat_data.add(sender_id);
                 new_chat_data.add(generateID(current_chat_data.get("msg_id")));
 
-                return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
-                        "?, ?, ?, ?, ?", new_chat_data);
+                return addDataSQL(table_chats, "channel_id, group_id, msg, send_at, send_by, msg_id",
+                        "?, ?, ?, ?, ?, ?", new_chat_data);
 
             }
         } else if (isMongo()) {
-            Document convId = new Document("channel_id", channel_id);
+            Document convId = new Document("channel_id", channel_id).append("group_id", group_id);
             List<Map<String, Object>> chat_msgs = getCollectionMongo(table_chats, "msgs", convId);
 
             if (chat_msgs == null) {
@@ -1510,7 +1517,7 @@ public class DatabaseManager {
             if (chat_msgs.isEmpty() || chat_msgs.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
                         new Document("channel_id", channel_id == 0L ?
-                                generateID(new ArrayList<>()) : channel_id)
+                                generateID(new ArrayList<>()) : channel_id).append("group_id", group_id)
                                 .append("user1", sender_id)
                                 .append("user2", resiver_id)
                                 .append("msgs",
@@ -1853,20 +1860,21 @@ public class DatabaseManager {
     }
 
 
-    public boolean handleEditMessage(long msg_id, String new_message, long channel_id) {
+    public boolean handleEditMessage(long msg_id, String new_message, long channel_id, long group_id) {
         if (isSQL()) {
             List<Object> condition = new ArrayList<>();
             condition.add(msg_id);
             condition.add(channel_id);
+            condition.add(group_id);
 
             List<Object> set_data = new ArrayList<>();
             set_data.add(new_message);
 
             return editDataSQL(table_chats, "msg = ?", set_data,
-                    "msg_id = ? AND channel_id = ?", condition);
+                    "msg_id = ? AND channel_id = ? AND group_id = ?", condition);
 
         } else if (isMongo()) {
-            Document filter = new Document("channel_id", channel_id);
+            Document filter = new Document("channel_id", channel_id).append("group_id", group_id);
             List<Map<String, Object>> all_msgs = getCollectionMongo(table_chats, "msgs", filter);
 
             if (all_msgs == null || all_msgs.isEmpty()) {
