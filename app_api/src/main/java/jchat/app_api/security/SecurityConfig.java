@@ -27,6 +27,7 @@ public class SecurityConfig {
             API_PREFIX + "/posts",
             API_PREFIX + "/posts/comment",
             API_PREFIX + "/update",
+            API_PREFIX + "/notifications",
             API_PREFIX + "/shop",
             API_PREFIX + "/group",
             API_PREFIX + "/group/role",

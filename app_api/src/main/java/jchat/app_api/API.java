@@ -10,7 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -39,9 +41,14 @@ public class API {
     public static String REQ_HEADER_CAPTCHA = "CapctchaID";
 
 
+    public static String stats = "online";
+
+
     
 
     public static Random random = new Random();
+
+    private static Yaml yaml = new Yaml();
 
     public static final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvxyz";
 
@@ -98,6 +105,20 @@ public class API {
         admin_role.put("delete_own_message", true);
         admin_role.put("send_message", true);
         admin_role.put("edit_own_message", true);
+
+
+        user settings types:
+        change_email
+        change_password
+        start_sub
+        end_sub
+        new_message
+        edited_message
+        new_coins
+        new_badges
+        deleted_group
+        new_owner
+        leave
         * */
 
         jwtService = new JwtService();
@@ -232,6 +253,13 @@ public class API {
 
         logger.info(databaseHandler.checkFriendRequest(user_id, user_id2)); */
 
+        /* config.yml
+        *
+        * port: 123141
+        * encryption_key: "DR6TYFUVYBIunohg86"
+        * jwt_sign_key: "46DT7FYBIUNOIMPijhuyg86f5"
+        * */
+
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             databaseHandler.handleCaptchas();
@@ -243,7 +271,7 @@ public class API {
         }, "Shutdown-thread"));
 
         SpringApplication app = new SpringApplication(API.class);
-        app.setDefaultProperties(Collections.singletonMap("server.port", 25533));
+        app.setDefaultProperties(Collections.singletonMap("server.port", readPortFromConfig()));
         app.run(args);
     }
 
@@ -320,5 +348,35 @@ public class API {
         } catch (Exception e) { return false; }
 
         return API.databaseHandler.checkIfSolvedCaptcha(captch_id);
+    }
+
+    public static int readPortFromConfig() {
+        try {
+            return (int) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("port");
+
+        } catch (Exception e) {
+            return 25533;
+        }
+    }
+
+    public static String readGlobalEncryptionKeyFromConfig() {
+        try {
+            return (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("encryption_key");
+
+        } catch (Exception e) {
+            return "P918nfQtYhbUzJVbmSQfZw==";
+        }
+    }
+
+    public static String readGlobalSignFromConfig() {
+        try {
+            return (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("jwt_sign_key");
+
+        } catch (Exception e) {
+            return "hGqlbRo8IbgSh24eblzVZWnOk9Iue9cXKegLhnHAGyKV9HkKhmYQPE2QBpxfJmfri9UO7iAj9mZhJhm6E4Fx4Wxv5m/cHaxKASn0duiwBMHYt0ZEa6ViOFr2b62hVBfSQS3xvC0XDqRx+5rAG+vDwvoAUTSsT9Owhd9KJnrWEmJv0rrpY0+4qQbcRKbPhWJrB3ULWjnQuRvJS2Hwr7P/AvIrnFngC9QtNDOvLj/lzG9gHA5MSHws+/a2ZAe2mAI0AAvfYEPwemZy0r9JhHhqi+zcpFTarRqTEP51fXtjwRSoLgcbXxIbh5awM6h05+83NQV8L3cMfpANOyNATO/bBqzg+nU+y69AtVmpjXZpMaqXFAhUqVoVsuHP2Nc6UhPfjkps5Pt6Ho2kjEJotf1cDBXX6RTTxhJ95aL/lHKpNVw/sEBuzwyOqFwp1BMNuzED";
+        }
     }
 }

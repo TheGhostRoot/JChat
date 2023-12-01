@@ -32,6 +32,8 @@ public class DatabaseManager {
     protected static final String table_shop = "shop";
     protected static final String table_friend_requests = "friend_requests";
 
+    protected static final String table_notifications = "notifi";
+
 
     protected final String postgressql_url = "jdbc:postgresql://localhost:5433/jcorechat-db";
     protected final String postgressql_username = "jcorechat";
@@ -79,7 +81,8 @@ public class DatabaseManager {
             accounts_table.add("friends TEXT NOT NULL, ");
             accounts_table.add("starts_sub TIMESTAMP NULL, ");
             accounts_table.add("ends_sub TIMESTAMP NULL, ");
-            accounts_table.add("bookmarks TEXT NOT NULL");
+            accounts_table.add("bookmarks TEXT NOT NULL, ");
+            accounts_table.add("settings TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
@@ -198,7 +201,13 @@ public class DatabaseManager {
             friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
             friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
 
+            List<String> notifi_table = new ArrayList<>();
+            notifi_table.add("id BIGINT NOT NULL, ");
+            notifi_table.add("update TEXT NOT NULL, ");
+            notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_notifications);
             deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
@@ -215,6 +224,7 @@ public class DatabaseManager {
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
+            createTableSQL(table_notifications, notifi_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
             createTableSQL( table_posts, posts_table);
@@ -254,7 +264,8 @@ public class DatabaseManager {
             accounts_table.add("friends TEXT NOT NULL, ");
             accounts_table.add("starts_sub TIMESTAMP NULL, ");
             accounts_table.add("ends_sub TIMESTAMP NULL, ");
-            accounts_table.add("bookmarks TEXT NOT NULL");
+            accounts_table.add("bookmarks TEXT NOT NULL, ");
+            accounts_table.add("settings TEXT NOT NULL");
 
             List<String> chats_table = new ArrayList<>();
             chats_table.add("channel_id BIGINT NOT NULL, ");
@@ -374,7 +385,13 @@ public class DatabaseManager {
             friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
             friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
 
+            List<String> notifi_table = new ArrayList<>();
+            notifi_table.add("id BIGINT NOT NULL, ");
+            notifi_table.add("update TEXT NOT NULL, ");
+            notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
+            deleteTableSQL(table_notifications);
             deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
@@ -391,6 +408,7 @@ public class DatabaseManager {
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
+            createTableSQL(table_notifications, notifi_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
             createTableSQL( table_posts, posts_table);
@@ -424,6 +442,8 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_posts);
             MongoDeleteCollectionNoSQL(table_groups);
             MongoDeleteCollectionNoSQL(table_shop);
+            MongoDeleteCollectionNoSQL(table_friend_requests);
+            MongoDeleteCollectionNoSQL(table_notifications);
 
 
             MongoCreateCollectionNoSQL(table_accounts);
@@ -435,6 +455,7 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_groups);
             MongoCreateCollectionNoSQL(table_shop);
             MongoCreateCollectionNoSQL(table_friend_requests);
+            MongoCreateCollectionNoSQL(table_notifications);
 
         } catch (Exception e) {
             e.printStackTrace();

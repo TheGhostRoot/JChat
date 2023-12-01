@@ -1,7 +1,24 @@
 package jchat.load_balancer;
 
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.boot.SpringApplication;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class LoadBalancer {
+
+
+    public static final Logger logger = LogManager.getRootLogger();
+
+    private static Yaml yaml = new Yaml();
 
     public static void main(String[] args) {
 
@@ -26,6 +43,34 @@ public class LoadBalancer {
         // if the API servers get very busy then the Load Balancer will start a queue and this protection applies there as well.
 
 
-        System.out.println("Load Balancer");
+        /*
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
+            // smt
+        }, 0, 1, TimeUnit.SECONDS);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // smt
+        }, "Shutdown-thread"));
+
+         */
+
+        /* config.yml
+         *
+         * port: 123141
+         * */
+
+        SpringApplication app = new SpringApplication(LoadBalancer.class);
+        app.setDefaultProperties(Collections.singletonMap("server.port", readPortFromConfig()));
+        app.run(args);
+    }
+
+    public static int readPortFromConfig() {
+        try {
+            return (int) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("port");
+
+        } catch (Exception e) {
+            return 25533;
+        }
     }
 }

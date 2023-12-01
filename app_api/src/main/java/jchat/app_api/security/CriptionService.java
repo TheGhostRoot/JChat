@@ -17,7 +17,7 @@ public class CriptionService {
 
     public CriptionService() {
         // GlobalEncription_Key = generateSecretKey();
-        GlobalEncription_Key = getKeyFromString("P918nfQtYhbUzJVbmSQfZw==");
+        GlobalEncription_Key = getKeyFromString(API.readGlobalEncryptionKeyFromConfig());
         API.logger.info("Global Encryption Key: "+Base64.getEncoder().encodeToString(GlobalEncription_Key.getEncoded()));
     }
 

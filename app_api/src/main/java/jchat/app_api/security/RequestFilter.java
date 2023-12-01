@@ -22,6 +22,8 @@ public class RequestFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        API.logger.info(request.getContextPath());
+
         String authHeader = request.getHeader(API.REQ_HEADER_AUTH);
         if (authHeader == null) {
             response.sendError(403);

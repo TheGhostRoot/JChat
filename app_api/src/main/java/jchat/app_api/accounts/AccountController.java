@@ -23,12 +23,13 @@ public class AccountController {
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (null == data) { return null; }
 
-        if (data.containsKey("username") && data.containsKey("password") && data.containsKey("email")) {
+        if (data.containsKey("username") && data.containsKey("password") && data.containsKey("email") && data.containsKey("settings")) {
             Map<String, Object> map = new HashMap<>();
             Long user_id = API.databaseHandler.createUser(String.valueOf(data.get("username")),
                     String.valueOf(data.get("email")), String.valueOf(data.get("password")),
                     API.criptionService.GlobalEncrypt(API.databaseHandler.generateUserEncryptionKey()),
-                    API.criptionService.GlobalEncrypt(API.databaseHandler.generateUserSignKey()));
+                    API.criptionService.GlobalEncrypt(API.databaseHandler.generateUserSignKey()),
+                    String.valueOf(data.get("settings")));
 
             map.put("id", null == user_id ? 0l : user_id);
 
@@ -67,6 +68,16 @@ public class AccountController {
         if (null == data || !data.containsKey("modif")) { return null; }
 
         switch (String.valueOf(data.get("modif"))) {
+            case "settings" -> {
+                if (!data.containsKey("settings")) {
+                    return null;
+                }
+                // update name
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("stats", API.databaseHandler.updateUserSettings(user_id, String.valueOf(data.get("settings"))));
+
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
             case "name" -> {
                 if (!data.containsKey("name")) {
                     return null;
@@ -148,6 +159,7 @@ public class AccountController {
             }
         }
     }
+
 
     @GetMapping()
     public String getAccount(HttpServletRequest request) {
