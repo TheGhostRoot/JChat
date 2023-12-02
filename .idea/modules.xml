@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App_API/JChat.App_API.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App_API/JChat.App_API.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Load_Balancer/JChat.Load_Balancer.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Load_Balancer/JChat.Load_Balancer.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" filepath="$PROJECT_DIR$/.idea/modules/App/JCoreChat.App.test.iml" />

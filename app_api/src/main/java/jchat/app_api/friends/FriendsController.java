@@ -74,8 +74,8 @@ public class FriendsController {
                     return null;
                 }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id1, user_id) &&
-                        API.databaseHandler.addUserFriend(user_id1, user_id, String.valueOf(data.get("friends"))));
+                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id, user_id1) &&
+                        API.databaseHandler.addUserFriend(user_id, user_id1, String.valueOf(data.get("friends"))));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 
@@ -83,7 +83,7 @@ public class FriendsController {
             case "deny" -> {
                 // the request was denied
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id1, user_id));
+                claims.put("stats", API.databaseHandler.deleteFriendRequest(user_id, user_id1));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 
@@ -91,7 +91,7 @@ public class FriendsController {
             case "new" -> {
                 // send friend request
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.createFriendRequest(user_id1, user_id));
+                claims.put("stats", API.databaseHandler.createFriendRequest(user_id, user_id1));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
 

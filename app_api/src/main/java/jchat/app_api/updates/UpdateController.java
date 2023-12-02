@@ -27,7 +27,7 @@ public class UpdateController {
     }
 
 
-    @PatchMapping
+    @PostMapping
     public Map<String, Object> getServerLoad(HttpServletRequest request) {
         Runtime rt = Runtime.getRuntime();
 

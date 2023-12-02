@@ -4099,10 +4099,18 @@ public class DatabaseHandler {
             users.add(id);
             users.add(id2);
 
+            addNotification(id, Collections.singletonMap("new_friend_request", users), "friend_requests");
+
              return databaseManager.addDataSQL(DatabaseManager.table_friend_requests,
                      "id, id2", "?, ?", users);
 
         } else if (databaseManager.isMongo()) {
+            List<Object> users = new ArrayList<>();
+            users.add(id);
+            users.add(id2);
+
+            addNotification(id, Collections.singletonMap("new_friend_request", users), "friend_requests");
+
             return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_friend_requests,
                     new Document("id", id).append("id2", id2), null);
         }
