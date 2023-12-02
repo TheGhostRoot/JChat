@@ -3,9 +3,11 @@ package jchat.load_balancer;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -15,24 +17,67 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
+@Order(1)
+@WebFilter("/**")
 public class RederectFilter extends OncePerRequestFilter  {
 
+    private static final int REQUEST_THRESHOLD = 2;
+    private static final long TIME_WINDOW_SECONDS = 1;
+
+    private final ConcurrentHashMap<String, Long> requestCountMap = new ConcurrentHashMap<>();
+    private final List<String> blockedIPs = new CopyOnWriteArrayList<>();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        Map<String, Object> data = new HashMap<>();
-        data.put("req", request);
-        data.put("res", response);
 
-        LoadBalancer.queue.add(data);
+        String IP = request.getRemoteAddr();
+        IP = "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
 
+        if (!blockedIPs.contains(IP) && isAllowed(IP)) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("req", request);
+            data.put("res", response);
+
+            LoadBalancer.queue.add(data);
+
+            filterChain.doFilter(request, response);
+
+        } else {
+            response.getWriter().write("Rate limit exceeded or IP blocked");
+            response.setContentType("text/plain");
+            response.setStatus(429); // 429 Too Many Requests
+        }
     }
+
+    private boolean isAllowed(String clientIP) {
+        long currentTime = System.currentTimeMillis();
+        long previousRequestTime = requestCountMap.getOrDefault(clientIP, 0L);
+
+        if (currentTime - previousRequestTime > TimeUnit.SECONDS.toMillis(TIME_WINDOW_SECONDS)) {
+            // Reset count if the time window has passed
+            requestCountMap.put(clientIP, currentTime);
+            return true;
+        } else {
+            // Increment request count
+            requestCountMap.put(clientIP, previousRequestTime);
+            return ((int) requestCountMap.keySet()
+                    .stream()
+                    .filter(ip -> ip.equals(clientIP))
+                    .count()) <= REQUEST_THRESHOLD;
+        }
+    }
+
+
 
     public void sendRederect() {
         if (LoadBalancer.useServer1) {

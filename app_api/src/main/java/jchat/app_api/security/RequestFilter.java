@@ -2,25 +2,48 @@ package jchat.app_api.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jchat.app_api.API;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 
 @Component
 @RequiredArgsConstructor
+@Order(1)
+@WebFilter("/**")
 public class RequestFilter extends OncePerRequestFilter {
+
+    private static final int REQUEST_THRESHOLD = 2;
+    private static final long TIME_WINDOW_SECONDS = 1;
+
+    private final ConcurrentHashMap<String, Long> requestCountMap = new ConcurrentHashMap<>();
+    private final List<String> blockedIPs = new CopyOnWriteArrayList<>();
+
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        if (blockedIPs.contains(API.get_IP(request)) || !isAllowed(API.get_IP(request))) {
+            response.getWriter().write("Rate limit exceeded or IP blocked");
+            response.setContentType("text/plain");
+            response.setStatus(429); // 429 Too Many Requests
+            return;
+        }
 
         if (request.getRequestURI().endsWith("/update")) {
             filterChain.doFilter(request, response);
@@ -90,6 +113,25 @@ public class RequestFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
+        }
+    }
+
+
+
+    private boolean isAllowed(String clientIP) {
+        long currentTime = System.currentTimeMillis();
+        long previousRequestTime = requestCountMap.getOrDefault(clientIP, 0L);
+
+        if (currentTime - previousRequestTime > TimeUnit.SECONDS.toMillis(TIME_WINDOW_SECONDS)) {
+            requestCountMap.put(clientIP, currentTime);
+            return true;
+
+        } else {
+            requestCountMap.put(clientIP, previousRequestTime);
+            return ((int) requestCountMap.keySet()
+                    .stream()
+                    .filter(ip -> ip.equals(clientIP))
+                    .count()) <= REQUEST_THRESHOLD;
         }
     }
 }
