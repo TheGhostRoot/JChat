@@ -1,6 +1,8 @@
 package jchat.load_balancer;
 
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +37,17 @@ public class LoadBalancer {
     public static ServerLoad serverLoad;
 
     private static Yaml yaml = new Yaml();
+
+    public static List<String> servers1 = new ArrayList<>();
+    public static List<String> servers2 = new ArrayList<>();
+
+    public static boolean useServer1 = false;
+
+    public static List<Map<String, Object>> queue = new CopyOnWriteArrayList<>();
+
+    public static RederectFilter rederectFilter;
+
+    public static Thread rederectThread;
 
     public static void main(String[] args) {
 
@@ -58,11 +72,12 @@ public class LoadBalancer {
         // if the API servers get very busy then the Load Balancer will start a queue and this protection applies there as well.
 
 
-        /*
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
-            // smt
-        }, 0, 1, TimeUnit.SECONDS);
 
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
+            serverLoad.setServerLoad();
+        }, 0, 5, TimeUnit.MINUTES);
+
+/*
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             // smt
         }, "Shutdown-thread"));
@@ -84,8 +99,17 @@ public class LoadBalancer {
         critical_ram = readCriticalRamFromConfig();
         critical_cpu = readCriticalCpuFromConfig();
         critical_disk = readCriticalDiskFromConfig();
+        rederectFilter = new RederectFilter();
 
-        serverLoad.getServerLoad();
+        serverLoad.setServerLoad();
+
+        rederectThread = new Thread(() -> {
+            while (true) {
+                rederectFilter.sendRederect();
+            }
+        });
+        rederectThread.setDaemon(true);
+        rederectThread.start();
 
         SpringApplication app = new SpringApplication(LoadBalancer.class);
         app.setDefaultProperties(Collections.singletonMap("server.port", readPortFromConfig()));

@@ -1,0 +1,6 @@
+port: 25532
+servers: ["http://localhost:25500"]
+critical_ram_usage_bytes: 20_000_000_000
+critical_cpu_usage_percent: 90
+critical_disk_usage_bytes: null
+

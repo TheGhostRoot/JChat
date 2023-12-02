@@ -13,13 +13,23 @@ public class ServerLoad {
         objectMapper = new ObjectMapper();
     }
 
-    public List<String> getServerLoad() {
+    public void setServerLoad() {
         Map<String, Map<String, Object>> server_load = new HashMap<>();
         for (String ip : LoadBalancer.servers) {
             try {
-                server_load.put(ip, objectMapper.readValue(RequestManager.post(ip + "/api/v1/update", null),
+                Map<String, Object> map = objectMapper.readValue(RequestManager.post(ip + "/api/v1/update", null),
                         new TypeReference<Map<String, Object>>() {
-                        }));
+                        });
+
+                if ((LoadBalancer.critical_ram <= Long.parseLong(String.valueOf(map.get("used_ram_jvm")))) ||
+                        (LoadBalancer.critical_cpu <= Double.parseDouble(String.valueOf(map.get("cpu_usage")))) ||
+                        (LoadBalancer.critical_disk <= Long.parseLong(String.valueOf(map.get("used_disk_bytes"))))) {
+                    continue;
+
+                }
+
+                server_load.put(ip, map);
+
             } catch (Exception e) {}
         }
 
@@ -28,7 +38,14 @@ public class ServerLoad {
         List<String> list = new ArrayList<>();
         list.addAll(server_load.keySet());
 
-        return list;
+        if (LoadBalancer.useServer1) {
+            LoadBalancer.servers2 = list;
+            LoadBalancer.useServer1 = false;
+
+        } else {
+            LoadBalancer.servers1 = list;
+            LoadBalancer.useServer1 = true;
+        }
     }
 
     public Map<String, Map<String, Object>> sortServers(Map<String, Map<String, Object>> mainMap) {
