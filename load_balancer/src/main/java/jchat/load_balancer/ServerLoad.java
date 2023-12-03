@@ -21,9 +21,12 @@ public class ServerLoad {
                         new TypeReference<Map<String, Object>>() {
                         });
 
-                if ((LoadBalancer.critical_ram <= Long.parseLong(String.valueOf(map.get("used_ram_jvm")))) ||
-                        (LoadBalancer.critical_cpu <= Double.parseDouble(String.valueOf(map.get("cpu_usage")))) ||
-                        (LoadBalancer.critical_disk <= Long.parseLong(String.valueOf(map.get("used_disk_bytes"))))) {
+                if ((LoadBalancer.critical_ram  != 0l &&
+                        LoadBalancer.critical_ram <= Long.parseLong(String.valueOf(map.get("used_ram_jvm")))) ||
+                        (LoadBalancer.critical_cpu != 0.0 &&
+                                LoadBalancer.critical_cpu <= Double.parseDouble(String.valueOf(map.get("cpu_usage")))) ||
+                        (LoadBalancer.critical_disk != 0l
+                                && LoadBalancer.critical_disk <= Long.parseLong(String.valueOf(map.get("used_disk_bytes"))))) {
                     continue;
 
                 }

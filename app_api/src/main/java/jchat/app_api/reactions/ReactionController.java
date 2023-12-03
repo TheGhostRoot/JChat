@@ -38,15 +38,17 @@ public class ReactionController {
         long channel_id;
         long message_id;
         long post_id;
+        int amount;
         try {
             channel_id = Long.parseLong(String.valueOf(data.get("channel_id")));
             message_id = Long.parseLong(String.valueOf(data.get("channel_id")));
             post_id = Long.parseLong(String.valueOf(data.get("post_id")));
+            amount = Integer.parseInt(String.valueOf(data.get("amount")));
         } catch (Exception e) {
             return null;
         }
 
-        Map<String, Object> react = API.databaseHandler.getReactions(channel_id, message_id, post_id);
+        Map<String, Object> react = API.databaseHandler.getReactions(channel_id, message_id, post_id, amount);
         if (react == null) {
             return null;
         }

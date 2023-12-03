@@ -70,17 +70,17 @@ public class DatabaseHandler {
         return false;
     }
 
-    public Map<String, List<Object>> getNotifications(long id) {
+    public Map<String, List<Object>> getNotifications(long id, int amount) {
         if (databaseManager.isSQL()) {
             List<Object> condition = new ArrayList<>();
             condition.add(id);
 
             return databaseManager.getDataSQL(DatabaseManager.table_notifications,
-                    "update", "id = ?", condition, null, "", 0);
+                    "update", "id = ?", condition, null, "", amount);
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_notifications = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_notifications,
-                    new Document("id", id), false, "update");
+                    new Document("id", id), false, amount, "update");
 
             if (all_notifications == null) {
                 return null;
@@ -150,7 +150,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> accounts_id_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
                     null,
-                    false, "id", "name", "email", "sign_key", "encryption_key");
+                    false, 0, "id", "name", "email", "sign_key", "encryption_key");
 
             Map<String, Object> values = new HashMap<>();
             values.put("name", name);
@@ -234,7 +234,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                        new Document("email", email).append("password", password), true, "id")));
+                        new Document("email", email).append("password", password), true, 0, "id")));
             } catch (Exception e) {
                 return null;
             }
@@ -264,7 +264,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                        new Document("session_id", sess_id).append("ip_address", ip), true, "id")
+                        new Document("session_id", sess_id).append("ip_address", ip), true, 0, "id")
                         .get(0).get("id")));
             } catch (Exception e) {
                 return null;
@@ -300,7 +300,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             return databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    new Document("id", id), true).get(0);
+                    new Document("id", id), true, 0).get(0);
         }
         return null;
     }
@@ -320,7 +320,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_emails = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "email");
+                    null, false, 0, "email");
 
             if (all_emails == null || databaseManager.checkNotUniqueWithStream(all_emails, "email", new_email)) {
                 return false;
@@ -349,7 +349,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_names = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "name");
+                    null, false, 0, "name");
 
             if (all_names == null || databaseManager.checkNotUniqueWithStream(all_names, "name", new_name)) {
                 return false;
@@ -471,7 +471,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "encryption_key");
+                    null, false, 0, "encryption_key");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "encryption_key", new_encryptino_key)) {
                 return false;
@@ -503,7 +503,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "encryption_key");
+                    null, false, 0, "encryption_key");
 
             if (all_keys == null) {
                 return false;
@@ -530,7 +530,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "sign_key");
+                    null, false, 0, "sign_key");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "sign_key", new_sign_key)) {
                 return false;
@@ -557,7 +557,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "ip_address");
+                    null, false, 0, "ip_address");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "ip_address", ip)) {
                 return false;
@@ -589,7 +589,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "sign_key");
+                    null, false, 0, "sign_key");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "sign_key", new_sign_key)) {
                 return false;
@@ -625,7 +625,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "session_id");
+                    null, false, 0, "session_id");
 
             if (all_keys == null || databaseManager.checkNotUniqueWithStream(all_keys, "session_id", session_id)) {
                 return null;
@@ -656,7 +656,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "session_id");
+                    null, false, 0, "session_id");
 
             if (all_keys == null) {
                 return null;
@@ -686,7 +686,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "encryption_key");
+                    null, false, 0, "encryption_key");
 
             if (all_keys == null) {
                 return null;
@@ -721,7 +721,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "sign_key");
+                    null, false, 0, "sign_key");
 
             if (all_keys == null) {
                 return null;
@@ -787,7 +787,7 @@ public class DatabaseHandler {
             Document filter = new Document("id", user_id);
 
             List<Map<String, Object>> account_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    filter, true,
+                    filter, true, 0,
                     "last_edit_time", "session_expire");
 
             if (account_data == null || account_data.get(0) == null ||
@@ -912,7 +912,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
 
             List<Map<String, Object>> account_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                    null, false, "id");
+                    null, false, 0, "id");
 
             if (account_data == null) {
                 return;
@@ -1025,7 +1025,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_chats,
-                        new Document("user1", user_id).append("user2", user_id2), true, "channel_id")
+                        new Document("user1", user_id).append("user2", user_id2), true, 0, "channel_id")
                         .get(0).get("channel_id")));
 
             } catch (Exception e) {
@@ -1049,7 +1049,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_chats,
-                    new Document("channel_id", channel_id).append("group_id", group_id), true);
+                    new Document("channel_id", channel_id).append("group_id", group_id), true, amount);
 
             Map<String, List<Object>> result = new HashMap<>();
 
@@ -1116,7 +1116,7 @@ public class DatabaseHandler {
             Document channelId = new Document("channel_id", channel_id);
             if (group_id == 0L) {
                 List<Map<String, Object>> msgs_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_chats,
-                        channelId, true, "msgs");
+                        channelId, true, 0 ,"msgs");
 
                 if (msgs_data == null || msgs_data.isEmpty()) {
                     return false;
@@ -1156,7 +1156,7 @@ public class DatabaseHandler {
                                     List.of("delete_own_message"), actor_id, group_id))) {
 
                 List<Map<String, Object>> msgs_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_chats,
-                        channelId, true, "msgs");
+                        channelId, true, 0, "msgs");
 
                 if (msgs_data == null || msgs_data.isEmpty()) {
                     return false;
@@ -1213,7 +1213,7 @@ public class DatabaseHandler {
     }
 
 
-    public Map<String, Object> getReactions(long channel_id, long message_id, long post_id) {
+    public Map<String, Object> getReactions(long channel_id, long message_id, long post_id, int amount) {
         Map<String, Object> result = new HashMap<>();
         if (databaseManager.isSQL()) {
             List<Object> condition = new ArrayList<>();
@@ -1223,7 +1223,7 @@ public class DatabaseHandler {
 
             Map<String, List<Object>> map = databaseManager.getDataSQL(DatabaseManager.table_reactions,
                     "*", "channel_id = ? AND msg_id = ? AND post_id = ?", condition,
-                    null, "", 0);
+                    null, "", amount);
 
             if (map == null) {
                 return null;
@@ -1238,9 +1238,9 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> prof = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_reactions,
                     new Document("channel_id", channel_id).append("msg_id", message_id)
-                            .append("post_id", post_id), true);
+                            .append("post_id", post_id), true, amount);
 
-            for (Map.Entry<String, List<Object>> entry : databaseManager.transformMongoToSQL(0, prof, new HashMap<>())
+            for (Map.Entry<String, List<Object>> entry : databaseManager.transformMongoToSQL(amount, prof, new HashMap<>())
                     .entrySet()) {
                 result.put(entry.getKey(), entry.getValue().get(0));
             }
@@ -1299,7 +1299,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
-                    null, false, "id");
+                    null, false, 0, "id");
 
             if (data == null) {
                 return null;
@@ -1345,7 +1345,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             Document captcha_id = new Document("id", id);
             List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
-                    captcha_id,true, "answer", "time");
+                    captcha_id,true, 0, "answer", "time");
 
             if (captcha_data == null || captcha_data.isEmpty()) {
                 return false;
@@ -1395,7 +1395,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
-                        new Document("id", id), true, "answer").get(0).get("answer")).isBlank();
+                        new Document("id", id), true, 0, "answer").get(0).get("answer")).isBlank();
             } catch (Exception e) {
                 return false;
             }
@@ -1441,7 +1441,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             Document captcha_id = new Document("id", id);
             List<Map<String, Object>> captcha_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
-                    captcha_id,true, "last_edit_time", "time");
+                    captcha_id,true, 0, "last_edit_time", "time");
 
             if (captcha_data == null || captcha_data.get(0).isEmpty()) {
                 return false;
@@ -1493,7 +1493,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> captcha_ids = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas, null,
-                    false, "id");
+                    false, 0,"id");
 
             if (captcha_ids == null) {
                 return;
@@ -1536,7 +1536,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> post_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_posts,
-                    null, false, "id");
+                    null, false, 0, "id");
 
             if (post_data == null) {
                 return false;
@@ -1572,7 +1572,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_posts,
-                    null, false);
+                    null, false, amount);
             Map<String, List<Object>> result = new HashMap<>();
 
             result.put("id", new ArrayList<>());
@@ -2051,7 +2051,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> prof = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_profiles,
-                    new Document("id", id), true);
+                    new Document("id", id), true, 0);
 
             for (Map.Entry<String, List<Object>> entry : databaseManager.transformMongoToSQL(0, prof, new HashMap<>())
                     .entrySet()) {
@@ -2086,7 +2086,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                    null, false);
+                    null, false, amount);
 
             if (mongoData == null) {
                 return null;
@@ -2142,7 +2142,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(
-                        DatabaseManager.table_groups, new Document("owner_id", id), false, "id")
+                        DatabaseManager.table_groups, new Document("owner_id", id), false, 0, "id")
                         .stream()
                         .sorted((m1, m2) -> ((LocalDateTime) m2.get("created_at")).compareTo((LocalDateTime) m1.get("created_at")))
                                 .findFirst()
@@ -2198,7 +2198,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_groups_id = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                    null, false, "id");
+                    null, false, 0, "id");
 
             if (all_groups_id == null) {
                 return false;
@@ -2332,7 +2332,7 @@ public class DatabaseHandler {
                     "members", filter);
 
             List<Map<String, Object>> group_info = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                    filter, true, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
+                    filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
 
             if (all_members == null || group_info == null) {
                 return false;
@@ -2814,7 +2814,7 @@ public class DatabaseHandler {
                                     actor_id, group_id))) {
 
                         List<Map<String, Object>> group_info = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                                filter, true, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
+                                filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
 
                         if (group_info == null) {
                             return false;
@@ -3035,7 +3035,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_chats,
-                    new Document("channel_id", channel_id).append("group_id", group_id), false);
+                    new Document("channel_id", channel_id).append("group_id", group_id), false, amount);
 
             if (mongoData == null) {
                 return null;
@@ -3933,7 +3933,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             Document data = new Document("item_type", item_type).append("seller_id", seller_id);
             List<Map<String, Object>> seller_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    data, false, "id");
+                    data, false, 0, "id");
 
             if (seller_data == null || !seller_data.isEmpty()) {
                 // he has this item already
@@ -3941,7 +3941,7 @@ public class DatabaseHandler {
             }
 
             List<Map<String, Object>> all_ids = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    null, false, "id");
+                    null, false, 0, "id");
 
             if (all_ids == null) {
                 return false;
@@ -4037,7 +4037,7 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    null, false);
+                    null, false, 0);
 
             if (mongoData == null) {
                 return null;
@@ -4079,7 +4079,7 @@ public class DatabaseHandler {
                         new Document("seller_id", seller_id)
                                 .append("item_name", item_name)
                                 .append("item_type", item_type)
-                                .append("item_price", item_price), true, "id").get(0).get("id")));
+                                .append("item_price", item_price), true, 0, "id").get(0).get("id")));
             } catch (Exception e) {
                 return null;
             }
@@ -4169,13 +4169,13 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> request_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
-                    new Document("id", id).append("id2", id2), true);
+                    new Document("id", id).append("id2", id2), true, 0);
 
             List<Map<String, Object>> request_data2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
-                    new Document("id2", id).append("id", id2), true);
+                    new Document("id2", id).append("id", id2), true, 0);
 
             List<Map<String, Object>> request_data3 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
-                    new Document("id", id2).append("id2", id), true);
+                    new Document("id", id2).append("id2", id), true, 0);
 
             return (request_data != null || request_data2 != null || request_data3 != null) &&
                     (!request_data.isEmpty() || !request_data2.isEmpty() || !request_data.isEmpty());

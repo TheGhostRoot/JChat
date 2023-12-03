@@ -554,7 +554,7 @@ public class DatabaseManager {
     }
 
     protected List<Map<String, Object>> MongoReadCollectionNoSQL(String collectionName, Document condition,
-                                                       boolean expectOne, String... filters) {
+                                                       boolean expectOne, int limit, String... filters) {
         if (!isMongo()) {
             return null;
         }
@@ -564,7 +564,14 @@ public class DatabaseManager {
         List<String> filter_list = Arrays.stream(filters).toList();
 
         try {
-            MongoCursor<Document> cursor = mongoDatabase.getCollection(collectionName).find().iterator();
+            MongoCursor<Document> cursor = null;
+
+            if (limit > 0) {
+                cursor = mongoDatabase.getCollection(collectionName).find().limit(limit).iterator();
+
+            } else {
+                cursor = mongoDatabase.getCollection(collectionName).find().iterator();
+            }
 
             while (cursor.hasNext()) {
                 if (expectOne && !result.isEmpty() && !result.get(0).isEmpty()) {
@@ -1003,7 +1010,7 @@ public class DatabaseManager {
 
     protected List<Map<String, Object>> getCollectionMongo(String table, String collection, Document filter) {
         List<Map<String, Object>> group = MongoReadCollectionNoSQL(table,
-                filter, true, collection);
+                filter, true, 0, collection);
 
         if (group == null) {
             return null;
@@ -1030,7 +1037,7 @@ public class DatabaseManager {
             return data != null && data.get("id") != null && !data.get("id").isEmpty();
 
         } else if (mongoClient != null && mongoDatabase != null) {
-            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table, new Document("id", id), false);
+            List<Map<String, Object>> data = MongoReadCollectionNoSQL(table, new Document("id", id), false, 0);
             return data != null && !data.isEmpty() && data.get(0) != null && !data.get(0).isEmpty();
         }
         return false;
@@ -1645,7 +1652,7 @@ public class DatabaseManager {
                 .append("reaction", reaction)
                 .append("msg_id", message_id).append("post_id", post_id).append("member_id", actor_id);
 
-        List<Map<String, Object>> reaction_data = MongoReadCollectionNoSQL(table_reactions, data, false);
+        List<Map<String, Object>> reaction_data = MongoReadCollectionNoSQL(table_reactions, data, false, 0);
         try {
             if (!reaction_data.isEmpty()) {
                 reaction_data.get(0).get("reaction");
@@ -1699,7 +1706,7 @@ public class DatabaseManager {
 
         } else if (isMongo()) {
             List<Map<String, Object>> group_data = MongoReadCollectionNoSQL(table_groups,
-                    new Document("id", group_id), true, "settings");
+                    new Document("id", group_id), true, 0, "settings");
 
             if (group_data == null || group_data.isEmpty() || group_data.get(0) == null) {
                 return null;
@@ -1761,7 +1768,7 @@ public class DatabaseManager {
 
         } else if (mongoClient != null && mongoDatabase != null) {
             List<Map<String, Object>> group_data = MongoReadCollectionNoSQL(table_groups,
-                    new Document("id", group_id), true, "owner_id");
+                    new Document("id", group_id), true, 0, "owner_id");
 
             try {
                 return Long.parseLong(String.valueOf(group_data.get(0).get("owner_id"))) == user_id;
