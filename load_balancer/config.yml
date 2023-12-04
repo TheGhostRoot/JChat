@@ -3,4 +3,4 @@ servers: ["http://localhost:25500"]
 critical_ram_usage_bytes: 20_000_000_000
 critical_cpu_usage_percent: 90
 critical_disk_usage_bytes: null
-
+secret: "6T7ybiunoibUYG6F"

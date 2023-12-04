@@ -32,6 +32,8 @@ public class LoadBalancer {
 
     public static long critical_disk;
 
+    public static String secret;
+
     public static final Logger logger = LogManager.getRootLogger();
 
     public static ServerLoad serverLoad;
@@ -69,6 +71,7 @@ public class LoadBalancer {
          * critical_ram_usage_bytes: 20_000_000_000
          * critical_cpu_usage_percent: 90
          * critical_disk_usage_bytes: null
+         * secret: "6T7ybiunoibUYG6F"
          * */
 
         serverLoad = new ServerLoad();
@@ -77,6 +80,7 @@ public class LoadBalancer {
         critical_ram = readCriticalRamFromConfig();
         critical_cpu = readCriticalCpuFromConfig();
         critical_disk = readCriticalDiskFromConfig();
+        secret = readSecretFromConfig();
         rederectFilter = new RederectFilter();
 
         serverLoad.setServerLoad();
@@ -149,6 +153,22 @@ public class LoadBalancer {
 
         } catch (Exception e) {
             return 0l;
+        }
+    }
+
+    public static String readSecretFromConfig() {
+        try {
+            String secr =  (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("secret");
+
+            if (secr == null) {
+                return "345E6FT7g65fv5D6f687T75rtufgF587DFg86xruycTF74S6u5dfog78D7U5F88d6urtifudr6t7if675dtfuhi";
+            }
+
+            return secr;
+
+        } catch (Exception e) {
+            return "345E6FT7g65fv5D6f687T75rtufgF587DFg86xruycTF74S6u5dfog78D7U5F88d6urtifudr6t7if675dtfuhi";
         }
     }
 }

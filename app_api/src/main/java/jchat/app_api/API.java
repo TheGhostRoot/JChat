@@ -44,10 +44,7 @@ public class API {
     public static String REQ_HEADER_CAPTCHA = "CapctchaID";
 
 
-    public static String stats = "online";
-
-
-    
+    public static String secret;
 
     public static Random random = new Random();
 
@@ -124,6 +121,8 @@ public class API {
         leave
         friend_requests
         * */
+
+        secret = readSecretFromConfig();
 
         jwtService = new JwtService();
         criptionService = new CriptionService();
@@ -263,6 +262,7 @@ public class API {
         * encryption_key: "DR6TYFUVYBIunohg86"
         * jwt_sign_key: "46DT7FYBIUNOIMPijhuyg86f5"
         * captcha_server: "http://localhost:1111/captcha/"
+        * secret: "D6FT7GY8HUJIOhuygt"
         * */
 
         captchaController = new CaptchaController(readCapctchaServerFromConfig());
@@ -284,6 +284,13 @@ public class API {
 
     public static String get_IP(HttpServletRequest request) {
         String IP = request.getRemoteAddr();
+        String forwardedIp = request.getHeader("Forwarded_IP");
+        String forwardedSecret = request.getHeader("Forwarded_Secret");
+        if (forwardedIp != null &&
+                forwardedSecret != null &&
+                forwardedSecret.equals(secret)) {
+            IP = forwardedIp;
+        }
         return "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
     }
 
@@ -413,6 +420,22 @@ public class API {
 
         } catch (Exception e) {
             return "P918nfQtYhbUzJVbmSQfZw==";
+        }
+    }
+
+    public static String readSecretFromConfig() {
+        try {
+            String secr =  (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("secret");
+
+            if (secr == null) {
+                return "345E6FT7g65fv5D6f687T75rtufgF587DFg86xruycTF74S6u5dfog78D7U5F88d6urtifudr6t7if675dtfuhi";
+            }
+
+            return secr;
+
+        } catch (Exception e) {
+            return "345E6FT7g65fv5D6f687T75rtufgF587DFg86xruycTF74S6u5dfog78D7U5F88d6urtifudr6t7if675dtfuhi";
         }
     }
 }

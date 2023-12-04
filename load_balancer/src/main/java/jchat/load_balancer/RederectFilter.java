@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,8 +41,7 @@ public class RederectFilter extends OncePerRequestFilter  {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String IP = request.getRemoteAddr();
-        IP = "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
+        String IP = getIp(request);
 
         if (!blockedIPs.contains(IP) && isAllowed(IP)) {
             Map<String, Object> data = new HashMap<>();
@@ -57,6 +57,12 @@ public class RederectFilter extends OncePerRequestFilter  {
             response.setContentType("text/plain");
             response.setStatus(429); // 429 Too Many Requests
         }
+    }
+
+    private static String getIp(HttpServletRequest request) {
+        String IP = request.getRemoteAddr();
+        IP = "0:0:0:0:0:0:0:1".equals(IP) ? "127.0.0.1" : IP;
+        return IP;
     }
 
     private boolean isAllowed(String clientIP) {
@@ -82,71 +88,61 @@ public class RederectFilter extends OncePerRequestFilter  {
     public void sendRederect() {
         if (LoadBalancer.useServer1) {
             for (String ip : LoadBalancer.servers1) {
-                try {
-                    HttpServletRequest request = (HttpServletRequest) LoadBalancer.queue.get(0).get("req");
-                    HttpServletResponse response = (HttpServletResponse) LoadBalancer.queue.get(0).get("res");
-
-                    LoadBalancer.queue.remove(0);
-
-                    String targetUrl = ip + request.getRequestURI();
-
-                    URL url = new URL(targetUrl);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod(request.getMethod());
-
-                    copyHeaders(request, connection);
-
-                    connection.setDoOutput(true);
-                    copyBody(request.getInputStream(), connection.getOutputStream());
-
-                    int responseCode = connection.getResponseCode();
-                    response.setStatus(responseCode);
-
-                    copyHeaders(connection, response);
-                    copyBody(connection.getInputStream(), response.getOutputStream());
-
-                    connection.disconnect();
-
-                } catch (Exception e) {}
+                handleRedirection(ip);
             }
 
 
         } else {
             for (String ip : LoadBalancer.servers2) {
-                try {
-                    HttpServletRequest request = (HttpServletRequest) LoadBalancer.queue.get(0).get("req");
-                    HttpServletResponse response = (HttpServletResponse) LoadBalancer.queue.get(0).get("res");
-
-                    LoadBalancer.queue.remove(0);
-
-                    String targetUrl = ip + request.getRequestURI();
-
-                    URL url = new URL(targetUrl);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod(request.getMethod());
-
-                    copyHeaders(request, connection);
-
-                    connection.setDoOutput(true);
-                    copyBody(request.getInputStream(), connection.getOutputStream());
-
-                    int responseCode = connection.getResponseCode();
-                    response.setStatus(responseCode);
-
-                    copyHeaders(connection, response);
-                    copyBody(connection.getInputStream(), response.getOutputStream());
-
-                    connection.disconnect();
-
-                } catch (Exception e) {}
+                handleRedirection(ip);
             }
 
         }
     }
 
-    private void copyHeaders(HttpServletRequest request, HttpURLConnection connection) {
-        request.getHeaderNames().asIterator()
-                .forEachRemaining(headerName -> connection.setRequestProperty(headerName, request.getHeader(headerName)));
+    private void handleRedirection(String ip) {
+        try {
+            HttpServletRequest request = (HttpServletRequest) LoadBalancer.queue.get(0).get("req");
+            HttpServletResponse response = (HttpServletResponse) LoadBalancer.queue.get(0).get("res");
+
+            LoadBalancer.queue.remove(0);
+
+            URL url = new URL(ip + request.getRequestURI());
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod(request.getMethod());
+
+            copyHeaders(updateHeaders(request), connection);
+
+            connection.setDoOutput(true);
+            copyBody(request.getInputStream(), connection.getOutputStream());
+
+            int responseCode = connection.getResponseCode();
+            response.setStatus(responseCode);
+
+            copyHeaders(connection, response);
+            copyBody(connection.getInputStream(), response.getOutputStream());
+
+            connection.disconnect();
+
+        } catch (Exception e) {}
+    }
+
+    private Map<String, String> updateHeaders(HttpServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        for (Iterator<String> it = request.getHeaderNames().asIterator(); it.hasNext(); ) {
+            String name = it.next();
+            headers.put(name, request.getHeader(name));
+        }
+
+        headers.put("Forwarded_IP", getIp(request));
+        headers.put("Forwarded_Secret", LoadBalancer.secret);
+        return headers;
+    }
+
+    private void copyHeaders(Map<String, String> headers, HttpURLConnection connection) {
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            connection.setRequestProperty(entry.getKey(), entry.getValue());
+        }
     }
 
     private void copyHeaders(HttpURLConnection connection, HttpServletResponse response) {

@@ -20,7 +20,6 @@ public class UpdateController {
     @GetMapping
     public Map<String, Object> getAppStats(HttpServletRequest request) {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("mode", API.stats);
         stats.put("version", API.API_VERSION);
 
         return stats;
