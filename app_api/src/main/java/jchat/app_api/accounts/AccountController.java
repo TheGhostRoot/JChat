@@ -200,6 +200,8 @@ public class AccountController {
             respose_data.put("sig_key", user_data.get(API.DB_SIGN_KEY));
             // app session id
             respose_data.put("sess_id", sess_id);
+            // user id
+            respose_data.put("id", id);
 
             return API.jwtService.generateGlobalJwt(respose_data, true);
 
