@@ -33,11 +33,18 @@ public class ProfilesController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null) {
+        if (data == null || !data.containsKey("id")) {
             return null;
         }
 
-        Map<String, Object> profile_data = API.databaseHandler.getProfile(user_id);
+        long given_user_id;
+        try {
+            given_user_id = Long.parseLong(String.valueOf(data.get("id")));
+        } catch (Exception e) {
+            return null;
+        }
+
+        Map<String, Object> profile_data = API.databaseHandler.getProfile(given_user_id);
         if (profile_data == null) {
             return null;
         }

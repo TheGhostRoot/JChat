@@ -72,8 +72,15 @@ public class PostsController {
         if (API.databaseHandler.createPost(user_id, String.valueOf(data.get("message")),
                 String.valueOf(data.get("background")))) {
 
+            long post_id;
+            try {
+                post_id = Long.parseLong(String.valueOf(API.databaseHandler.getLatestPosts(1).get("id").get(0)));
+            } catch (Exception e) {
+                return null;
+            }
+
             Map<String, Object> claims = new HashMap<>();
-            claims.put("stats", true);
+            claims.put("id", post_id);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
