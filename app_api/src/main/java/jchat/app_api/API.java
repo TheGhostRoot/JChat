@@ -128,7 +128,19 @@ public class API {
         criptionService = new CriptionService();
         databaseManager = new DatabaseManager();
 
-        databaseManager.setupMongoDB();
+        String db = readDatabase();
+        if (db.equalsIgnoreCase("mongo")) {
+            databaseManager.setupMongoDB();
+
+        } else if (db.equalsIgnoreCase("mysql")) {
+            databaseManager.setupMySQL();
+
+        } else if (db.equalsIgnoreCase("postgres")) {
+            databaseManager.setupPostgresSQL();
+
+        } else {
+            System.exit(500);
+        }
 
         databaseHandler = new DatabaseHandler(databaseManager);
 
@@ -263,6 +275,7 @@ public class API {
         * jwt_sign_key: "46DT7FYBIUNOIMPijhuyg86f5"
         * captcha_server: "http://localhost:1111/captcha/"
         * secret: "D6FT7GY8HUJIOhuygt"
+        * db: "mongo"
         * */
 
         captchaController = new CaptchaController(readCapctchaServerFromConfig());
@@ -387,6 +400,23 @@ public class API {
 
         } catch (Exception e) {
             return "P918nfQtYhbUzJVbmSQfZw==";
+        }
+    }
+
+
+    public static String readDatabase() {
+        try {
+            String key = (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("db");
+
+            if (key == null) {
+                return "mongo";
+            }
+
+            return key;
+
+        } catch (Exception e) {
+            return "mongo==";
         }
     }
 

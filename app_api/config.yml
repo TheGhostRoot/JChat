@@ -1,3 +1,4 @@
 port: 25500
 captcha_server: "http://localhost:1111/captcha/"
 secret: "6T7ybiunoibUYG6F"
+db: "mongo"
