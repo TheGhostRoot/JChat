@@ -69,27 +69,27 @@ public class JwtService {
     public String generateGlobalJwt(Map<String, Object> claims, boolean encrypted) {
         return encrypted ? API.criptionService.GlobalEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)    // For python we use HS256  , but we will change it to ES512
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS512)    // For python we use HS256  , but we will change it to ES512
                 .compact()) : Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS512)
                 .compact();
 
     }
 
     public String generateJwtForDB(Map<String, Object> claims) {
         return Jwts.builder().claims(claims)
-                .signWith(GlobalSignInKey, SignatureAlgorithm.HS256)
+                .signWith(GlobalSignInKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public String generateUserJwt(Map<String, Object> claims, String SignatureKey, String EncryptionKey) {
         return EncryptionKey != null ? API.criptionService.UserEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
                 .compact(), EncryptionKey) : Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS256)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
                 .compact();
 
     }

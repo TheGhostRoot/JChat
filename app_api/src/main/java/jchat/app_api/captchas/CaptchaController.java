@@ -3,6 +3,7 @@ package jchat.app_api.captchas;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,12 +23,6 @@ import java.util.Map;
 @RestController()
 @RequestMapping(path = "/api/v"+ API.API_VERSION+"/captcha")
 public class CaptchaController {
-
-    private String captcha_server = null;
-
-    public CaptchaController(String given_captcha_server) {
-        captcha_server = given_captcha_server;
-    }
 
     @GetMapping()
     public String getCaptcha(HttpServletRequest request) {
@@ -77,10 +72,10 @@ public class CaptchaController {
     }
 
     private String getCaptchaImage(String code) {
-        if (captcha_server == null) { return null; }
+        if (API.captcha_server == null) { return null; }
 
         try {
-            URL url = new URL(captcha_server + code);
+            URL url = new URL(API.captcha_server + code);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setDoOutput(true);
