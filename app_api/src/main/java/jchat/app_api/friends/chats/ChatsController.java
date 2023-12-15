@@ -102,7 +102,6 @@ public class ChatsController {
             }
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("stats", true);
             claims.put("message_id", message_id);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
