@@ -30,7 +30,23 @@ public class NotificationController {
             return null;
         }
 
-        Map<String, List<Object>> all_notifications = API.databaseHandler.getNotifications(user_id);
+        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
+        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
+
+        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
+                user_sign_key);
+        if (data == null) {
+            return null;
+        }
+
+        int amount;
+        try {
+            amount = Integer.parseInt(String.valueOf(data.get("amount")));
+        } catch (Exception e) {
+            return  null;
+        }
+
+        Map<String, List<Object>> all_notifications = API.databaseHandler.getNotifications(user_id, amount);
         if (all_notifications == null) {
             return null;
         }
@@ -40,7 +56,6 @@ public class NotificationController {
         Map<String, Object> claims = new HashMap<>();
         claims.put("notifi", all_notifications);
 
-        return API.jwtService.generateUserJwt(claims, String.valueOf(user_data.get(API.DB_SIGN_KEY)),
-                String.valueOf(user_data.get(API.DB_ENCRYP_KEY)));
+        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 }
