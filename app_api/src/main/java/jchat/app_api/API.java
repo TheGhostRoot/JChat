@@ -33,9 +33,8 @@ public class API {
 
     public static DatabaseHandler databaseHandler;
 
-    public static CaptchaController captchaController;
-
     public static String captcha_server;
+    public static int captcha_time;
 
 
 
@@ -278,9 +277,11 @@ public class API {
         * captcha_server: "http://localhost:1111/captcha/"
         * secret: "D6FT7GY8HUJIOhuygt"
         * db: "mongo"
+        * captcha_time: 20
         * */
 
         captcha_server = readCapctchaServerFromConfig();
+        captcha_time = readCaptchaTimeConfig();
 
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
@@ -389,6 +390,16 @@ public class API {
         }
     }
 
+    public static int readCaptchaTimeConfig() {
+        try {
+            return (int) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("captcha_time");
+
+        } catch (Exception e) {
+            return 20;
+        }
+    }
+
     public static String readGlobalEncryptionKeyFromConfig() {
         try {
             String key = (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
@@ -428,13 +439,13 @@ public class API {
                     .get("jwt_sign_key");
 
             if (key == null) {
-                return "sEMHHQ/R3LsxNeb3+Lr/xHHQAI83VvXk+YEsTqiNhsfNV7ihj+FcFvQW3pvieZtPKaMQw60vADIPEP0bM16WtycxtWTH0bevIXwWk/Kw+rCnI/mrOGKjSy9wFymceHCMwk03GNSWqBwzOLMrVCXIbFTZ8wNj1nQHHvrEU5Ihx3M=";
+                return "sE1MHHQ/R3LsxNeb3+Lr/xHHQAI83VvXk+YEsTqiNhsfNV7ihj+FcFvQW3pvieZtPKaMQw60vADIPEP0bM16WtycxtWTH0bevIXwWk/Kw+rCnI/mrOGKjSy9wFymceHCMwk03GNSWqBwzOLMrVCXIbFTZ8wNj1nQHHvrEU5Ihx3M=";
             }
 
             return key;
 
         } catch (Exception e) {
-            return "sEMHHQ/R3LsxNeb3+Lr/xHHQAI83VvXk+YEsTqiNhsfNV7ihj+FcFvQW3pvieZtPKaMQw60vADIPEP0bM16WtycxtWTH0bevIXwWk/Kw+rCnI/mrOGKjSy9wFymceHCMwk03GNSWqBwzOLMrVCXIbFTZ8wNj1nQHHvrEU5Ihx3M=";
+            return "sE1MHHQ/R3LsxNeb3+Lr/xHHQAI83VvXk+YEsTqiNhsfNV7ihj+FcFvQW3pvieZtPKaMQw60vADIPEP0bM16WtycxtWTH0bevIXwWk/Kw+rCnI/mrOGKjSy9wFymceHCMwk03GNSWqBwzOLMrVCXIbFTZ8wNj1nQHHvrEU5Ihx3M=";
         }
     }
 

@@ -9,7 +9,7 @@ import jchat.app_api.API;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.util.Base64;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,13 +19,10 @@ import java.util.Map;
 public class JwtService {
     private final String GlobalSECRET_KEY = API.readGlobalSignFromConfig();
 
-    private final SecretKey GlobalSignInKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(GlobalSECRET_KEY));
+    private final SecretKey GlobalSignInKey = Keys.hmacShaKeyFor(GlobalSECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
-    public JwtService() {
-        API.logger.info("Global Sign Key: "+Base64.getEncoder().encodeToString(GlobalSignInKey.getEncoded()));
-    }
 
-        public Map<String, Object> getData(String jwt, String EncryptionKey, String SignKey) {
+    public Map<String, Object> getData(String jwt, String EncryptionKey, String SignKey) {
         Claims all = EncryptionKey == null && SignKey == null ? getGlobalClaims(API.criptionService.GlobalDecrypt(jwt)) :
                 getUserClaims(API.criptionService.UserDecrypt(jwt, EncryptionKey), SignKey);
         return null != all ? new HashMap<>(all) : null;

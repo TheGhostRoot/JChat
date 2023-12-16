@@ -1,6 +1,7 @@
 from flask import Flask, request, send_file, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import random
+import base64
 import string
 import io
 
@@ -55,9 +56,7 @@ def generate_captcha(captcha_code):
     img_byte_array.seek(0)
 
     # Encode the image to base64
-    base64_encoded_image = base64.b64encode(img_byte_array.read()).decode('utf-8')
-
-    return jsonify({"base64_image": base64_encoded_image})
+    return base64.b64encode(img_byte_array.read()).decode('utf-8')
 
     #return send_file(img_byte_array, mimetype='image/png')
 

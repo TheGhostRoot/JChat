@@ -101,15 +101,17 @@ public class RequestFilter extends OncePerRequestFilter {
                 return;
             }
 
-            try {
-                String decr = API.criptionService.GlobalDecrypt(request.getHeader(API.REQ_HEADER_CAPTCHA));
-                if (decr == null) {
-                    throw new Exception();
+            if (request.getHeader(API.REQ_HEADER_CAPTCHA) != null) {
+                try {
+                    String decr = API.criptionService.GlobalDecrypt(request.getHeader(API.REQ_HEADER_CAPTCHA));
+                    if (decr == null) {
+                        throw new Exception();
+                    }
+                    Long.parseLong(decr);
+                } catch (Exception e) {
+                    response.sendError(403);
+                    return;
                 }
-                Long.parseLong(decr);
-            } catch (Exception e) {
-                response.sendError(403);
-                return;
             }
 
             filterChain.doFilter(request, response);
