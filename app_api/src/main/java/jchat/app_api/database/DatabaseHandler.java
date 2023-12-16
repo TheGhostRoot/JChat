@@ -1295,7 +1295,7 @@ public class DatabaseHandler {
 
             return databaseManager.addDataSQL(DatabaseManager.table_captchas,
                     "id, answer, time, last_edit_time",
-                    "?, ?, 10, ?", values) ? id : null;
+                    "?, ?, "+ API.captcha_time +", ?", values) ? id : null;
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_captchas,
@@ -1359,7 +1359,7 @@ public class DatabaseHandler {
                 return false;
             }
 
-            if ((time <= 0) || (String.valueOf(data.get("answer")).equals(given_answer))) {
+            if ((time > 0) && (String.valueOf(data.get("answer")).equals(given_answer))) {
                 // expired
                 //databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_captchas, captcha_id);
                 //return false;

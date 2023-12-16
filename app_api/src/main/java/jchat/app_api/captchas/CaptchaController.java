@@ -3,7 +3,6 @@ package jchat.app_api.captchas;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

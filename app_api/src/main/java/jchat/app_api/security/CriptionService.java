@@ -48,7 +48,9 @@ public class CriptionService {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, GlobalEncription_Key);
             return Base64.getEncoder().encodeToString(cipher.doFinal(input.getBytes()));
-        } catch (Exception e) { return null; }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String UserEncrypt(String input, String key) {
