@@ -234,7 +234,7 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                        new Document("email", email).append("password", password), true, 0, "id")));
+                        new Document("email", email).append("password", password), true, 0, "id").get(0).get("id")));
             } catch (Exception e) {
                 return null;
             }
