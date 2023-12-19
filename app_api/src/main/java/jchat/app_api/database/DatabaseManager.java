@@ -185,6 +185,8 @@ public class DatabaseManager {
             profiles_table.add("coins INT NOT NULL, ");
             profiles_table.add("badges TEXT NOT NULL, ");
             profiles_table.add("animations TEXT, ");
+            profiles_table.add("bio TEXT NOT NULL, ");
+            profiles_table.add("stats TEXT NOT NULL, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
             List<String> shop_table = new ArrayList<>();

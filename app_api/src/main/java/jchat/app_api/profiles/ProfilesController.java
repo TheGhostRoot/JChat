@@ -137,6 +137,24 @@ public class ProfilesController {
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
+            case "bio" -> {
+                if (!data.containsKey("bio")) {
+                    return null;
+                }
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("stats", API.databaseHandler.updateProfileBio(user_id, String.valueOf(data.get("bio"))));
+
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
+            case "stats" -> {
+                if (!data.containsKey("stats")) {
+                    return null;
+                }
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("stats", API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats"))));
+
+                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+            }
             default -> {
                 return null;
             }
