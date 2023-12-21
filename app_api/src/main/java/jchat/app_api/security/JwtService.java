@@ -23,8 +23,7 @@ public class JwtService {
 
 
     public Map<String, Object> getData(String jwt, String EncryptionKey, String SignKey) {
-        Claims all = EncryptionKey == null && SignKey == null ? getGlobalClaims(API.criptionService.GlobalDecrypt(jwt)) :
-                getUserClaims(API.criptionService.UserDecrypt(jwt, EncryptionKey), SignKey);
+        Claims all = EncryptionKey == null && SignKey == null ? getGlobalClaims(API.criptionService.GlobalDecrypt(jwt)) : getUserClaims(API.criptionService.UserDecrypt(jwt, EncryptionKey), SignKey);
         return null != all ? new HashMap<>(all) : null;
     }
 
@@ -53,7 +52,7 @@ public class JwtService {
         Claims claims;
         try {
             claims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignKey)))
+                    .verifyWith(Keys.hmacShaKeyFor(SignKey.getBytes(StandardCharsets.UTF_8)))
                     .build()
                     .parseSignedClaims(jwt)
                     .getPayload();
@@ -83,10 +82,10 @@ public class JwtService {
     public String generateUserJwt(Map<String, Object> claims, String SignatureKey, String EncryptionKey) {
         return EncryptionKey != null ? API.criptionService.UserEncrypt(Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
+                .signWith(Keys.hmacShaKeyFor(SignatureKey.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS512)
                 .compact(), EncryptionKey) : Jwts.builder().claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SignatureKey)), SignatureAlgorithm.HS512)
+                .signWith(Keys.hmacShaKeyFor(SignatureKey.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS512)
                 .compact();
 
     }

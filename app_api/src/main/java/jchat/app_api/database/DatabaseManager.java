@@ -29,7 +29,6 @@ public class DatabaseManager {
     protected static final String table_posts = "posts";
     protected static final String table_post_comments = "post_comments";
     protected static final String table_profiles = "profiles";
-    protected static final String table_shop = "shop";
     protected static final String table_friend_requests = "friend_requests";
 
     protected static final String table_notifications = "notifi";
@@ -181,21 +180,11 @@ public class DatabaseManager {
             profiles_table.add("id BIGINT NOT NULL, ");
             profiles_table.add("pfp TEXT NOT NULL, ");
             profiles_table.add("banner TEXT NOT NULL, ");
-            profiles_table.add("pets TEXT, ");
-            profiles_table.add("coins INT NOT NULL, ");
             profiles_table.add("badges TEXT NOT NULL, ");
             profiles_table.add("animations TEXT, ");
-            profiles_table.add("bio TEXT NOT NULL, ");
+            profiles_table.add("about_me TEXT NOT NULL, ");
             profiles_table.add("stats TEXT NOT NULL, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-            List<String> shop_table = new ArrayList<>();
-            shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
-            shop_table.add("item_name TEXT NOT NULL, ");
-            shop_table.add("item_type TEXT NOT NULL, ");
-            shop_table.add("item_price INT NOT NULL, ");
-            shop_table.add("seller_id BIGINT NOT NULL, ");
-            shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
             List<String> friends_table = new ArrayList<>();
             friends_table.add("id BIGINT NOT NULL, ");
@@ -211,7 +200,6 @@ public class DatabaseManager {
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_notifications);
             deleteTableSQL(table_friend_requests);
-            deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
             deleteTableSQL(table_group_members);
@@ -239,7 +227,6 @@ public class DatabaseManager {
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_shop, shop_table);
             createTableSQL(table_friend_requests, friends_table);
 
         } catch (Exception e) {
@@ -367,19 +354,11 @@ public class DatabaseManager {
             profiles_table.add("id BIGINT NOT NULL, ");
             profiles_table.add("pfp TEXT NOT NULL, ");
             profiles_table.add("banner TEXT NOT NULL, ");
-            profiles_table.add("pets TEXT NULL, ");
-            profiles_table.add("coins INT NOT NULL, ");
             profiles_table.add("badges TEXT NOT NULL, ");
             profiles_table.add("animations TEXT NULL, ");
+            profiles_table.add("about_me TEXT NOT NULL, ");
+            profiles_table.add("stats TEXT NOT NULL, ");
             profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-            List<String> shop_table = new ArrayList<>();
-            shop_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL, ");
-            shop_table.add("item_name TEXT NOT NULL, ");
-            shop_table.add("item_type TEXT NOT NULL, ");
-            shop_table.add("item_price INT NOT NULL, ");
-            shop_table.add("seller_id BIGINT NOT NULL, ");
-            shop_table.add("sell_at TIMESTAMP(6) NOT NULL");
 
             List<String> friends_table = new ArrayList<>();
             friends_table.add("id BIGINT NOT NULL, ");
@@ -395,7 +374,6 @@ public class DatabaseManager {
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_notifications);
             deleteTableSQL(table_friend_requests);
-            deleteTableSQL(table_shop);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
             deleteTableSQL(table_group_members);
@@ -423,7 +401,6 @@ public class DatabaseManager {
             createTableSQL(table_group_channels, group_channels_tabls);
             createTableSQL(table_group_roles, group_roles_tabls);
             createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_shop, shop_table);
             createTableSQL(table_friend_requests, friends_table);
 
         } catch (SQLException e) {
@@ -443,7 +420,6 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_reactions);
             MongoDeleteCollectionNoSQL(table_posts);
             MongoDeleteCollectionNoSQL(table_groups);
-            MongoDeleteCollectionNoSQL(table_shop);
             MongoDeleteCollectionNoSQL(table_friend_requests);
             MongoDeleteCollectionNoSQL(table_notifications);
 
@@ -455,7 +431,6 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_reactions);
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
-            MongoCreateCollectionNoSQL(table_shop);
             MongoCreateCollectionNoSQL(table_friend_requests);
             MongoCreateCollectionNoSQL(table_notifications);
 

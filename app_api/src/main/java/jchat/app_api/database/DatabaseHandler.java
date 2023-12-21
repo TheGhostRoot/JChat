@@ -108,7 +108,7 @@ public class DatabaseHandler {
             account_details.add(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS));
             account_details.add(settings);
 
-            if (!databaseManager.addDataSQL(databaseManager.table_accounts,
+            if (!databaseManager.addDataSQL(DatabaseManager.table_accounts,
                     "name, email, password, encryption_key, sign_key, session_id, session_expire, last_edit_time, created_at, friends,  starts_sub, ends_sub, bookmarks, settings",
                     "?, ?, ?, ?, ?, NULL, NULL, NULL, ?, '', NULL, NULL, '', ?", account_details)) {
                 return null;
@@ -138,8 +138,8 @@ public class DatabaseHandler {
             }
             profile_details.add(id);
 
-            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, pets, coins, badges, animations",
-                    "?, 'Default Pic', 'Default Banner', NULL, 0, 'No badges', NULL", profile_details)) {
+            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, badges, animations",
+                    "?, '', '', '', NULL", profile_details)) {
 
                 databaseManager.deleteDataSQL(DatabaseManager.table_accounts, "id = ?", profile_details);
                 return null;
@@ -180,9 +180,10 @@ public class DatabaseHandler {
 
             if (!databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_profiles,
                     new Document("id", account_ID)
-                    .append("pfp", "Default Pic").append("banner", "Default Banner")
-                    .append("pets", null).append("coins", 0).append("badges", "No badges")
-                    .append("animations", null), null)) {
+                    .append("pfp", "").append("banner", "")
+                    .append("badges", "")
+                    .append("animations", null)
+                            .append("about_me", "").append("stats", "0"), null)) {
 
 
                 databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_accounts,
@@ -682,7 +683,7 @@ public class DatabaseHandler {
                 toContain.add(String.valueOf(key));
             }
 
-            return API.generateKey(toContain, 50);
+            return API.generateKey(toContain, 24);
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_keys = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
@@ -697,7 +698,7 @@ public class DatabaseHandler {
                 toContain.add(String.valueOf(key));
             }
 
-            return API.generateKey(toContain, 50);
+            return API.generateKey(toContain, 24);
 
         }
         return null;
@@ -1935,53 +1936,6 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean updateProfilePets(long id, String given_pets) {
-        // can be jwt token
-        if (databaseManager.isSQL()) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_pets);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_profiles,
-                    "pets = ?", profile_data, "id = ?", condition_data);
-
-        } else if (databaseManager.isMongo()) {
-
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_profiles,
-                    new Document("id", id),
-                    new Document("pets", given_pets));
-
-        }
-        return false;
-    }
-
-    public boolean updateProfileCoins(long id, int given_coins) {
-        if (databaseManager.isSQL()) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_coins);
-
-            addNotification(id, Collections.singletonMap("new_coins", given_coins), "new_coins");
-
-            return databaseManager.editDataSQL(DatabaseManager.table_profiles,
-                    "coins = ?", profile_data, "id = ?", condition_data);
-
-        } else if (databaseManager.isMongo()) {
-
-            addNotification(id, Collections.singletonMap("new_badges", given_coins), "new_coins");
-
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_profiles,
-                    new Document("id", id),
-                    new Document("coins", given_coins));
-
-        }
-        return false;
-    }
-
     public boolean updateProfileBadges(long id, String given_badges) {
         // can be jwt token
         if (databaseManager.isSQL()) {
@@ -2078,7 +2032,6 @@ public class DatabaseHandler {
     }
 
     public Map<String, Object> getProfile(long id) {
-        Map<String, Object> result = new HashMap<>();
         if (databaseManager.isSQL()) {
             List<Object> condition = new ArrayList<>();
             condition.add(id);
@@ -2089,6 +2042,8 @@ public class DatabaseHandler {
                 return null;
             }
 
+            Map<String, Object> result = new HashMap<>();
+
             for (Map.Entry<String, List<Object>> entry : map.entrySet()) {
                 result.put(entry.getKey(), entry.getValue().get(0));
             }
@@ -2096,15 +2051,12 @@ public class DatabaseHandler {
             return result;
 
         } else if (databaseManager.isMongo()) {
-            List<Map<String, Object>> prof = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_profiles,
-                    new Document("id", id), true, 0);
-
-            for (Map.Entry<String, List<Object>> entry : databaseManager.transformMongoToSQL(0, prof, new HashMap<>())
-                    .entrySet()) {
-                result.put(entry.getKey(), entry.getValue().get(0));
+            try {
+                return databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_profiles,
+                        new Document("id", id), true, 0).get(0);
+            } catch (Exception e) {
+                return  null;
             }
-
-            return result;
         }
         return null;
     }
@@ -3945,195 +3897,6 @@ public class DatabaseHandler {
         return false;
 
     }
-
-
-
-    public boolean addItemToShop(String item_type, String item_name, int item_price, long seller_id) {
-        if (seller_id != 0 && !databaseManager.checkIDExists(seller_id, DatabaseManager.table_accounts)) {
-            return false;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        if (databaseManager.isSQL()) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(item_type);
-            condition_data.add(seller_id);
-
-            Map<String, List<Object>> seller_data = databaseManager.getDataSQL(DatabaseManager.table_shop,
-                    "id", "item_type = ? AND seller_id = ?", condition_data,
-                    null, "", 0);
-
-            if (seller_data == null || !seller_data.get("id").isEmpty()) {
-                // he has this item already
-                return false;
-            }
-
-            condition_data.add(item_name);
-            condition_data.add(item_price);
-            condition_data.add(now);
-
-            return databaseManager.addDataSQL(DatabaseManager.table_shop,
-                    "item_type, seller_id, item_name, item_price, sell_at", "?, ?, ?, ?, ?", condition_data);
-
-
-        } else if (databaseManager.isMongo()) {
-            Document data = new Document("item_type", item_type).append("seller_id", seller_id);
-            List<Map<String, Object>> seller_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    data, false, 0, "id");
-
-            if (seller_data == null || !seller_data.isEmpty()) {
-                // he has this item already
-                return false;
-            }
-
-            List<Map<String, Object>> all_ids = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    null, false, 0, "id");
-
-            if (all_ids == null) {
-                return false;
-            }
-
-            data.append("id", databaseManager.MongoGenerateID(all_ids, "id"));
-            data.append("item_name", item_name);
-            data.append("item_price", item_price);
-            data.append("sell_at", now);
-
-            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_shop, data, null);
-        }
-        return false;
-    }
-
-    public boolean removeItemToShop(long id) {
-        if (databaseManager.isSQL()) {
-            List<Object> data = new ArrayList<>();
-            data.add(id);
-
-            return databaseManager.deleteDataSQL(DatabaseManager.table_shop, "id = ?", data);
-
-        } else if (databaseManager.isMongo()) {
-            return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_shop,
-                    new Document("id", id));
-
-        }
-        return false;
-    }
-
-    public boolean updateItemNameInShop(long id, String item_name) {
-        if (databaseManager.isSQL()) {
-            List<Object> condition = new ArrayList<>();
-            condition.add(id);
-
-            List<Object> data = new ArrayList<>();
-            data.add(item_name);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_name = ?", data,
-                    "id = ?", condition);
-
-        } else if (databaseManager.isMongo()) {
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
-                    new Document("id", id), new Document("item_name", item_name));
-
-        }
-        return false;
-    }
-
-    public boolean updateItemPriceInShop(long id, long item_price) {
-        if (databaseManager.isSQL()) {
-            List<Object> condition = new ArrayList<>();
-            condition.add(id);
-
-            List<Object> data = new ArrayList<>();
-            data.add(item_price);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_price = ?", data,
-                    "id = ?", condition);
-
-        } else if (databaseManager.isMongo()) {
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
-                    new Document("id", id), new Document("item_price", item_price));
-
-        }
-        return false;
-    }
-
-    public boolean updateItemTypeInShop(long id, String item_type) {
-        if (databaseManager.isSQL()) {
-            List<Object> condition = new ArrayList<>();
-            condition.add(id);
-
-            List<Object> data = new ArrayList<>();
-            data.add(item_type);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_shop, "item_type = ?", data,
-                    "id = ?", condition);
-
-        } else if (databaseManager.isMongo()) {
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_shop,
-                    new Document("id", id), new Document("item_type", item_type));
-
-        }
-        return false;
-    }
-
-    public Map<String, List<Object>> getItemsFromShop(int amount) {
-        if (databaseManager.isSQL()) {
-
-            return databaseManager.getDataSQL(DatabaseManager.table_shop, "*", "", null,
-                    null, "sell_at DESC", amount);
-
-        } else if (databaseManager.isMongo()) {
-            List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                    null, false, 0);
-
-            if (mongoData == null) {
-                return null;
-            }
-
-            Map<String, List<Object>> result = new HashMap<>();
-            result.put("id", new ArrayList<>());
-            result.put("item_name", new ArrayList<>());
-            result.put("item_type", new ArrayList<>());
-            result.put("item_price", new ArrayList<>());
-            result.put("seller_id", new ArrayList<>());
-            result.put("sell_at", new ArrayList<>());
-
-            return databaseManager.transformMongoToSQL(amount, mongoData, result);
-
-        }
-        return null;
-    }
-
-    public Long getItemFromShopByDetails(long seller_id, String item_name, String item_type, long item_price) {
-        if (databaseManager.isSQL()) {
-            List<Object> condition = new ArrayList<>();
-            condition.add(seller_id);
-            condition.add(item_name);
-            condition.add(item_type);
-            condition.add(item_price);
-
-            try {
-                return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_shop, "id",
-                        "seller_id = ? AND item_name = ? AND item_type = ? AND item_price = ?",
-                        condition,null, "", 0).get("id").get(0)));
-            } catch (Exception e) {
-                return null;
-            }
-
-        } else if (databaseManager.isMongo()) {
-            try {
-                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_shop,
-                        new Document("seller_id", seller_id)
-                                .append("item_name", item_name)
-                                .append("item_type", item_type)
-                                .append("item_price", item_price), true, 0, "id").get(0).get("id")));
-            } catch (Exception e) {
-                return null;
-            }
-
-        }
-        return null;
-    }
-
 
     public boolean createFriendRequest(long id, long id2) {
         if (checkFriendRequest(id, id2)) {

@@ -95,30 +95,6 @@ public class ProfilesController {
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
-            case "pets" -> {
-                if (!data.containsKey("pets")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfilePets(user_id, String.valueOf(data.get("pets"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "coins" -> {
-                if (!data.containsKey("coins")) {
-                    return null;
-                }
-                int coins;
-                try {
-                    coins = Integer.parseInt(String.valueOf(data.get("coins")));
-                } catch (Exception e) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileCoins(user_id, coins));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
             case "badges" -> {
                 if (!data.containsKey("badges")) {
                     return null;

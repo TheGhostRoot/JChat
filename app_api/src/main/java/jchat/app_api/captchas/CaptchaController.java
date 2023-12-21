@@ -25,7 +25,7 @@ public class CaptchaController {
 
     @GetMapping()
     public String getCaptcha(HttpServletRequest request) {
-        String captcha_code = API.generateKey(7);
+        String captcha_code = API.generateKey(4);
         Long captcha_id = API.databaseHandler.startCaptcha(captcha_code);
         if (captcha_id == null) {
             return null;

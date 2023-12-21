@@ -5,12 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
