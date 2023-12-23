@@ -71,70 +71,40 @@ public class ProfilesController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("modif")) {
+        if (data == null) {
             return null;
         }
 
-        switch (String.valueOf(data.get("modif"))) {
-            case "pfp" -> {
-                // update Pfp
-                if (!data.containsKey("pfp")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfilePfp(user_id, String.valueOf(data.get("pfp"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "banner" -> {
-                if (!data.containsKey("banner")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileBanner(user_id, String.valueOf(data.get("banner"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "badges" -> {
-                if (!data.containsKey("badges")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileBadges(user_id, String.valueOf(data.get("badges"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "animations" -> {
-                if (!data.containsKey("animations")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileAnimations(user_id, String.valueOf(data.get("animations"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "bio" -> {
-                if (!data.containsKey("bio")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileBio(user_id, String.valueOf(data.get("bio"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            case "stats" -> {
-                if (!data.containsKey("stats")) {
-                    return null;
-                }
-                Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats"))));
-
-                return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
-            }
-            default -> {
-                return null;
-            }
+        Map<String, Object> claims = new HashMap<>();
+        if (data.containsKey("pfp")) {
+            claims.put("stats", API.databaseHandler.updateProfilePfp(user_id, String.valueOf(data.get("pfp"))));
         }
+
+        if (data.containsKey("banner")) {
+            claims.put("stats", API.databaseHandler.updateProfileBanner(user_id, String.valueOf(data.get("banner"))));
+        }
+
+        if (data.containsKey("badges")) {
+            claims.put("stats", API.databaseHandler.updateProfileBadges(user_id, String.valueOf(data.get("badges"))));
+        }
+
+        if (data.containsKey("name")) {
+            claims.put("stats", API.databaseHandler.updateUserName(user_id, String.valueOf(data.get("name"))));
+        }
+
+        if (data.containsKey("animations")) {
+            claims.put("stats", API.databaseHandler.updateProfileAnimations(user_id, String.valueOf(data.get("animations"))));
+        }
+
+        if (data.containsKey("about_me")) {
+            claims.put("stats", API.databaseHandler.updateProfileAboutMe(user_id, String.valueOf(data.get("about_me"))));
+        }
+
+        if (data.containsKey("stats")) {
+            claims.put("stats", API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats"))));
+        }
+
+        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 
 }

@@ -1985,24 +1985,24 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean updateProfileBio(long id, String given_bio) {
+    public boolean updateProfileAboutMe(long id, String given_about_me) {
         // can be jwt token
         if (databaseManager.isSQL()) {
             List<Object> condition_data = new ArrayList<>();
             condition_data.add(id);
 
             List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_bio);
+            profile_data.add(given_about_me);
 
             return databaseManager.editDataSQL(DatabaseManager.table_profiles,
-                    "bio = ?", profile_data,
+                    "about_me = ?", profile_data,
                     "id = ?", condition_data);
 
         } else if (databaseManager.isMongo()) {
 
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_profiles,
                     new Document("id", id),
-                    new Document("bio", given_bio));
+                    new Document("about_me", given_about_me));
 
         }
         return false;
