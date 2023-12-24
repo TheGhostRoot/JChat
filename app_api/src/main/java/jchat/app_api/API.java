@@ -294,7 +294,11 @@ public class API {
         }, "Shutdown-thread"));
 
         SpringApplication app = new SpringApplication(API.class);
-        app.setDefaultProperties(Collections.singletonMap("server.port", readPortFromConfig()));
+        Map<String, Object> config = new HashMap<>();
+        config.put("server.port", readPortFromConfig());
+        config.put("server.max-http-header-size", "100MB");
+
+        app.setDefaultProperties(config);
         app.run(args);
     }
 
