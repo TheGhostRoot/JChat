@@ -27,11 +27,11 @@ public class FileSystemHandler {
                     names.add(file.getName().split("\\.")[0]);
                 }
             }
-            int g = 1;
-            while (names.contains(String.valueOf(g)) && g == 0) {
-                g = API.random.nextInt();
+            String g = "";
+            while (names.contains(g) || g.isBlank()) {
+                g = API.generateKey(50);
             }
-            return String.valueOf(g);
+            return g;
         }
         return null;
     }
@@ -84,5 +84,7 @@ public class FileSystemHandler {
 
         return false;
     }
+
+
 
 }

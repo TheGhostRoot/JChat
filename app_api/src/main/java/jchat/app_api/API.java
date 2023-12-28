@@ -513,15 +513,16 @@ public class API {
     }
 
 
-    public static boolean uploadAttachments(String server, String authHeader) {
+    public static boolean uploadAttachments(String server, String authHeader, String method) {
         if (upload_server == null || upload_server.isEmpty()) { return false; }
 
         try {
             URL url = new URL(server);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
+            con.setRequestMethod(method);
             con.setDoOutput(true);
             con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
+            // global encrypted
 
             if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 return false;
@@ -536,7 +537,7 @@ public class API {
             }
 
             in.close();
-            return response.toString() == "true";
+            return response.toString().equals("true");
 
         } catch (Exception e) {
             return false;

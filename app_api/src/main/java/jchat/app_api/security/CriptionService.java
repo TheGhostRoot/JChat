@@ -21,11 +21,8 @@ public class CriptionService {
         API.logger.info("Global Encryption Key: "+Base64.getEncoder().encodeToString(GlobalEncription_Key.getEncoded()));
     }
 
-    public String generateKey() {
-        return Base64.getEncoder().encodeToString(generateSecretKey().getEncoded());
-    }
 
-    public SecretKey getKeyFromString(String key) {
+    private SecretKey getKeyFromString(String key) {
         byte[] decodedKey = Base64.getDecoder().decode(key);
         try {
             return new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");

@@ -3,10 +3,7 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -17,23 +14,12 @@ public class ProfileAvatar {
 
     @GetMapping
     public String getProfileAvatar(HttpServletRequest request) {
-        // only session
-        Long user_id = API.getUserID_SessionOnly(request);
-        if (user_id == null) {
+        String auth = request.getHeader(API.REQ_HEADER_AUTH);
+        if (auth == null) {
             return null;
         }
-
-        Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
-        if (user_data == null) {
-            return null;
-        }
-
-        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
-        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
-                user_sign_key);
-        if (data == null || !data.containsKey("id")) {
+        Map<String, Object> data = API.jwtService.getData(auth, null, null);
+        if (data == null || !data.containsKey("id") || !data.containsKey("name")) {
             return null;
         }
 
@@ -44,23 +30,43 @@ public class ProfileAvatar {
             return null;
         }
 
+        Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
+        if (profile == null) {
+            return null;
+        }
 
-
-        String pfp = (String) profile_data.get("pfp");
-        if (pfp.startsWith("video;")) {
-            return "<html><head><head><body> <source type=\"video/mp4\" src=\""+pfp.substring(6, pfp.length())+"\">  <body><html>";
+        if (String.valueOf(profile.get("pfp")).startsWith("video;")) {
+            return "<html><head><head><body> <source type=\"video/mp4\" src=\"attachments/" + given_user_id + "/" + data.get("name")  +"\">  <body><html>";
 
         } else {
-            return "<html><head><head><body> <img src=\"data:image/png;base64, "+pfp+"\">  <body><html>";
+            return "<html><head><head><body> <img src=\"attachments/"+ given_user_id +"/"+data.get("name")+"\">  <body><html>";
         }
     }
 
 
-    @PostMapping
+    @PatchMapping
     public String uploadProfileAvatar(HttpServletRequest request) {
-        // upload the avatar in file system
+        String auth = request.getHeader(API.REQ_HEADER_AUTH);
+        if (auth == null) {
+            return "false";
+        }
+        Map<String, Object> data = API.jwtService.getData(auth, null, null);
+        if (data == null || !data.containsKey("id") || !data.containsKey("pfp") || !data.containsKey("name")) {
+            return "false";
+        }
+
+        long given_user_id;
+        try {
+            given_user_id = Long.parseLong(String.valueOf(data.get("id")));
+        } catch (Exception e) {
+            return "false";
+        }
+
+        String pfp = String.valueOf(data.get("pfp"));
+        String name = String.valueOf(data.get("name"));
+        if (!name.equals("")) {
+            API.fileSystemHandler.deleteFile(given_user_id, name);
+        }
+        return API.fileSystemHandler.saveFile(given_user_id, pfp.startsWith("video;"), pfp.substring(6, pfp.length())) ? "true" : "false";
     }
-
-
-
 }
