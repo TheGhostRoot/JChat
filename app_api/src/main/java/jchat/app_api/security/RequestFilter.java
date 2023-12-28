@@ -45,11 +45,12 @@ public class RequestFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (request.getRequestURI().endsWith("/update")) {
+        String uri = request.getRequestURI();
+
+        if (uri.endsWith("/update") || uri.endsWith("/profile/avatar") || uri.endsWith("/profile/banner")) {
             filterChain.doFilter(request, response);
 
         } else {
-
             String authHeader = request.getHeader(API.REQ_HEADER_AUTH);
             if (authHeader == null) {
                 response.sendError(403);

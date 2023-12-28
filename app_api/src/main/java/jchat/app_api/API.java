@@ -13,7 +13,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +37,10 @@ public class API {
 
     public static DatabaseHandler databaseHandler;
 
-    public static String captcha_server;
+    public static FileSystemHandler fileSystemHandler;
+
+    public static List<String> captcha_server;
+    public static List<String> upload_server;
     public static int captcha_time;
 
 
@@ -128,6 +135,7 @@ public class API {
         jwtService = new JwtService();
         criptionService = new CriptionService();
         databaseManager = new DatabaseManager();
+        fileSystemHandler = new FileSystemHandler();
 
         String db = readDatabase();
         if (db.equalsIgnoreCase("mongo")) {
@@ -274,13 +282,15 @@ public class API {
         * port: 123141
         * encryption_key: "DR6TYFUVYBIunohg86"
         * jwt_sign_key: "46DT7FYBIUNOIMPijhuyg86f5"
-        * captcha_server: "http://localhost:1111/captcha/"
+        * captcha_server: ["http://localhost:1111/captcha/"]
         * secret: "D6FT7GY8HUJIOhuygt"
         * db: "mongo"
         * captcha_time: 20
+        * upload_servers: ["http://195.168.0.215/api/v1/profile"]
         * */
 
-        captcha_server = readCapctchaServerFromConfig();
+        captcha_server = readCaptchaServersFromConfig();
+        upload_server = readUploadServersFromConfig();
         captcha_time = readCaptchaTimeConfig();
 
 
@@ -454,19 +464,19 @@ public class API {
     }
 
 
-    public static String readCapctchaServerFromConfig() {
+    public static List<String> readCaptchaServersFromConfig() {
         try {
-            String key = (String) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
-                    .get("captcha_server");
+            List<String> servs =  (List<String>) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("captcha_servers");
 
-            if (key == null) {
-                return "http://localhost:1111";
+            if (servs == null) {
+                return new ArrayList<>();
             }
 
-            return key;
+            return servs;
 
         } catch (Exception e) {
-            return "http://localhost:1111";
+            return new ArrayList<>();
         }
     }
 
@@ -483,6 +493,53 @@ public class API {
 
         } catch (Exception e) {
             return "345E6FT7g65fv5D6f687T75rtufgF587DFg86xruycTF74S6u5dfog78D7U5F88d6urtifudr6t7if675dtfuhi";
+        }
+    }
+
+    public static List<String> readUploadServersFromConfig() {
+        try {
+            List<String> servs =  (List<String>) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+                    .get("upload_servers");
+
+            if (servs == null) {
+                return new ArrayList<>();
+            }
+
+            return servs;
+
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+
+    public static boolean uploadAttachments(String server, String authHeader) {
+        if (upload_server == null || upload_server.isEmpty()) { return false; }
+
+        try {
+            URL url = new URL(server);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setDoOutput(true);
+            con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
+
+            if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                return false;
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while (null != (inputLine = in.readLine())) {
+                response.append(inputLine);
+            }
+
+            in.close();
+            return response.toString() == "true";
+
+        } catch (Exception e) {
+            return false;
         }
     }
 }

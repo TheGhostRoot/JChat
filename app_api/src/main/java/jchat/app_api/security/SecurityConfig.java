@@ -23,6 +23,8 @@ public class SecurityConfig {
             API_PREFIX + "/friend",
             API_PREFIX + "/friend/chat",
             API_PREFIX + "/profile",
+            API_PREFIX + "/profile/avatar",
+            API_PREFIX + "/profile/banner",
             API_PREFIX + "/reaction",
             API_PREFIX + "/posts",
             API_PREFIX + "/posts/comment",

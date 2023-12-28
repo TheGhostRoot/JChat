@@ -71,16 +71,15 @@ public class CaptchaController {
     }
 
     private String getCaptchaImage(String code) {
-        if (API.captcha_server == null) { return null; }
+        if (API.captcha_server == null || API.captcha_server.isEmpty()) { return null; }
 
         try {
-            URL url = new URL(API.captcha_server + code);
+            URL url = new URL(API.captcha_server.get(API.random.nextInt(0, API.captcha_server.size())) + code);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setDoOutput(true);
 
-            int responseCode = con.getResponseCode();
-            if (responseCode != HttpURLConnection.HTTP_OK) {
+            if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 return "";
             }
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -95,7 +94,6 @@ public class CaptchaController {
             return response.toString();
 
         } catch (Exception e) {
-            e.printStackTrace();
             return "";
         }
     }
