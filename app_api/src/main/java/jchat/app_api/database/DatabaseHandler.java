@@ -1,6 +1,7 @@
 package jchat.app_api.database;
 
 
+import com.mysql.cj.x.protobuf.MysqlxExpr;
 import jchat.app_api.API;
 import org.bson.Document;
 
@@ -3995,4 +3996,69 @@ public class DatabaseHandler {
         return false;
     }
 
+
+    public boolean addUpload(long user_id, String server, String name) {
+        if (databaseManager.isSQL()) {
+            List<Object> stuff = new ArrayList<>();
+            stuff.add(user_id);
+            stuff.add(server);
+            stuff.add(name);
+
+            return databaseManager.addDataSQL(DatabaseManager.table_uploads, "user_id, server, name", "?, ?, ?", stuff);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoAddDataToCollectionNoSQL(DatabaseManager.table_uploads,
+                    new Document("user_id", user_id).append("server", server).append("name", name), null);
+        }
+
+        return false;
+    }
+
+
+    public boolean deleteUpload(long user_id, String server, String name) {
+        if (databaseManager.isSQL()) {
+            List<Object> stuff = new ArrayList<>();
+            stuff.add(user_id);
+            stuff.add(server);
+            stuff.add(name);
+
+            return databaseManager.deleteDataSQL(DatabaseManager.table_uploads,
+                    "user_id=? AND server=? AND name=?",  stuff);
+
+        } else if (databaseManager.isMongo()) {
+            return databaseManager.MongoDeleteDataFromCollectionNoSQL(DatabaseManager.table_uploads,
+                    new Document("user_id", user_id).append("server", server).append("name", name));
+        }
+
+        return false;
+    }
+
+
+    public Map<String, List<Object>> getUploads(long user_id) {
+        if (databaseManager.isSQL()) {
+            List<Object> search = new ArrayList<>();
+            search.add(user_id);
+
+            return databaseManager.getDataSQL(DatabaseManager.table_uploads,
+                    "*", "user_id=?", search, null, "", 0);
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> mongoData = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_uploads,
+                    new Document("user_id", user_id), false, 0);
+
+            if (mongoData == null || mongoData.isEmpty()) {
+                return null;
+            }
+
+            Map<String, List<Object>> res = new HashMap<>();
+            res.put("user_id", new ArrayList<>());
+            res.put("server", new ArrayList<>());
+            res.put("name", new ArrayList<>());
+
+            return databaseManager.transformMongoToSQL(0, mongoData, res);
+
+        }
+
+        return null;
+    }
 }

@@ -19,7 +19,7 @@ public class ProfileAvatar {
             return null;
         }
         Map<String, Object> data = API.jwtService.getData(auth, null, null);
-        if (data == null || !data.containsKey("id") || !data.containsKey("name")) {
+        if (data == null || !data.containsKey("id")) {
             return null;
         }
 
@@ -36,37 +36,34 @@ public class ProfileAvatar {
         }
 
         if (String.valueOf(profile.get("pfp")).startsWith("video;")) {
-            return "<html><head><head><body> <source type=\"video/mp4\" src=\"attachments/" + given_user_id + "/" + data.get("name")  +"\">  <body><html>";
+            return "<html><head><head><body> <source type=\"video/mp4\" src=\"attachments/" + given_user_id + "/avatar.mp4\">  <body><html>";
 
         } else {
-            return "<html><head><head><body> <img src=\"attachments/"+ given_user_id +"/"+data.get("name")+"\">  <body><html>";
+            return "<html><head><head><body> <img src=\"attachments/"+ given_user_id +"/avatar.jpg\">  <body><html>";
         }
     }
 
 
-    @PatchMapping
+    @PostMapping
     public String uploadProfileAvatar(HttpServletRequest request) {
         String auth = request.getHeader(API.REQ_HEADER_AUTH);
         if (auth == null) {
             return "false";
         }
         Map<String, Object> data = API.jwtService.getData(auth, null, null);
-        if (data == null || !data.containsKey("id") || !data.containsKey("pfp") || !data.containsKey("name")) {
+        Map<String, String[]> body = API.getBody(request);
+        if (data == null || body == null) {
             return "false";
         }
 
         long given_user_id;
         try {
-            given_user_id = Long.parseLong(String.valueOf(data.get("id")));
+            given_user_id = Long.parseLong(String.valueOf(body.get("id")[0]));
         } catch (Exception e) {
             return "false";
         }
 
-        String pfp = String.valueOf(data.get("pfp"));
-        String name = String.valueOf(data.get("name"));
-        if (!name.equals("")) {
-            API.fileSystemHandler.deleteFile(given_user_id, name);
-        }
-        return API.fileSystemHandler.saveFile(given_user_id, pfp.startsWith("video;"), pfp.substring(6, pfp.length())) ? "true" : "false";
+        String pfp = String.valueOf(body.get("pfp")[0]);
+        return API.fileSystemHandler.saveFile(given_user_id, pfp.startsWith("video;"), pfp.substring(6, pfp.length()), "avatar") ? "true" : "false";
     }
 }

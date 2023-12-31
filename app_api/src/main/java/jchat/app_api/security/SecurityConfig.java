@@ -46,11 +46,11 @@ public class SecurityConfig {
                         authorizeRequests.requestMatchers(paths).permitAll()
                                 .anyRequest().denyAll())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .csrf(c -> c.disable())
-                .headers(h ->
-                        h.referrerPolicy(referrerPolicy -> referrerPolicy.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
-                                .frameOptions(frameOptions -> frameOptions.sameOrigin())
-                                .contentSecurityPolicy(contentSecurityPolicy -> contentSecurityPolicy.policyDirectives("script-src 'self'")));
+                .csrf(c -> c.disable());
+               // .headers(h ->
+             ///           h.referrerPolicy(referrerPolicy -> referrerPolicy.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
+               //                 .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                //                .contentSecurityPolicy(contentSecurityPolicy -> contentSecurityPolicy.policyDirectives("script-src 'self'")));
         return http.build();
 
     }

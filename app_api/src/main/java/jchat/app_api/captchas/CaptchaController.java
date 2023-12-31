@@ -80,7 +80,7 @@ public class CaptchaController {
             con.setDoOutput(true);
 
             if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                return "";
+                return null;
             }
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
@@ -94,7 +94,7 @@ public class CaptchaController {
             return response.toString();
 
         } catch (Exception e) {
-            return "";
+            return null;
         }
     }
 

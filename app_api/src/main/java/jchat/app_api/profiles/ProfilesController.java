@@ -53,67 +53,6 @@ public class ProfilesController {
 
 
     @PostMapping
-    public String uploadProfileAttachments(HttpServletRequest request) {
-        // only session
-        Long user_id = API.getUserID_SessionOnly(request);
-        if (user_id == null) {
-            return null;
-        }
-
-        Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
-        if (user_data == null) {
-            return null;
-        }
-
-        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
-        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
-                user_sign_key);
-        if (data == null || !data.containsKey("name")) {
-            return null;
-        }
-
-        String selectedUploadServer = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", user_id);
-        claims.put("name", data.get("name"));
-
-        if (data.containsKey("pfp")) {
-            claims.put("pfp", data.get("pfp"));
-            String authHeader = API.jwtService.generateGlobalJwt(claims, true);
-            if (authHeader == null) {
-                return null;
-            }
-
-            if (API.databaseHandler.updateProfilePfp(user_id, selectedUploadServer) &&
-                    API.uploadAttachments(selectedUploadServer, authHeader, "PATCH")) {
-                // try to upload it.
-
-            }
-
-        }
-
-        if (data.containsKey("banner")) {
-            claims.put("banner", data.get("banner"));
-            String authHeader = API.jwtService.generateGlobalJwt(claims, true);
-            if (authHeader == null) {
-                return null;
-            }
-
-            if (API.databaseHandler.updateProfileBanner(user_id, selectedUploadServer) &&
-                    API.uploadAttachments(selectedUploadServer, authHeader, "PATCH")) {
-                // try to upload it.
-
-            }
-        }
-
-        return null;
-    }
-
-
-    @PatchMapping
     public String updateProfile(HttpServletRequest request) {
         // only session
         Long user_id = API.getUserID_SessionOnly(request);
@@ -136,10 +75,6 @@ public class ProfilesController {
         }
 
         Map<String, Object> claims = new HashMap<>();
-        if (data.containsKey("badges")) {
-            claims.put("stats", API.databaseHandler.updateProfileBadges(user_id, String.valueOf(data.get("badges"))));
-        }
-
         if (data.containsKey("name")) {
             claims.put("stats", API.databaseHandler.updateUserName(user_id, String.valueOf(data.get("name"))));
         }
@@ -157,41 +92,48 @@ public class ProfilesController {
         }
 
         String selectedUploadServer = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
+        Map<String, String[]> given_body = API.getBody(request);
 
-        if (data.containsKey("pfp") && data.containsKey("pfp_name")) {
+        if (data.containsKey("pfp") && given_body != null) {
             Map<String, Object> pfpClaims = new HashMap<>();
-            pfpClaims.put("id", user_id);
-            pfpClaims.put("name", data.get("pfp_name"));
-            pfpClaims.put("pfp", data.get("pfp"));
+            pfpClaims.put("f", 1);
 
             String authHeader = API.jwtService.generateGlobalJwt(pfpClaims, true);
             if (authHeader == null) {
                 claims.put("stats", false);
 
             } else {
-                claims.put("stats",
-                        API.databaseHandler.updateProfilePfp(user_id,
-                                (String.valueOf(data.get("pfp")).startsWith("video;") ? "video;" : "") + selectedUploadServer) &&
-                        API.uploadAttachments(selectedUploadServer, authHeader, "PATCH"));
+                Map<String, String[]> body = new HashMap<>();
+                body.put("id", new String[]{user_id.toString()});
+                body.put("pfp", given_body.get("pfp"));
+
+                boolean a = API.databaseHandler.updateProfilePfp(user_id,
+                        (String.valueOf(data.get("pfp")).startsWith("video;") ? "video;" : "") + selectedUploadServer);
+
+                boolean g = API.uploadAttachments(selectedUploadServer + "avatar", authHeader, "POST", body);
+
+                claims.put("stats", a && g);
             }
 
         }
 
-        if (data.containsKey("banner") && data.containsKey("banner_name")) {
+        if (data.containsKey("banner") && given_body != null) {
             Map<String, Object> bannerClaims = new HashMap<>();
-            bannerClaims.put("id", user_id);
-            bannerClaims.put("name", data.get("banner_name"));
-            bannerClaims.put("banner", data.get("banner"));
+            bannerClaims.put("f", 3);
 
             String authHeader = API.jwtService.generateGlobalJwt(bannerClaims, true);
             if (authHeader == null) {
                 claims.put("stats", false);
 
             } else {
-                claims.put("stats",
-                        API.databaseHandler.updateProfileBanner(user_id,
-                                (String.valueOf(data.get("banner")).startsWith("video;") ? "video;" : "") + selectedUploadServer) &&
-                        API.uploadAttachments(selectedUploadServer, authHeader, "PATCH"));
+                Map<String, String[]> body = new HashMap<>();
+                body.put("id", new String[]{user_id.toString()});
+                body.put("banner", given_body.get("banner"));
+
+                boolean f = API.databaseHandler.updateProfileBanner(user_id,
+                        (String.valueOf(data.get("banner")).startsWith("video;") ? "video;" : "") + selectedUploadServer);
+                boolean d = API.uploadAttachments(selectedUploadServer + "banner", authHeader, "POST", body);
+                claims.put("stats", d && f);
             }
         }
 

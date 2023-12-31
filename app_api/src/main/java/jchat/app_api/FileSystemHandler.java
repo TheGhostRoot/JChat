@@ -36,7 +36,7 @@ public class FileSystemHandler {
         return null;
     }
 
-    public boolean saveFile(long user_id, boolean video, String base64) {
+    public boolean saveFile(long user_id, boolean video, String base64, String name) {
         File user_folder = new File(dir + user_id);
         if (!user_folder.exists()) {
             if (!user_folder.mkdirs()) {
@@ -44,12 +44,8 @@ public class FileSystemHandler {
                 return false;
             }
         }
-        String generatedName = generateName(user_folder);
-        if (generatedName == null) {
-            return false;
-        }
 
-        File file = new File(user_folder.getAbsolutePath() + "/" + generatedName + (video ? ".mp4" : ".jpeg"));
+        File file = new File(user_folder.getAbsolutePath() + "/" + name + (video ? ".mp4" : ".jpg"));
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
@@ -60,6 +56,8 @@ public class FileSystemHandler {
                 API.logger.info("Can't create user's file");
                 return false;
             }
+        } else if (!deleteFile(user_id, name)) {
+            return false;
         }
 
         try {

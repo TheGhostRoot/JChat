@@ -1,8 +1,8 @@
 package jchat.app_api;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
-import jchat.app_api.captchas.CaptchaController;
 import jchat.app_api.database.DatabaseHandler;
 import jchat.app_api.database.DatabaseManager;
 import jchat.app_api.security.CriptionService;
@@ -13,14 +13,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class API {
@@ -49,7 +49,7 @@ public class API {
     public static String DB_ENCRYP_KEY = "encryption_key";
     public static String REQ_HEADER_AUTH = "Authorization";
     public static String REQ_HEADER_SESS = "SessionID";
-    public static String REQ_HEADER_CAPTCHA = "CapctchaID";
+    public static String REQ_HEADER_CAPTCHA = "CaptchaID";
 
 
     public static String secret;
@@ -60,7 +60,10 @@ public class API {
 
     public static final String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvxyz";
 
+    public static ObjectMapper objectMapper;
+
     public static void main(String[] args) {
+        objectMapper = new ObjectMapper();
 
         // The client will handle all the hashing
 
@@ -466,7 +469,7 @@ public class API {
 
     public static List<String> readCaptchaServersFromConfig() {
         try {
-            List<String> servs =  (List<String>) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
+            List<String> servs = (List<String>) ( (Map<String, Object>) yaml.load(new FileInputStream("config.yml")))
                     .get("captcha_servers");
 
             if (servs == null) {
@@ -513,15 +516,22 @@ public class API {
     }
 
 
-    public static boolean uploadAttachments(String server, String authHeader, String method) {
+    public static boolean uploadAttachments(String server, String authHeader, String method, Map<String, String[]> body) {
         if (upload_server == null || upload_server.isEmpty()) { return false; }
 
         try {
             URL url = new URL(server);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.setDoOutput(true);
             con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
+            con.setDoOutput(true);
+
+            try (OutputStream os = con.getOutputStream()) {
+                OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
+                osw.write(objectMapper.writeValueAsString(body));
+                osw.flush();
+            }
+
             // global encrypted
 
             if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -541,6 +551,15 @@ public class API {
 
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    public static Map<String, String[]> getBody(HttpServletRequest request) {
+        try {
+            return objectMapper.readValue(request.getParameterMap().toString(), Map.class);
+
+        } catch (Exception e) {
+            return null;
         }
     }
 }

@@ -26,6 +26,7 @@ public class DatabaseManager {
     protected static final String table_group_logs = "chat_group_logs";
     protected static final String table_captchas = "captchas";
     protected static final String table_reactions = "reactions";
+    protected static final String table_uploads = "uploads";
     protected static final String table_posts = "posts";
     protected static final String table_post_comments = "post_comments";
     protected static final String table_profiles = "profiles";
@@ -197,8 +198,16 @@ public class DatabaseManager {
             notifi_table.add("update TEXT NOT NULL, ");
             notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
+
+            List<String> uploads_table = new ArrayList<>();
+            uploads_table.add("server TEXT NOT NULL, ");
+            uploads_table.add("name TEXT NOT NULL, ");
+            uploads_table.add("user_id TEXT NOT NULL");
+            friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_notifications);
+            deleteTableSQL(table_uploads);
             deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
@@ -214,6 +223,7 @@ public class DatabaseManager {
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
+            createTableSQL(table_uploads, uploads_table);
             createTableSQL(table_notifications, notifi_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
@@ -371,8 +381,15 @@ public class DatabaseManager {
             notifi_table.add("update TEXT NOT NULL, ");
             notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
+            List<String> uploads_table = new ArrayList<>();
+            uploads_table.add("server TEXT NOT NULL, ");
+            uploads_table.add("name TEXT NOT NULL, ");
+            uploads_table.add("user_id TEXT NOT NULL");
+            friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+
             deleteTableSQL(table_profiles);
             deleteTableSQL(table_notifications);
+            deleteTableSQL(table_uploads);
             deleteTableSQL(table_friend_requests);
             deleteTableSQL(table_post_comments);
             deleteTableSQL(table_posts);
@@ -388,6 +405,7 @@ public class DatabaseManager {
             deleteTableSQL(table_accounts);
 
             createTableSQL( table_accounts, accounts_table);
+            createTableSQL(table_uploads, uploads_table);
             createTableSQL(table_notifications, notifi_table);
             createTableSQL( table_captchas, captchas_table);
             createTableSQL( table_profiles, profiles_table);
@@ -418,6 +436,7 @@ public class DatabaseManager {
             MongoDeleteCollectionNoSQL(table_captchas);
             MongoDeleteCollectionNoSQL(table_chats);
             MongoDeleteCollectionNoSQL(table_reactions);
+            MongoDeleteCollectionNoSQL(table_uploads);
             MongoDeleteCollectionNoSQL(table_posts);
             MongoDeleteCollectionNoSQL(table_groups);
             MongoDeleteCollectionNoSQL(table_friend_requests);
@@ -429,6 +448,7 @@ public class DatabaseManager {
             MongoCreateCollectionNoSQL(table_captchas);
             MongoCreateCollectionNoSQL(table_chats);
             MongoCreateCollectionNoSQL(table_reactions);
+            MongoCreateCollectionNoSQL(table_uploads);
             MongoCreateCollectionNoSQL(table_posts);
             MongoCreateCollectionNoSQL(table_groups);
             MongoCreateCollectionNoSQL(table_friend_requests);
