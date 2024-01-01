@@ -3,6 +3,8 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
+import jchat.app_api.JChatRequestBody;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -52,9 +54,10 @@ public class ProfilesController {
     }
 
 
-    @PostMapping
-    public String updateProfile(HttpServletRequest request) {
+    @PostMapping()
+    public String updateProfile(HttpServletRequest request, @RequestBody JChatRequestBody bodyRequest) {
         // only session
+        Map<String, Object> given_body = bodyRequest.getData();
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -92,7 +95,7 @@ public class ProfilesController {
         }
 
         String selectedUploadServer = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
-        Map<String, String[]> given_body = API.getBody(request);
+        //Map<String, String[]> given_body = API.objectMapper.convertValue(requestBody, HashMap.class);
 
         if (data.containsKey("pfp") && given_body != null) {
             Map<String, Object> pfpClaims = new HashMap<>();
@@ -103,8 +106,8 @@ public class ProfilesController {
                 claims.put("stats", false);
 
             } else {
-                Map<String, String[]> body = new HashMap<>();
-                body.put("id", new String[]{user_id.toString()});
+                Map<String, Object> body = new HashMap<>();
+                body.put("id", user_id);
                 body.put("pfp", given_body.get("pfp"));
 
                 boolean a = API.databaseHandler.updateProfilePfp(user_id,
@@ -126,8 +129,8 @@ public class ProfilesController {
                 claims.put("stats", false);
 
             } else {
-                Map<String, String[]> body = new HashMap<>();
-                body.put("id", new String[]{user_id.toString()});
+                Map<String, Object> body = new HashMap<>();
+                body.put("id", user_id);
                 body.put("banner", given_body.get("banner"));
 
                 boolean f = API.databaseHandler.updateProfileBanner(user_id,

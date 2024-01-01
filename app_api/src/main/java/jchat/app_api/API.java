@@ -292,6 +292,10 @@ public class API {
         * upload_servers: ["http://195.168.0.215/api/v1/profile"]
         * */
 
+
+
+
+
         captcha_server = readCaptchaServersFromConfig();
         upload_server = readUploadServersFromConfig();
         captcha_time = readCaptchaTimeConfig();
@@ -516,7 +520,7 @@ public class API {
     }
 
 
-    public static boolean uploadAttachments(String server, String authHeader, String method, Map<String, String[]> body) {
+    public static boolean uploadAttachments(String server, String authHeader, String method, Map<String, Object> body) {
         if (upload_server == null || upload_server.isEmpty()) { return false; }
 
         try {
@@ -524,6 +528,8 @@ public class API {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
             con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
+            con.addRequestProperty("Content-Type", "application/json");
+            con.addRequestProperty("Host", url.getHost());
             con.setDoOutput(true);
 
             try (OutputStream os = con.getOutputStream()) {
@@ -554,12 +560,4 @@ public class API {
         }
     }
 
-    public static Map<String, String[]> getBody(HttpServletRequest request) {
-        try {
-            return objectMapper.readValue(request.getParameterMap().toString(), Map.class);
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

@@ -3,7 +3,8 @@ package jchat.app_api;
 import org.apache.tomcat.util.codec.binary.Base64;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,22 +47,40 @@ public class FileSystemHandler {
         }
 
         File file = new File(user_folder.getAbsolutePath() + "/" + name + (video ? ".mp4" : ".jpg"));
+        File videoFile = new File(user_folder.getAbsolutePath() + "/" + name + ".mp4");
+        File pictureFile = new File(user_folder.getAbsolutePath() + "/" + name + ".jpg");
+        if (videoFile.exists() && !video) {
+            deleteFile(user_id, name, false);
+        }
+        if (pictureFile.exists() && video) {
+            deleteFile(user_id, name, true);
+        }
+
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) {
-                    API.logger.info("Can't create user's file");
                     return false;
                 }
             } catch (Exception e) {
-                API.logger.info("Can't create user's file");
                 return false;
             }
-        } else if (!deleteFile(user_id, name)) {
-            return false;
+        } else {
+            if (deleteFile(user_id, name, video)) {
+                try {
+                    if (!file.createNewFile()) {
+                        return false;
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+
+            } else {
+                return false;
+            }
         }
 
         try {
-            new FileOutputStream(file.getAbsolutePath()).write(Base64.decodeBase64(base64));
+            Files.write(Paths.get(file.getAbsolutePath()), Base64.decodeBase64(base64));
             return true;
 
         } catch (Exception e) {
@@ -69,10 +88,10 @@ public class FileSystemHandler {
         }
     }
 
-    public boolean deleteFile(long user_id, String name) {
+    public boolean deleteFile(long user_id, String name, boolean video) {
         File user_folder = new File(dir + user_id);
         if (user_folder.exists()) {
-            File toDelete = new File(user_folder.getAbsolutePath() + "/" + name);
+            File toDelete = new File(user_folder.getAbsolutePath() + "/" + name + (video ? ".mp4" : ".jpg"));
             if (toDelete.exists() && toDelete.isFile()) {
                 return toDelete.delete();
             }
