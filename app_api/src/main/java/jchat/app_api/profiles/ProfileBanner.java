@@ -6,7 +6,9 @@ import jchat.app_api.API;
 import jchat.app_api.JChatRequestBody;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,28 +60,26 @@ public class ProfileBanner {
     }
 
 
+    // @RequestParam("file") MultipartFile file
+    // @RequestBody JChatRequestBody bodyRequest
+
     @PostMapping()
-    public String uploadProfileBanner(HttpServletRequest request, @RequestBody JChatRequestBody bodyRequest) {
+    public String uploadProfileBanner(HttpServletRequest request, @RequestParam("file") MultipartFile file,
+                                      @RequestParam("video") boolean isVideo, @RequestParam("id") long given_user_id) {
         // upload the banner in file system
-        Map<String, Object> body = bodyRequest.getData();
-        String auth = request.getHeader(API.REQ_HEADER_AUTH);
-        if (auth == null) {
-            return "false";
-        }
-        Map<String, Object> data = API.jwtService.getData(auth, null, null);
-        if (data == null || body == null) {
-            return "false";
-        }
-
-        long given_user_id;
+        // Map<String, Object> body = bodyRequest.getData();
+        byte[] files;
         try {
-            given_user_id = Long.parseLong(String.valueOf(body.get("id")));
+            if (file.isEmpty()) {
+                return null;
+            }
+            files = file.getBytes();
         } catch (Exception e) {
-            return "false";
+            return null;
         }
 
-        String banner = String.valueOf(body.get("banner"));
-        return API.fileSystemHandler.saveFile(given_user_id, banner.startsWith("video;"), banner.startsWith("video;") ? banner.substring(6, banner.length()) : banner, "banner") ? "true" : "false";
+
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "banner") ? "true" : "false";
     }
 
 }

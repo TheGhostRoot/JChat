@@ -6,7 +6,9 @@ import jchat.app_api.API;
 import jchat.app_api.JChatRequestBody;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.Map;
 
 @RestController()
@@ -47,25 +49,19 @@ public class ProfileAvatar {
 
 
     @PostMapping()
-    public String uploadProfileAvatar(HttpServletRequest request, @RequestBody JChatRequestBody bodyRequest) {
-        Map<String, Object> body = bodyRequest.getData();
-        String auth = request.getHeader(API.REQ_HEADER_AUTH);
-        if (auth == null) {
-            return "false";
-        }
-        Map<String, Object> data = API.jwtService.getData(auth, null, null);
-        if (data == null || body == null) {
-            return "false";
-        }
+    public String uploadProfileAvatar(HttpServletRequest request, @RequestParam("file") MultipartFile file,
+                                      @RequestParam("video") boolean isVideo, @RequestParam("id") long given_user_id) {
 
-        long given_user_id;
+        byte[] files;
         try {
-            given_user_id = Long.parseLong(String.valueOf(body.get("id")));
+            if (file.isEmpty()) {
+                return null;
+            }
+            files = file.getBytes();
         } catch (Exception e) {
-            return "false";
+            return null;
         }
 
-        String pfp = String.valueOf(body.get("pfp"));
-        return API.fileSystemHandler.saveFile(given_user_id, pfp.startsWith("video;"), pfp.startsWith("video;") ? pfp.substring(6, pfp.length()) : pfp, "avatar") ? "true" : "false";
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "avatar") ? "true" : "false";
     }
 }

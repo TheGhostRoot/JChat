@@ -1,7 +1,9 @@
 package jchat.app_api;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,7 +22,7 @@ public class FileSystemHandler {
         }
     }
 
-    public String generateName(File folder) {
+    public static String generateName(File folder) {
         if (folder.exists() && folder.isDirectory()) {
             List<String> names = new ArrayList<>();
             for (File file : folder.listFiles()) {
@@ -37,7 +39,7 @@ public class FileSystemHandler {
         return null;
     }
 
-    public boolean saveFile(long user_id, boolean video, String base64, String name) {
+    public boolean saveBase64(long user_id, boolean video, String base64, String name) {
         File user_folder = new File(dir + user_id);
         if (!user_folder.exists()) {
             if (!user_folder.mkdirs()) {
@@ -81,6 +83,52 @@ public class FileSystemHandler {
 
         try {
             Files.write(Paths.get(file.getAbsolutePath()), Base64.decodeBase64(base64));
+            return true;
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean saveFile(long user_id, boolean video, byte[] file, String name) {
+        File user_folder = new File(dir + user_id);
+        if (!user_folder.exists()) {
+            if (!user_folder.mkdirs()) {
+                API.logger.info("Can't create user's folder");
+                return false;
+            }
+        }
+
+        File file1 = new File(user_folder.getAbsolutePath() + "/" + name + (video ? ".mp4" : ".jpg"));
+        deleteFile(user_id, name, true);
+        deleteFile(user_id, name, false);
+
+        if (!file1.exists()) {
+            try {
+                if (!file1.createNewFile()) {
+                    return false;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        } else {
+            if (deleteFile(user_id, name, video)) {
+                try {
+                    if (!file1.createNewFile()) {
+                        return false;
+                    }
+                } catch (Exception e) {
+                    return false;
+                }
+
+            } else {
+                return false;
+            }
+        }
+
+        try {
+            //Files.write(file1.toPath(), FileUtils.readFileToByteArray(file));
+            Files.write(file1.toPath(), file);
             return true;
 
         } catch (Exception e) {

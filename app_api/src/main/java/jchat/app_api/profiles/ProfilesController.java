@@ -6,7 +6,9 @@ import jchat.app_api.API;
 import jchat.app_api.JChatRequestBody;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,10 +56,12 @@ public class ProfilesController {
     }
 
 
-    @PostMapping()
-    public String updateProfile(HttpServletRequest request, @RequestBody JChatRequestBody bodyRequest) {
+    // @RequestParam("file") MultipartFile file
+    // @RequestBody JChatRequestBody bodyRequest
+
+    @PatchMapping()
+    public String updateUser(HttpServletRequest request) {
         // only session
-        Map<String, Object> given_body = bodyRequest.getData();
         Long user_id = API.getUserID_SessionOnly(request);
         if (user_id == null) {
             return null;
@@ -70,7 +74,6 @@ public class ProfilesController {
 
         String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
         String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
         if (data == null) {
@@ -94,53 +97,56 @@ public class ProfilesController {
             claims.put("stats", API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats"))));
         }
 
+        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+    }
+
+    @PostMapping()
+    public String updateProfile(HttpServletRequest request, @RequestParam("file") MultipartFile file,
+                                @RequestParam("video") boolean isVideo, @RequestParam("pfp") boolean isPfp,
+                                @RequestParam("id") long user_id) {
+        // only session
+        //Map<String, Object> given_body = bodyRequest.getData();
+
         String selectedUploadServer = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
-        //Map<String, String[]> given_body = API.objectMapper.convertValue(requestBody, HashMap.class);
 
-        if (data.containsKey("pfp") && given_body != null) {
-            Map<String, Object> pfpClaims = new HashMap<>();
-            pfpClaims.put("f", 1);
+        byte[] files;
+        try {
+            if (file.isEmpty()) {
+               return null;
+            }
+            files = file.getBytes();
+        } catch (Exception e) {
+            return null;
+        }
 
-            String authHeader = API.jwtService.generateGlobalJwt(pfpClaims, true);
-            if (authHeader == null) {
-                claims.put("stats", false);
+        Map<String, Object> claims = new HashMap<>();
 
-            } else {
+        if (isPfp) {
+                /*
                 Map<String, Object> body = new HashMap<>();
                 body.put("id", user_id);
-                body.put("pfp", given_body.get("pfp"));
+                body.put("pfp", given_body.get("pfp")); */
 
                 boolean a = API.databaseHandler.updateProfilePfp(user_id,
-                        (String.valueOf(data.get("pfp")).startsWith("video;") ? "video;" : "") + selectedUploadServer);
+                        (isVideo ? "video;" : "") + selectedUploadServer);
 
-                boolean g = API.uploadAttachments(selectedUploadServer + "avatar", authHeader, "POST", body);
+                boolean g = API.uploadFile(selectedUploadServer + "avatar", isVideo, user_id, files);
 
                 claims.put("stats", a && g);
-            }
 
-        }
-
-        if (data.containsKey("banner") && given_body != null) {
-            Map<String, Object> bannerClaims = new HashMap<>();
-            bannerClaims.put("f", 3);
-
-            String authHeader = API.jwtService.generateGlobalJwt(bannerClaims, true);
-            if (authHeader == null) {
-                claims.put("stats", false);
-
-            } else {
+        } else {
+                /*
                 Map<String, Object> body = new HashMap<>();
                 body.put("id", user_id);
-                body.put("banner", given_body.get("banner"));
+                body.put("banner", given_body.get("banner")); */
 
                 boolean f = API.databaseHandler.updateProfileBanner(user_id,
-                        (String.valueOf(data.get("banner")).startsWith("video;") ? "video;" : "") + selectedUploadServer);
-                boolean d = API.uploadAttachments(selectedUploadServer + "banner", authHeader, "POST", body);
+                        (isVideo ? "video;" : "") + selectedUploadServer);
+                boolean d = API.uploadFile(selectedUploadServer + "banner", isVideo, user_id, files);
                 claims.put("stats", d && f);
-            }
         }
 
-        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+        return API.jwtService.generateGlobalJwt(claims, true);
     }
 
 }

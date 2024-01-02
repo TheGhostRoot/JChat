@@ -7,6 +7,12 @@ import jchat.app_api.database.DatabaseHandler;
 import jchat.app_api.database.DatabaseManager;
 import jchat.app_api.security.CriptionService;
 import jchat.app_api.security.JwtService;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
@@ -17,10 +23,10 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class API {
@@ -50,6 +56,8 @@ public class API {
     public static String REQ_HEADER_AUTH = "Authorization";
     public static String REQ_HEADER_SESS = "SessionID";
     public static String REQ_HEADER_CAPTCHA = "CaptchaID";
+
+    private static File tempDir;
 
 
     public static String secret;
@@ -310,10 +318,15 @@ public class API {
             databaseManager.shutDown();
         }, "Shutdown-thread"));
 
+        tempDir = new File("/temp/");
+        tempDir.mkdirs();
+
         SpringApplication app = new SpringApplication(API.class);
         Map<String, Object> config = new HashMap<>();
         config.put("server.port", readPortFromConfig());
-        config.put("server.max-http-header-size", "100MB");
+        config.put("server.max-http-header-size", "1MB");
+        config.put("spring.servlet.multipart.max-file-size", "10MB");
+        config.put("spring.servlet.multipart.max-request-size", "10MB");
 
         app.setDefaultProperties(config);
         app.run(args);
@@ -520,7 +533,7 @@ public class API {
     }
 
 
-    public static boolean uploadAttachments(String server, String authHeader, String method, Map<String, Object> body) {
+    public static boolean uploadBody(String server, String authHeader, String method, Map<String, Object> body) {
         if (upload_server == null || upload_server.isEmpty()) { return false; }
 
         try {
@@ -554,6 +567,30 @@ public class API {
 
             in.close();
             return response.toString().equals("true");
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean uploadFile(String server, boolean video, long user_id, byte[] file) {
+        if (upload_server == null || upload_server.isEmpty()) { return false; }
+
+        try {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(server + "?video="+video+"&id="+user_id);
+
+            File f = new File(FileSystemHandler.generateName(tempDir) + (video ? ".mp4" : ".jpg"));
+            Files.write(f.toPath(), file);
+            MultipartEntity reqEntity = new MultipartEntity();
+            reqEntity.addPart("file", new FileBody(f));
+            httpPost.setEntity(reqEntity);
+
+            HttpResponse response = httpclient.execute(httpPost);
+
+            f.delete();
+
+            return response.getStatusLine().getStatusCode() == 200;
 
         } catch (Exception e) {
             return false;

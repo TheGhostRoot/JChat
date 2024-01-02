@@ -47,7 +47,8 @@ public class RequestFilter extends OncePerRequestFilter {
 
         String uri = request.getRequestURI();
 
-        if (uri.endsWith("/update") || uri.endsWith("/profile/avatar") || uri.endsWith("/profile/banner")) {
+        if (uri.endsWith("/update") || uri.endsWith("/profile") ||
+                uri.endsWith("/profile/banner") || uri.endsWith("/profile/avatar")) {
             filterChain.doFilter(request, response);
 
         } else {
