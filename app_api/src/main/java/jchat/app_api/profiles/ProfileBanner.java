@@ -3,13 +3,10 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
-import jchat.app_api.JChatRequestBody;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController()
@@ -18,23 +15,9 @@ public class ProfileBanner {
 
 
     @GetMapping
-    public String getProfileBanner(HttpServletRequest request) {
-        // only session
-        Long user_id = API.getUserID_SessionOnly(request);
-        if (user_id == null) {
-            return null;
-        }
-
-        Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
-        if (user_data == null) {
-            return null;
-        }
-
-        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
-        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
-                user_sign_key);
+    public String getProfileBanner(HttpServletRequest request,
+                                   @RequestParam("redirected") boolean redirected, @RequestParam("type") String type) {
+        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (data == null || !data.containsKey("id")) {
             return null;
         }
@@ -46,17 +29,63 @@ public class ProfileBanner {
             return null;
         }
 
-        Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
-        if (profile == null) {
-            return null;
-        }
+        if (redirected && (type == null || type.isBlank())) {
+            if (type.equals("video") && new File("/attachments/"+given_user_id+"/banner.mp4").exists()) {
+                return """
+                <html><head></head> 
+                <body> 
+                
+                <video controls autoplay muted name="media">
+                    <source type="video/mp4" src="/attachments/"""+ given_user_id + """
+                 /banner.mp4"> 
+                 
+                 </video>
+                 
+                 </body></html>""";
 
-        if (String.valueOf(profile.get("banner")).startsWith("video;")) {
-            return "<html><head><head><body> <source type=\"video/mp4\" src=\"attachments/"+ given_user_id + "/banner.mp4\">  <body><html>";
+            } else if (new File("/attachments/"+given_user_id+"/banner.jpg").exists()) {
+                return """
+                        <html><head></head> 
+                        <body> 
+                                        
+                                <img src="/attachments/"""+ given_user_id + """
+                         /black.jpg">  
+                         
+                         </body></html>""";
+
+
+            }
+            return """
+        <html><head></head><body> 
+        
+        <img src="/black.jpg">
+        
+        </body></html>""";
 
         } else {
-            return "<html><head><head><body> <img src=\"attachments/"+given_user_id + "/banner.jpg\">  <body><html>";
+            Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
+            if (profile == null) {
+                return null;
+            }
+
+            String server = String.valueOf(profile.get("banner"));
+            if (server.isBlank()) {
+                server = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
+            }
+            server += "/banner";
+
+            boolean isVideo = server.startsWith("video;");
+
+            String res = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
+                    request.getHeader(API.REQ_HEADER_AUTH), "GET", isVideo);
+            return res == null ? """
+        <html><head><head><body> 
+        
+        <img src="/black.jpg">  
+        
+        </body></html>""" : res;
         }
+
     }
 
 

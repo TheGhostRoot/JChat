@@ -3,8 +3,6 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
-import jchat.app_api.JChatRequestBody;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,12 +15,9 @@ public class ProfileAvatar {
 
 
     @GetMapping
-    public String getProfileAvatar(HttpServletRequest request) {
-        String auth = request.getHeader(API.REQ_HEADER_AUTH);
-        if (auth == null) {
-            return null;
-        }
-        Map<String, Object> data = API.jwtService.getData(auth, null, null);
+    public String getProfileAvatar(HttpServletRequest request, @RequestParam("redirected") boolean redirected,
+                                   @RequestParam("type") String type) {
+        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (data == null || !data.containsKey("id")) {
             return null;
         }
@@ -34,16 +29,62 @@ public class ProfileAvatar {
             return null;
         }
 
-        Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
-        if (profile == null) {
-            return null;
-        }
+        if (redirected && (type == null || type.isBlank())) {
+            if (type.equals("video") && new File("/attachments/"+given_user_id+"/pfp.mp4").exists()) {
+                return """
+                <html><head></head> 
+                <body> 
+                
+                <video controls autoplay muted name="media">
+                    <source type="video/mp4" src="/attachments/"""+ given_user_id + """
+                 /avatar.mp4"> 
+                 
+                 </video>
+                 
+                 </body></html>""";
 
-        if (String.valueOf(profile.get("pfp")).startsWith("video;")) {
-            return "<html><head><head><body> <source type=\"video/mp4\" src=\"attachments/" + given_user_id + "/avatar.mp4\">  <body><html>";
+            } else if (new File("/attachments/"+given_user_id+"/pfp.jpg").exists()) {
+                return """
+                        <html><head></head> 
+                        <body> 
+                                        
+                                <img src="/attachments/"""+ given_user_id + """
+                         /black.jpg">  
+                         
+                         </body></html>""";
+
+
+            }
+            return """
+        <html><head></head><body> 
+        
+        <img src="/pfp.jpg">  
+        
+        </body></html>""";
 
         } else {
-            return "<html><head><head><body> <img src=\"attachments/"+ given_user_id +"/avatar.jpg\">  <body><html>";
+            Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
+            if (profile == null) {
+                return null;
+            }
+
+            String server = String.valueOf(profile.get("pfp"));
+            if (server.isBlank()) {
+                server = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
+            }
+
+            server += "/avatar";
+
+            boolean isVideo = server.startsWith("video;");
+
+            String res = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
+                    request.getHeader(API.REQ_HEADER_AUTH), "GET", isVideo);
+            return res == null ? """
+        <html><head></head><body> 
+        
+        <img src="/pfp.jpg">  
+        
+        </body></html>""" : res;
         }
     }
 

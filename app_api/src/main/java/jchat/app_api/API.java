@@ -327,6 +327,7 @@ public class API {
         config.put("server.max-http-header-size", "1MB");
         config.put("spring.servlet.multipart.max-file-size", "10MB");
         config.put("spring.servlet.multipart.max-request-size", "10MB");
+        config.put("spring.web.resources.static-locations", "file:D:\\ToolBox\\Tools\\Kit\\JChat\\app_api");
 
         app.setDefaultProperties(config);
         app.run(args);
@@ -594,6 +595,42 @@ public class API {
 
         } catch (Exception e) {
             return false;
+        }
+    }
+
+
+
+    public static String sendRequestToUploads(String server, String authHeader, String method, boolean isVideo) {
+        if (upload_server == null || upload_server.isEmpty()) { return null; }
+
+        try {
+            URL url = new URL(server + "?redirected=true&type=" + (isVideo ? "video" : "image"));
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod(method);
+            con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
+            con.addRequestProperty("Accept", "*/*");
+            con.addRequestProperty("Host", url.getHost());
+            con.setDoOutput(true);
+
+            // global encrypted
+
+            if (con.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                return null;
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while (null != (inputLine = in.readLine())) {
+                response.append(inputLine);
+            }
+
+            in.close();
+            return response.toString();
+
+        } catch (Exception e) {
+            return null;
         }
     }
 

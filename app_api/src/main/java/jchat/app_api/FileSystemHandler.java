@@ -49,14 +49,8 @@ public class FileSystemHandler {
         }
 
         File file = new File(user_folder.getAbsolutePath() + "/" + name + (video ? ".mp4" : ".jpg"));
-        File videoFile = new File(user_folder.getAbsolutePath() + "/" + name + ".mp4");
-        File pictureFile = new File(user_folder.getAbsolutePath() + "/" + name + ".jpg");
-        if (videoFile.exists() && !video) {
-            deleteFile(user_id, name, false);
-        }
-        if (pictureFile.exists() && video) {
-            deleteFile(user_id, name, true);
-        }
+        deleteFile(user_id, name, false);
+        deleteFile(user_id, name, true);
 
         if (!file.exists()) {
             try {
