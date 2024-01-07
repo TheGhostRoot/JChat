@@ -18,7 +18,7 @@ public class ProfileBanner {
 
 
     @GetMapping
-    public String getProfileBanner(HttpServletRequest request,
+    public Object getProfileBanner(HttpServletRequest request,
                                    @RequestParam("redirected") boolean redirected, @RequestParam("type") String type) {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
@@ -33,11 +33,9 @@ public class ProfileBanner {
             return null;
         }
 
-        API.logger.info(redirected && !type.isBlank());
-
         if (redirected && !type.isBlank()) {
-            File bannerVideo = new File("/attachments/" +given_user_id+"/banner.mp4");
-            File bannerImg = new File("/attachments/" +given_user_id+"/banner.jpg");
+            File bannerVideo = new File("./attachments/" +given_user_id+"/banner.mp4");
+            File bannerImg = new File("./attachments/" +given_user_id+"/banner.jpg");
             if (type.equals("video") && bannerVideo.exists()) {
                 try {
                     byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(bannerVideo));
@@ -120,12 +118,17 @@ public class ProfileBanner {
                 return null;
             }
 
+
             if (base64Banner.startsWith("video;")) {
+
+                return Base64.decodeBase64(base64Banner.substring(6));
+
+                /*
                 return """
                         <html><head></head><body>
                         
                         <video controls autoplay muted> 
-                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Banner + """
+                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Banner.substring(6) + """
                             ">
                         </video>
                          
@@ -133,6 +136,11 @@ public class ProfileBanner {
                         </body>
                         </html>
                         """;
+
+                 */
+
+
+
 
 
             } else {
@@ -149,21 +157,24 @@ public class ProfileBanner {
 
     @PostMapping()
     public String uploadProfileBanner(HttpServletRequest request, @RequestParam("file") MultipartFile file,
-                                      @RequestParam("video") boolean isVideo, @RequestParam("id") long given_user_id) {
+                                      @RequestParam("video") boolean isVideo, @RequestParam("id") String given_user_id_str) {
         // upload the banner in file system
         // Map<String, Object> body = bodyRequest.getData();
+
         byte[] files;
+        long given_user_id;
         try {
             if (file.isEmpty()) {
                 return null;
             }
+            given_user_id = Long.parseLong(given_user_id_str);
             files = file.getBytes();
         } catch (Exception e) {
             return null;
         }
 
 
-        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "profile/banner") ? "true" : "false";
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "banner") ? "true" : "false";
     }
 
 }

@@ -18,7 +18,7 @@ public class ProfileAvatar {
 
 
     @GetMapping
-    public String getProfileAvatar(HttpServletRequest request, @RequestParam("redirected") boolean redirected,
+    public Object getProfileAvatar(HttpServletRequest request, @RequestParam("redirected") boolean redirected,
                                    @RequestParam("type") String type) {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
@@ -34,8 +34,8 @@ public class ProfileAvatar {
         }
 
         if (redirected && !type.isBlank()) {
-            File avatarVideo = new File("/attachments/" +given_user_id+"/pfp.mp4");
-            File avatarImg = new File("/attachments/" +given_user_id+"/pfp.jpg");
+            File avatarVideo = new File("./attachments/" +given_user_id+"/pfp.mp4");
+            File avatarImg = new File("./attachments/" +given_user_id+"/pfp.jpg");
             if (type.equals("video") && avatarVideo.exists()) {
                 try {
                     byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(avatarVideo));
@@ -128,16 +128,21 @@ public class ProfileAvatar {
             String base64Avatar = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
                     request.getHeader(API.REQ_HEADER_AUTH), "GET", isVideo);
 
+
             if (base64Avatar == null) {
                 return null;
             }
 
             if (base64Avatar.startsWith("video;")) {
+
+                return Base64.decodeBase64(base64Avatar.substring(6));
+
+                /*
                 return """
                         <html><head></head><body>
                         
                         <video controls autoplay muted> 
-                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Avatar + """
+                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Avatar.substring(6) + """
                             ">
                         </video>
                          
@@ -146,10 +151,14 @@ public class ProfileAvatar {
                         </html>
                         """;
 
+                 */
+
             } else {
 
-                return "<html><head></head><body> <img src=\"data:image/jpg;base64, " + base64Avatar + "\"/></body></html>";
+                return base64Avatar;
             }
+
+
         }
     }
 
@@ -168,6 +177,6 @@ public class ProfileAvatar {
             return null;
         }
 
-        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "profile/avatar") ? "true" : "false";
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "pfp") ? "true" : "false";
     }
 }

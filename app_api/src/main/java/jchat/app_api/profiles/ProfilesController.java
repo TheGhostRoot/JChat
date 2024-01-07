@@ -100,17 +100,19 @@ public class ProfilesController {
     @PostMapping()
     public String updateProfile(HttpServletRequest request, @RequestParam("file") MultipartFile file,
                                 @RequestParam("video") boolean isVideo, @RequestParam("pfp") boolean isPfp,
-                                @RequestParam("id") long user_id) {
+                                @RequestParam("id") String user_id_str) {
         // only session
         //Map<String, Object> given_body = bodyRequest.getData();
 
         String selectedUploadServer = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
 
         byte[] files;
+        long user_id;
         try {
             if (file.isEmpty()) {
                return null;
             }
+            user_id = Long.parseLong(user_id_str);
             files = file.getBytes();
         } catch (Exception e) {
             return null;
@@ -127,7 +129,7 @@ public class ProfilesController {
                 boolean a = API.databaseHandler.updateProfilePfp(user_id,
                         (isVideo ? "video;" : "") + selectedUploadServer);
 
-                boolean g = API.uploadFile(selectedUploadServer + "profile/avatar", isVideo, user_id, files);
+                boolean g = API.uploadFile(selectedUploadServer + "/avatar", isVideo, user_id, files);
 
                 claims.put("stats", a && g);
 
@@ -139,7 +141,7 @@ public class ProfilesController {
 
                 boolean f = API.databaseHandler.updateProfileBanner(user_id,
                         (isVideo ? "video;" : "") + selectedUploadServer);
-                boolean d = API.uploadFile(selectedUploadServer + "profile/banner", isVideo, user_id, files);
+                boolean d = API.uploadFile(selectedUploadServer + "/banner", isVideo, user_id, files);
                 claims.put("stats", d && f);
         }
 
