@@ -3,17 +3,14 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
-import jchat.app_api.JChatRequestBody;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+ API.API_VERSION+"/profile")
+@RequestMapping(path = "/api/v"+ API.API_VERSION+ "/profile")
 public class ProfilesController {
 
 
@@ -130,7 +127,7 @@ public class ProfilesController {
                 boolean a = API.databaseHandler.updateProfilePfp(user_id,
                         (isVideo ? "video;" : "") + selectedUploadServer);
 
-                boolean g = API.uploadFile(selectedUploadServer + "avatar", isVideo, user_id, files);
+                boolean g = API.uploadFile(selectedUploadServer + "profile/avatar", isVideo, user_id, files);
 
                 claims.put("stats", a && g);
 
@@ -142,7 +139,7 @@ public class ProfilesController {
 
                 boolean f = API.databaseHandler.updateProfileBanner(user_id,
                         (isVideo ? "video;" : "") + selectedUploadServer);
-                boolean d = API.uploadFile(selectedUploadServer + "banner", isVideo, user_id, files);
+                boolean d = API.uploadFile(selectedUploadServer + "profile/banner", isVideo, user_id, files);
                 claims.put("stats", d && f);
         }
 

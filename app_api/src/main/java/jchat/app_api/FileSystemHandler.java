@@ -1,9 +1,7 @@
 package jchat.app_api;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;

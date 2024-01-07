@@ -327,7 +327,8 @@ public class API {
         config.put("server.max-http-header-size", "1MB");
         config.put("spring.servlet.multipart.max-file-size", "10MB");
         config.put("spring.servlet.multipart.max-request-size", "10MB");
-        config.put("spring.web.resources.static-locations", "file:D:\\ToolBox\\Tools\\Kit\\JChat\\app_api");
+        //config.put("spring.web.resources.static-locations", "file:D:\\ToolBox\\Tools\\Kit\\JChat\\app_api\\public");
+
 
         app.setDefaultProperties(config);
         app.run(args);

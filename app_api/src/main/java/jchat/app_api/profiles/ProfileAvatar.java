@@ -3,20 +3,24 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+ API.API_VERSION+"/profile/avatar")
+@RequestMapping(path = "/api/v"+ API.API_VERSION+ "/profile/avatar")
 public class ProfileAvatar {
 
 
     @GetMapping
     public String getProfileAvatar(HttpServletRequest request, @RequestParam("redirected") boolean redirected,
                                    @RequestParam("type") String type) {
+
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (data == null || !data.containsKey("id")) {
             return null;
@@ -29,8 +33,46 @@ public class ProfileAvatar {
             return null;
         }
 
-        if (redirected && (type == null || type.isBlank())) {
-            if (type.equals("video") && new File("/attachments/"+given_user_id+"/pfp.mp4").exists()) {
+        if (redirected && !type.isBlank()) {
+            File avatarVideo = new File("/attachments/" +given_user_id+"/pfp.mp4");
+            File avatarImg = new File("/attachments/" +given_user_id+"/pfp.jpg");
+            if (type.equals("video") && avatarVideo.exists()) {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(avatarVideo));
+                    return "video;" + (new String(encoded, StandardCharsets.US_ASCII));
+
+                } catch (Exception e) {
+                    return null;
+                }
+
+            } else if (avatarImg.exists()) {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(avatarImg));
+                    return new String(encoded, StandardCharsets.US_ASCII);
+
+                } catch (Exception e) {
+                    return null;
+                }
+
+            } else {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(new File("profile/avatar/pfp.jpg")));
+                    return new String(encoded, StandardCharsets.US_ASCII);
+
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+            /*
+            if (type.equals("video") && file.exists()) {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(file));
+                    return new String(encoded, StandardCharsets.UTF_8);
+
+                } catch (Exception e) {
+                    return null;
+                }
+
                 return """
                 <html><head></head> 
                 <body> 
@@ -43,7 +85,11 @@ public class ProfileAvatar {
                  
                  </body></html>""";
 
-            } else if (new File("/attachments/"+given_user_id+"/pfp.jpg").exists()) {
+
+
+            } else if (new File("/attachments/" +given_user_id+"/pfp.jpg").exists()) {
+
+
                 return """
                         <html><head></head> 
                         <body> 
@@ -54,13 +100,15 @@ public class ProfileAvatar {
                          </body></html>""";
 
 
+
+
             }
             return """
         <html><head></head><body> 
         
-        <img src="/pfp.jpg">  
+        <img src="/profile/avatar/pfp.jpg">  
         
-        </body></html>""";
+        </body></html>""";*/
 
         } else {
             Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
@@ -69,7 +117,7 @@ public class ProfileAvatar {
             }
 
             String server = String.valueOf(profile.get("pfp"));
-            if (server.isBlank()) {
+            if (server.isBlank() || server.equals("null")) {
                 server = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
             }
 
@@ -77,14 +125,31 @@ public class ProfileAvatar {
 
             boolean isVideo = server.startsWith("video;");
 
-            String res = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
+            String base64Avatar = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
                     request.getHeader(API.REQ_HEADER_AUTH), "GET", isVideo);
-            return res == null ? """
-        <html><head></head><body> 
-        
-        <img src="/pfp.jpg">  
-        
-        </body></html>""" : res;
+
+            if (base64Avatar == null) {
+                return null;
+            }
+
+            if (base64Avatar.startsWith("video;")) {
+                return """
+                        <html><head></head><body>
+                        
+                        <video controls autoplay muted> 
+                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Avatar + """
+                            ">
+                        </video>
+                         
+                                            
+                        </body>
+                        </html>
+                        """;
+
+            } else {
+
+                return "<html><head></head><body> <img src=\"data:image/jpg;base64, " + base64Avatar + "\"/></body></html>";
+            }
         }
     }
 
@@ -103,6 +168,6 @@ public class ProfileAvatar {
             return null;
         }
 
-        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "avatar") ? "true" : "false";
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "profile/avatar") ? "true" : "false";
     }
 }

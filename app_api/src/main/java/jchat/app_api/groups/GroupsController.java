@@ -66,14 +66,14 @@ public class GroupsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("name") || !data.containsKey("banner") || !data.containsKey("logo")
+        if (data == null || !data.containsKey("name") || !data.containsKey("profile/banner") || !data.containsKey("logo")
                 || !data.containsKey("anim")) {
             return null;
         }
 
         String name = String.valueOf(data.get("name"));
         String logo = String.valueOf(data.get("logo"));
-        String banner = String.valueOf(data.get("banner"));
+        String banner = String.valueOf(data.get("profile/banner"));
         String animations = String.valueOf(data.get("anim"));
 
         if (API.databaseHandler.createGroup(user_id, name, logo, banner, animations)) {
@@ -142,13 +142,13 @@ public class GroupsController {
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
             }
-            case "banner" -> {
+            case "profile/banner" -> {
                 // update the banner
-                if (!data.containsKey("banner")) {
+                if (!data.containsKey("profile/banner")) {
                     return null;
                 }
                 Map<String, Object> claims = new HashMap<>();
-                claims.put("stats", API.databaseHandler.updateGroupBanner(String.valueOf(data.get("banner")), group_id,
+                claims.put("stats", API.databaseHandler.updateGroupBanner(String.valueOf(data.get("profile/banner")), group_id,
                         user_id, log_message));
 
                 return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);

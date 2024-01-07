@@ -3,20 +3,24 @@ package jchat.app_api.profiles;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jchat.app_api.API;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController()
-@RequestMapping(path = "/api/v"+ API.API_VERSION+"/profile/banner")
+@RequestMapping(path = "/api/v"+ API.API_VERSION+ "/profile/banner")
 public class ProfileBanner {
 
 
     @GetMapping
     public String getProfileBanner(HttpServletRequest request,
                                    @RequestParam("redirected") boolean redirected, @RequestParam("type") String type) {
+
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (data == null || !data.containsKey("id")) {
             return null;
@@ -29,8 +33,41 @@ public class ProfileBanner {
             return null;
         }
 
-        if (redirected && (type == null || type.isBlank())) {
-            if (type.equals("video") && new File("/attachments/"+given_user_id+"/banner.mp4").exists()) {
+        API.logger.info(redirected && !type.isBlank());
+
+        if (redirected && !type.isBlank()) {
+            File bannerVideo = new File("/attachments/" +given_user_id+"/banner.mp4");
+            File bannerImg = new File("/attachments/" +given_user_id+"/banner.jpg");
+            if (type.equals("video") && bannerVideo.exists()) {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(bannerVideo));
+                    return "video;" + (new String(encoded, StandardCharsets.US_ASCII));
+
+                } catch (Exception e) {
+                    return null;
+                }
+
+            } else if (bannerImg.exists()) {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(bannerImg));
+                    return new String(encoded, StandardCharsets.US_ASCII);
+
+                } catch (Exception e) {
+                    return null;
+                }
+
+            } else {
+                try {
+                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(new File("profile/banner/black.jpg")));
+                    return new String(encoded, StandardCharsets.US_ASCII);
+
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+
+            /*
+            if (type.equals("video") && new File("/attachments/" +given_user_id+"/banner.mp4").exists()) {
                 return """
                 <html><head></head> 
                 <body> 
@@ -43,7 +80,7 @@ public class ProfileBanner {
                  
                  </body></html>""";
 
-            } else if (new File("/attachments/"+given_user_id+"/banner.jpg").exists()) {
+            } else if (new File("/attachments/" +given_user_id+"/banner.jpg").exists()) {
                 return """
                         <html><head></head> 
                         <body> 
@@ -58,9 +95,9 @@ public class ProfileBanner {
             return """
         <html><head></head><body> 
         
-        <img src="/black.jpg">
+        <img src="/profile/banner/black.jpg">
         
-        </body></html>""";
+        </body></html>""";*/
 
         } else {
             Map<String, Object> profile = API.databaseHandler.getProfile(given_user_id);
@@ -69,21 +106,39 @@ public class ProfileBanner {
             }
 
             String server = String.valueOf(profile.get("banner"));
-            if (server.isBlank()) {
+            if (server.isBlank() || server.equals("null")) {
                 server = API.upload_server.get(API.random.nextInt(0, API.upload_server.size()));
             }
             server += "/banner";
 
             boolean isVideo = server.startsWith("video;");
 
-            String res = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
+            String base64Banner = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
                     request.getHeader(API.REQ_HEADER_AUTH), "GET", isVideo);
-            return res == null ? """
-        <html><head><head><body> 
-        
-        <img src="/black.jpg">  
-        
-        </body></html>""" : res;
+
+            if (base64Banner == null) {
+                return null;
+            }
+
+            if (base64Banner.startsWith("video;")) {
+                return """
+                        <html><head></head><body>
+                        
+                        <video controls autoplay muted> 
+                            <source type="video/mp4" src="data:video/mp4;base64, """ + base64Banner + """
+                            ">
+                        </video>
+                         
+                                            
+                        </body>
+                        </html>
+                        """;
+
+
+            } else {
+                return base64Banner;
+                //return "<html><head></head><body> <img src=\"data:image/jpg;base64, " + base64Banner + "\"/></body></html>";
+            }
         }
 
     }
@@ -108,7 +163,7 @@ public class ProfileBanner {
         }
 
 
-        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "banner") ? "true" : "false";
+        return API.fileSystemHandler.saveFile(given_user_id, isVideo, files, "profile/banner") ? "true" : "false";
     }
 
 }

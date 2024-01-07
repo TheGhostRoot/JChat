@@ -38,14 +38,15 @@ public class RequestFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        if (blockedIPs.contains(API.get_IP(request)) || !isAllowed(API.get_IP(request))) {
+        if (false) {
             response.getWriter().write("Rate limit exceeded or IP blocked");
             response.setContentType("text/plain");
-            response.setStatus(429); // 429 Too Many Requests
+            response.setStatus(429);
             return;
         }
 
         String uri = request.getRequestURI();
+        API.logger.info(request.getMethod() + " " + uri);
 
         if (uri.endsWith("/update") || uri.endsWith("/profile") ||
                 uri.endsWith("/profile/banner") || uri.endsWith("/profile/avatar")) {
