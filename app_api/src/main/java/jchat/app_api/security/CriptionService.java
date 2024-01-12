@@ -83,8 +83,8 @@ public class CriptionService {
             // AES/CBC/PKCS5Padding
             cipher.init(Cipher.DECRYPT_MODE, SecKey);
             return new String(cipher.doFinal(Base64.getDecoder().decode(cipherText)));
+
         } catch (Exception e) {
-            e.printStackTrace();
             return null;
         }
     }
