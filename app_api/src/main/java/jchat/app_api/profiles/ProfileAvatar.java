@@ -42,8 +42,6 @@ public class ProfileAvatar {
             return null;
         }
 
-        API.logger.info(redirected && !type.isBlank());
-
         if (redirected && !type.isBlank()) {
             File avatarVideo = new File("./attachments/" +user_id+"/pfp.mp4");
             File avatarImg = new File("./attachments/" +user_id+"/pfp.jpg");

@@ -83,16 +83,36 @@ public class ProfilesController {
         }
 
         if (data.containsKey("animations")) {
-            claims.put("stats", API.databaseHandler.updateProfileAnimations(user_id, String.valueOf(data.get("animations"))));
+            boolean suess = API.databaseHandler.updateProfileAnimations(user_id, String.valueOf(data.get("animations")));
+            if (claims.containsKey("stats")) {
+                claims.put("stats", suess && Boolean.valueOf(claims.get("stats").toString()));
+
+            } else {
+                claims.put("stats", suess);
+            }
         }
 
         if (data.containsKey("about_me")) {
-            claims.put("stats", API.databaseHandler.updateProfileAboutMe(user_id, String.valueOf(data.get("about_me"))));
+            boolean suess = API.databaseHandler.updateProfileAboutMe(user_id, String.valueOf(data.get("about_me")));
+            if (claims.containsKey("stats")) {
+                claims.put("stats", suess && Boolean.valueOf(claims.get("stats").toString()));
+
+            } else {
+                claims.put("stats", suess);
+            }
         }
 
         if (data.containsKey("stats")) {
-            claims.put("stats", API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats"))));
+            boolean suess = API.databaseHandler.updateProfileStats(user_id, String.valueOf(data.get("stats")));
+            if (claims.containsKey("stats")) {
+                claims.put("stats", suess && Boolean.valueOf(claims.get("stats").toString()));
+
+            } else {
+                claims.put("stats", suess);
+            }
         }
+
+        API.logger.info(claims);
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
