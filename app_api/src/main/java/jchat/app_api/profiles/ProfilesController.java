@@ -112,8 +112,6 @@ public class ProfilesController {
             }
         }
 
-        API.logger.info(claims);
-
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 

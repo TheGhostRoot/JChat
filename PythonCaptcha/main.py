@@ -15,14 +15,31 @@ def encode_image_to_base64(image_path):
 def decode_base64_to_image(encoded_string):
     return Image.open(io.BytesIO(base64.b64decode(encoded_string)))
 
+
+def drawLines(draw, height, width):
+    line_count = random.randint(10, 15)
+    for i in range(line_count):
+        x1 = random.randint(0, width)
+        y1 = random.randint(0, height)
+        x2 = random.randint(0, width)
+        y2 = random.randint(0, height)
+        draw.line((x1, y1, x2, y2), fill=(0, 0, 0))
+
+def drawDots(draw, height, width):
+    dot_count = random.randint(500, 1000)
+    for i in range(dot_count):
+        x = random.randint(0, width)
+        y = random.randint(0, height)
+        draw.point((x, y), fill=(0, 0, 0))
+
 @app.route('/captcha/<captcha_code>', methods=['GET'])
-def generate_captcha(captcha_code):
-    width = 225
+def generate_captcha(captcha_code: str):
+    width = 30 * len(captcha_code)
     height = 50
 
     image = Image.new('RGB', (width, height), (255, 255, 255))
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype('font.ttf', 36)
+    font = ImageFont.truetype('font2.ttf', 36)
 
     code_chars = list(captcha_code)
     for i, c in enumerate(code_chars):
@@ -34,19 +51,9 @@ def generate_captcha(captcha_code):
                   fill=(random.randint(50, 175), random.randint(50, 175),
                         random.randint(50, 175)))
 
-    line_count = random.randint(10, 15)
-    for i in range(line_count):
-        x1 = random.randint(0, width)
-        y1 = random.randint(0, height)
-        x2 = random.randint(0, width)
-        y2 = random.randint(0, height)
-        draw.line((x1, y1, x2, y2), fill=(0, 0, 0))
+    drawLines(draw, height, width)
 
-    dot_count = random.randint(500, 1000)
-    for i in range(dot_count):
-        x = random.randint(0, width)
-        y = random.randint(0, height)
-        draw.point((x, y), fill=(0, 0, 0))
+    drawDots(draw, height, width)
 
     # Save the image to a BytesIO object
     img_byte_array = io.BytesIO()
