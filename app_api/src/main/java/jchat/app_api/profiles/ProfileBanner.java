@@ -21,24 +21,15 @@ public class ProfileBanner {
     public Object getProfileBanner(HttpServletRequest request,
                                    @RequestParam("redirected") boolean redirected, @RequestParam("type") String type) {
 
+        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
+        if (data == null) {
+            return null;
+        }
+
         long user_id;
         try {
-            user_id = Long.parseLong(String.valueOf(request.getHeader("user_id")));
+            user_id = Long.parseLong(String.valueOf(data.get("id")));
         } catch (Exception e) {
-            return null;
-        }
-
-        Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
-        if (user_data == null) {
-            return null;
-        }
-
-        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
-        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
-                user_sign_key);
-        if (data == null) {
             return null;
         }
 
@@ -118,7 +109,7 @@ public class ProfileBanner {
             boolean isVideo = server.startsWith("video;");
 
             String base64Banner = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
-                    request.getHeader(API.REQ_HEADER_AUTH), request.getHeader(API.REQ_HEADER_SESS), user_id,"GET", isVideo);
+                    request.getHeader(API.REQ_HEADER_AUTH), user_id,"GET", isVideo);
 
             if (base64Banner == null) {
                 return null;

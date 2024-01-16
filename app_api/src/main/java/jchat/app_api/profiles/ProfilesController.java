@@ -17,22 +17,18 @@ public class ProfilesController {
 
     @GetMapping
     public String getProfile(HttpServletRequest request) {
-        // only session
-        Long user_id = API.getUserID_SessionOnly(request);
-        if (user_id == null) {
+        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
+        if (data == null) {
             return null;
         }
 
-        Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
-        if (user_data == null) {
+        long user_id;
+        try {
+            user_id = Long.parseLong(String.valueOf(data.get("id")));
+        } catch (Exception e) {
             return null;
         }
 
-        String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
-        String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
-
-        Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
-                user_sign_key);
         if (data == null || !data.containsKey("id")) {
             return null;
         }
@@ -49,7 +45,7 @@ public class ProfilesController {
             return null;
         }
 
-        return API.jwtService.generateUserJwt(profile_data, user_sign_key, user_encryp_key);
+        return API.jwtService.generateGlobalJwt(profile_data, true);
     }
 
 
@@ -71,8 +67,10 @@ public class ProfilesController {
 
         String user_encryp_key = String.valueOf(user_data.get(API.DB_ENCRYP_KEY));
         String user_sign_key = String.valueOf(user_data.get(API.DB_SIGN_KEY));
+
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
+
         if (data == null) {
             return null;
         }
@@ -112,7 +110,7 @@ public class ProfilesController {
             }
         }
 
-        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
+        return API.jwtService.generateGlobalJwt(claims, true);
     }
 
     @PostMapping()
