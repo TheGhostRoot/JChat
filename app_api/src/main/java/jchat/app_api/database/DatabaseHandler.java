@@ -220,14 +220,18 @@ public class DatabaseHandler {
     }
 
     public Long getUserByDetails(String email, String password) {
+        // password can be null
         if (databaseManager.isSQL()) {
             List<Object> condition = new ArrayList<>();
             condition.add(email);
-            condition.add(password);
+            if (password != null) {
+                condition.add(password);
+            }
 
             try {
                 return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
-                        "id", "email = ? AND password = ?", condition, null, "" ,0).get("id").get(0)));
+                        "id", password == null ? "email = ?" : "email = ? AND password = ?", condition,
+                        null, "" ,0).get("id").get(0)));
             } catch (Exception e) {
                 return null;
             }
@@ -235,7 +239,9 @@ public class DatabaseHandler {
         } else if (databaseManager.isMongo()) {
             try {
                 return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                        new Document("email", email).append("password", password), true, 0, "id").get(0).get("id")));
+                        password == null ? new Document("email", email) :
+                                new Document("email", email).append("password", password),
+                        true, 0, "id").get(0).get("id")));
             } catch (Exception e) {
                 return null;
             }

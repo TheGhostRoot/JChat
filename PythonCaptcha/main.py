@@ -39,7 +39,7 @@ def generate_captcha(captcha_code: str):
 
     image = Image.new('RGB', (width, height), (255, 255, 255))
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype('font2.ttf', 36)
+    font = ImageFont.truetype('font.ttf', 36)
 
     code_chars = list(captcha_code)
     for i, c in enumerate(code_chars):
