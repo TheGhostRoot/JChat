@@ -18,7 +18,7 @@ public class ProfilesController {
     @GetMapping
     public String getProfile(HttpServletRequest request) {
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
-        if (data == null) {
+        if (data == null || !data.containsKey("id")) {
             return null;
         }
 
@@ -29,18 +29,7 @@ public class ProfilesController {
             return null;
         }
 
-        if (data == null || !data.containsKey("id")) {
-            return null;
-        }
-
-        long given_user_id;
-        try {
-            given_user_id = Long.parseLong(String.valueOf(data.get("id")));
-        } catch (Exception e) {
-            return null;
-        }
-
-        Map<String, Object> profile_data = API.databaseHandler.getProfile(given_user_id);
+        Map<String, Object> profile_data = API.databaseHandler.getProfile(user_id);
         if (profile_data == null) {
             return null;
         }
