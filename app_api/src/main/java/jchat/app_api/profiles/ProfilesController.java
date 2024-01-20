@@ -99,7 +99,7 @@ public class ProfilesController {
             }
         }
 
-        return API.jwtService.generateGlobalJwt(claims, true);
+        return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
 
     @PostMapping()

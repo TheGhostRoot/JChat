@@ -594,7 +594,7 @@ public class DatabaseManager {
             boolean contains = false;
             for (Map.Entry<String, Object> entry2 : condition.entrySet()) {
                 String key = entry2.getKey();
-                contains = next.containsKey(key) && next.get(key).equals(entry2.getValue());
+                contains = next.containsKey(key) && next.get(key) != null && next.get(key).equals(entry2.getValue());
             }
 
             if (contains) {
