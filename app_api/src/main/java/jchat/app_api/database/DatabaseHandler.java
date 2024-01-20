@@ -44,13 +44,13 @@ public class DatabaseHandler {
 
             content.add(String.valueOf(update));
 
-            return databaseManager.addDataSQL(DatabaseManager.table_notifications, "id, update",
+            return databaseManager.addDataSQL(DatabaseManager.table_notifications, "id, notification",
                     "?, ?", content);
 
         } else if (databaseManager.isMongo()) {
 
             return databaseManager.MongoAddDataToCollectionNoSQL(databaseManager.table_notifications,
-                    new Document("id", id).append("update", update), null);
+                    new Document("id", id).append("notification", update), null);
         }
         return false;
     }
@@ -76,18 +76,18 @@ public class DatabaseHandler {
             condition.add(id);
 
             return databaseManager.getDataSQL(DatabaseManager.table_notifications,
-                    "update", "id = ?", condition, null, "", amount);
+                    "notification", "id = ?", condition, null, "", amount);
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> all_notifications = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_notifications,
-                    new Document("id", id), false, amount, "update");
+                    new Document("id", id), false, amount, "notification");
 
             if (all_notifications == null) {
                 return null;
             }
 
             Map<String, List<Object>> res = new HashMap<>();
-            res.put("update", new ArrayList<>());
+            res.put("notification", new ArrayList<>());
 
             return databaseManager.transformMongoToSQL(0, all_notifications, res);
 
@@ -138,8 +138,8 @@ public class DatabaseHandler {
             }
             profile_details.add(id);
 
-            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, badges, animations",
-                    "?, '', '', '', NULL", profile_details)) {
+            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, badges, animations, about_me, stats",
+                    "?, '', '', '', NULL, '', '0'", profile_details)) {
 
                 databaseManager.deleteDataSQL(DatabaseManager.table_accounts, "id = ?", profile_details);
                 return null;

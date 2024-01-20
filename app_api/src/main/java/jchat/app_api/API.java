@@ -311,7 +311,7 @@ public class API {
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
             databaseHandler.handleCaptchas();
-            databaseHandler.handleSessions();
+            //databaseHandler.handleSessions();
         }, 0, 1, TimeUnit.SECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

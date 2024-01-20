@@ -1,6 +1,6 @@
 port: 25500
 captcha_servers: ["http://localhost:1111/captcha/"]
 secret: "6T7ybiunoibUYG6F"
-db: "mongo"
+db: "mysql" # mysql, mongo, postgres
 captcha_time: 25
 upload_servers: ["http://localhost:25500/api/v1/profile"]

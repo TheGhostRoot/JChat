@@ -58,7 +58,7 @@ public class DatabaseManager {
 
     public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
 
-
+    private final boolean debug = true;
 
 
 
@@ -66,178 +66,181 @@ public class DatabaseManager {
         try {
             postgressql_connection = DriverManager.getConnection(postgressql_url, postgressql_username, postgressql_password);
 
-            List<String> accounts_table = new ArrayList<>();
-            accounts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
-            accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
-            accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("password VARCHAR(100) NOT NULL, ");
-            accounts_table.add("encryption_key VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("sign_key VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("session_id BIGINT UNIQUE, ");
-            accounts_table.add("ip_address TEXT, ");
-            accounts_table.add("session_expire smallint, ");
-            accounts_table.add("last_edit_time timestamp, ");
-            accounts_table.add("created_at timestamp NOT NULL, ");
-            accounts_table.add("friends TEXT NOT NULL, ");
-            accounts_table.add("starts_sub TIMESTAMP NULL, ");
-            accounts_table.add("ends_sub TIMESTAMP NULL, ");
-            accounts_table.add("bookmarks TEXT NOT NULL, ");
-            accounts_table.add("settings TEXT NOT NULL");
+            if (debug) {
 
-            List<String> chats_table = new ArrayList<>();
-            chats_table.add("channel_id BIGINT NOT NULL, ");
-            chats_table.add("group_id BIGINT NOT NULL, ");
-            chats_table.add("msg VARCHAR(2000) NOT NULL, ");
-            chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
-            chats_table.add("send_by BIGINT NOT NULL, ");
-            chats_table.add("msg_id BIGINT NOT NULL");
-            chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
+                List<String> accounts_table = new ArrayList<>();
+                accounts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+                accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
+                accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
+                accounts_table.add("password VARCHAR(100) NOT NULL, ");
+                accounts_table.add("encryption_key LONGTEXT(65535) UNIQUE NOT NULL, ");
+                accounts_table.add("sign_key LONGTEXT(65535) UNIQUE NOT NULL, ");
+                accounts_table.add("session_id BIGINT UNIQUE, ");
+                accounts_table.add("ip_address TEXT, ");
+                accounts_table.add("session_expire smallint, ");
+                accounts_table.add("last_edit_time timestamp, ");
+                accounts_table.add("created_at timestamp NOT NULL, ");
+                accounts_table.add("friends TEXT NOT NULL, ");
+                accounts_table.add("starts_sub TIMESTAMP NULL, ");
+                accounts_table.add("ends_sub TIMESTAMP NULL, ");
+                accounts_table.add("bookmarks TEXT NOT NULL, ");
+                accounts_table.add("settings TEXT NOT NULL");
 
-            List<String> reactions_table = new ArrayList<>();
-            reactions_table.add("channel_id BIGINT NOT NULL, ");
-            reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
-            reactions_table.add("msg_id BIGINT NOT NULL, ");
-            reactions_table.add("post_id BIGINT NOT NULL, ");
-            reactions_table.add("member_id BIGINT NOT NULL, ");
-            reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+                List<String> chats_table = new ArrayList<>();
+                chats_table.add("channel_id BIGINT NOT NULL, ");
+                chats_table.add("group_id BIGINT NOT NULL, ");
+                chats_table.add("msg VARCHAR(2000) NOT NULL, ");
+                chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
+                chats_table.add("send_by BIGINT NOT NULL, ");
+                chats_table.add("msg_id BIGINT NOT NULL");
+                chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
-            List<String> group_table = new ArrayList<>();
-            group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            group_table.add("name VARCHAR(50) NOT NULL, ");
-            group_table.add("owner_id BIGINT NOT NULL, ");
-            group_table.add("logo TEXT NOT NULL, ");
-            group_table.add("banner TEXT NOT NULL, ");
-            group_table.add("animations TEXT NOT NULL, ");
-            group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
-            group_table.add("group_events TEXT, ");
-            group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
+                List<String> reactions_table = new ArrayList<>();
+                reactions_table.add("channel_id BIGINT NOT NULL, ");
+                reactions_table.add("reaction LONGTEXT(65535) UNIQUE NOT NULL, ");
+                reactions_table.add("msg_id BIGINT NOT NULL, ");
+                reactions_table.add("post_id BIGINT NOT NULL, ");
+                reactions_table.add("member_id BIGINT NOT NULL, ");
+                reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
-            List<String> group_members_tabls = new ArrayList<>();
-            group_members_tabls.add("group_id BIGINT, ");
-            group_members_tabls.add("member_id BIGINT, ");
-            group_members_tabls.add("roles_id TEXT NOT NULL, ");
-            group_members_tabls.add("nickname VARCHAR(50) NULL, ");
-            group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+                List<String> group_table = new ArrayList<>();
+                group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                group_table.add("name VARCHAR(50) NOT NULL, ");
+                group_table.add("owner_id BIGINT NOT NULL, ");
+                group_table.add("logo TEXT NOT NULL, ");
+                group_table.add("banner TEXT NOT NULL, ");
+                group_table.add("animations TEXT NOT NULL, ");
+                group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
+                group_table.add("group_events TEXT, ");
+                group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
-            List<String> group_channels_tabls = new ArrayList<>();
-            group_channels_tabls.add("group_id BIGINT, ");
-            group_channels_tabls.add("channel_id BIGINT, ");
-            group_channels_tabls.add("name TEXT NOT NULL, ");
-            group_channels_tabls.add("permissions TEXT NOT NULL, ");
-            group_channels_tabls.add("channel_type TEXT NOT NULL, ");
-            group_channels_tabls.add("categories_id TEXT NOT NULL, ");
-            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+                List<String> group_members_tabls = new ArrayList<>();
+                group_members_tabls.add("group_id BIGINT, ");
+                group_members_tabls.add("member_id BIGINT, ");
+                group_members_tabls.add("roles_id TEXT NOT NULL, ");
+                group_members_tabls.add("nickname VARCHAR(50) NULL, ");
+                group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+                group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
-            List<String> group_categories_tabls = new ArrayList<>();
-            group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            group_categories_tabls.add("group_id BIGINT NOT NULL, ");
-            group_categories_tabls.add("name TEXT NOT NULL, ");
-            group_categories_tabls.add("category_type TEXT NOT NULL, ");
-            group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+                List<String> group_channels_tabls = new ArrayList<>();
+                group_channels_tabls.add("group_id BIGINT, ");
+                group_channels_tabls.add("channel_id BIGINT, ");
+                group_channels_tabls.add("name TEXT NOT NULL, ");
+                group_channels_tabls.add("permissions TEXT NOT NULL, ");
+                group_channels_tabls.add("channel_type TEXT NOT NULL, ");
+                group_channels_tabls.add("categories_id TEXT NOT NULL, ");
+                group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
 
-            List<String> group_roles_tabls = new ArrayList<>();
-            group_roles_tabls.add("group_id BIGINT, ");
-            group_roles_tabls.add("role_id BIGINT, ");
-            group_roles_tabls.add("name TEXT NOT NULL, ");
-            group_roles_tabls.add("permissions TEXT NOT NULL, ");
-            group_roles_tabls.add("role_type TEXT NOT NULL, ");
-            group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+                List<String> group_categories_tabls = new ArrayList<>();
+                group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                group_categories_tabls.add("group_id BIGINT NOT NULL, ");
+                group_categories_tabls.add("name TEXT NOT NULL, ");
+                group_categories_tabls.add("category_type TEXT NOT NULL, ");
+                group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
-            List<String> group_logs_tabls = new ArrayList<>();
-            group_logs_tabls.add("group_id BIGINT, ");
-            group_logs_tabls.add("actor_id BIGINT, ");
-            group_logs_tabls.add("log_type TEXT NOT NULL, ");
-            group_logs_tabls.add("log_message TEXT NOT NULL, ");
-            group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
-            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
+                List<String> group_roles_tabls = new ArrayList<>();
+                group_roles_tabls.add("group_id BIGINT, ");
+                group_roles_tabls.add("role_id BIGINT, ");
+                group_roles_tabls.add("name TEXT NOT NULL, ");
+                group_roles_tabls.add("permissions TEXT NOT NULL, ");
+                group_roles_tabls.add("role_type TEXT NOT NULL, ");
+                group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
-            List<String> captchas_table = new ArrayList<>();
-            captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
-            captchas_table.add("answer TEXT NOT NULL, ");
-            captchas_table.add("time smallint NOT NULL, ");
-            captchas_table.add("last_edit_time TEXT NOT NULL");
+                List<String> group_logs_tabls = new ArrayList<>();
+                group_logs_tabls.add("group_id BIGINT, ");
+                group_logs_tabls.add("actor_id BIGINT, ");
+                group_logs_tabls.add("log_type TEXT NOT NULL, ");
+                group_logs_tabls.add("log_message TEXT NOT NULL, ");
+                group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
+                group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+                group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
-            List<String> posts_table = new ArrayList<>();
-            posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
-            posts_table.add("sender_id BIGINT NOT NULL, ");
-            posts_table.add("send_at TIMESTAMP(6) NOT NULL, ");
-            posts_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_table.add("background TEXT NOT NULL, ");
-            posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
+                List<String> captchas_table = new ArrayList<>();
+                captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
+                captchas_table.add("answer TEXT NOT NULL, ");
+                captchas_table.add("time smallint NOT NULL, ");
+                captchas_table.add("last_edit_time TEXT NOT NULL");
 
-            List<String> posts_comment_table = new ArrayList<>();
-            posts_comment_table.add("post_id BIGINT NOT NULL, ");
-            posts_comment_table.add("send_by BIGINT NOT NULL, ");
-            posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
-            posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_comment_table.add("repl_to TEXT NOT NULL, ");
-            posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
-            posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
+                List<String> posts_table = new ArrayList<>();
+                posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
+                posts_table.add("sender_id BIGINT NOT NULL, ");
+                posts_table.add("send_at TIMESTAMP(6) NOT NULL, ");
+                posts_table.add("msg VARCHAR(200) NOT NULL, ");
+                posts_table.add("background TEXT NOT NULL, ");
+                posts_table.add("FOREIGN KEY (sender_id) REFERENCES accounts(id)");
 
-            List<String> profiles_table = new ArrayList<>();
-            profiles_table.add("id BIGINT NOT NULL, ");
-            profiles_table.add("pfp TEXT NOT NULL, ");
-            profiles_table.add("banner TEXT NOT NULL, ");
-            profiles_table.add("badges TEXT NOT NULL, ");
-            profiles_table.add("animations TEXT, ");
-            profiles_table.add("about_me TEXT NOT NULL, ");
-            profiles_table.add("stats TEXT NOT NULL, ");
-            profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+                List<String> posts_comment_table = new ArrayList<>();
+                posts_comment_table.add("post_id BIGINT NOT NULL, ");
+                posts_comment_table.add("send_by BIGINT NOT NULL, ");
+                posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
+                posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
+                posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                posts_comment_table.add("repl_to TEXT NOT NULL, ");
+                posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
+                posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
-            List<String> friends_table = new ArrayList<>();
-            friends_table.add("id BIGINT NOT NULL, ");
-            friends_table.add("id2 BIGINT NOT NULL, ");
-            friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
-            friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+                List<String> profiles_table = new ArrayList<>();
+                profiles_table.add("id BIGINT NOT NULL, ");
+                profiles_table.add("pfp TEXT NOT NULL, ");
+                profiles_table.add("banner TEXT NOT NULL, ");
+                profiles_table.add("badges TEXT NOT NULL, ");
+                profiles_table.add("animations TEXT, ");
+                profiles_table.add("about_me TEXT NOT NULL, ");
+                profiles_table.add("stats TEXT NOT NULL, ");
+                profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
-            List<String> notifi_table = new ArrayList<>();
-            notifi_table.add("id BIGINT NOT NULL, ");
-            notifi_table.add("update TEXT NOT NULL, ");
-            notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+                List<String> friends_table = new ArrayList<>();
+                friends_table.add("id BIGINT NOT NULL, ");
+                friends_table.add("id2 BIGINT NOT NULL, ");
+                friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
+                friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+
+                List<String> notifi_table = new ArrayList<>();
+                notifi_table.add("id BIGINT NOT NULL, ");
+                notifi_table.add("notification LONGTEXT NOT NULL, ");
+                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
 
-            List<String> uploads_table = new ArrayList<>();
-            uploads_table.add("server TEXT NOT NULL, ");
-            uploads_table.add("name TEXT NOT NULL, ");
-            uploads_table.add("user_id TEXT NOT NULL");
-            friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+                List<String> uploads_table = new ArrayList<>();
+                uploads_table.add("server TEXT NOT NULL, ");
+                uploads_table.add("name TEXT NOT NULL, ");
+                uploads_table.add("user_id TEXT NOT NULL");
+                friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
 
-            deleteTableSQL(table_profiles);
-            deleteTableSQL(table_notifications);
-            deleteTableSQL(table_uploads);
-            deleteTableSQL(table_friend_requests);
-            deleteTableSQL(table_post_comments);
-            deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_members);
-            deleteTableSQL(table_group_channels);
-            deleteTableSQL(table_group_category);
-            deleteTableSQL(table_group_roles);
-            deleteTableSQL(table_group_logs);
-            deleteTableSQL(table_groups);
-            deleteTableSQL(table_reactions);
-            deleteTableSQL(table_chats);
-            deleteTableSQL(table_captchas);
-            deleteTableSQL(table_accounts);
+                deleteTableSQL(table_profiles);
+                deleteTableSQL(table_notifications);
+                deleteTableSQL(table_uploads);
+                deleteTableSQL(table_friend_requests);
+                deleteTableSQL(table_post_comments);
+                deleteTableSQL(table_posts);
+                deleteTableSQL(table_group_members);
+                deleteTableSQL(table_group_channels);
+                deleteTableSQL(table_group_category);
+                deleteTableSQL(table_group_roles);
+                deleteTableSQL(table_group_logs);
+                deleteTableSQL(table_groups);
+                deleteTableSQL(table_reactions);
+                deleteTableSQL(table_chats);
+                deleteTableSQL(table_captchas);
+                deleteTableSQL(table_accounts);
 
-            createTableSQL( table_accounts, accounts_table);
-            createTableSQL(table_uploads, uploads_table);
-            createTableSQL(table_notifications, notifi_table);
-            createTableSQL( table_captchas, captchas_table);
-            createTableSQL( table_profiles, profiles_table);
-            createTableSQL( table_posts, posts_table);
-            createTableSQL(table_post_comments, posts_comment_table);
-            createTableSQL( table_chats, chats_table);
-            createTableSQL(table_reactions, reactions_table);
-            createTableSQL(table_groups, group_table);
-            createTableSQL(table_group_members, group_members_tabls);
-            createTableSQL(table_group_category, group_categories_tabls);
-            createTableSQL(table_group_channels, group_channels_tabls);
-            createTableSQL(table_group_roles, group_roles_tabls);
-            createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_friend_requests, friends_table);
+                createTableSQL(table_accounts, accounts_table);
+                createTableSQL(table_uploads, uploads_table);
+                createTableSQL(table_notifications, notifi_table);
+                createTableSQL(table_captchas, captchas_table);
+                createTableSQL(table_profiles, profiles_table);
+                createTableSQL(table_posts, posts_table);
+                createTableSQL(table_post_comments, posts_comment_table);
+                createTableSQL(table_chats, chats_table);
+                createTableSQL(table_reactions, reactions_table);
+                createTableSQL(table_groups, group_table);
+                createTableSQL(table_group_members, group_members_tabls);
+                createTableSQL(table_group_category, group_categories_tabls);
+                createTableSQL(table_group_channels, group_channels_tabls);
+                createTableSQL(table_group_roles, group_roles_tabls);
+                createTableSQL(table_group_logs, group_logs_tabls);
+                createTableSQL(table_friend_requests, friends_table);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -248,178 +251,184 @@ public class DatabaseManager {
         try {
             mysql_connection = DriverManager.getConnection(mysql_url, mysql_username, mysql_password);
 
-            List<String> accounts_table = new ArrayList<>();
-            accounts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
-            accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("password VARCHAR(100) NOT NULL, ");
-            accounts_table.add("encryption_key VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("sign_key VARCHAR(50) UNIQUE NOT NULL, ");
-            accounts_table.add("session_id BIGINT UNIQUE, ");
-            accounts_table.add("ip_address TEXT, ");
-            accounts_table.add("session_expire SMALLINT, ");
-            accounts_table.add("last_edit_time TIMESTAMP NULL, ");
-            accounts_table.add("created_at TIMESTAMP NOT NULL, ");
-            accounts_table.add("friends TEXT NOT NULL, ");
-            accounts_table.add("starts_sub TIMESTAMP NULL, ");
-            accounts_table.add("ends_sub TIMESTAMP NULL, ");
-            accounts_table.add("bookmarks TEXT NOT NULL, ");
-            accounts_table.add("settings TEXT NOT NULL");
+            if (debug) {
 
-            List<String> chats_table = new ArrayList<>();
-            chats_table.add("channel_id BIGINT NOT NULL, ");
-            chats_table.add("group_id BIGINT NOT NULL, ");
-            chats_table.add("msg VARCHAR(2000) NOT NULL, ");
-            chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
-            chats_table.add("send_by BIGINT NOT NULL, ");
-            chats_table.add("msg_id BIGINT NOT NULL, ");
-            chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
+                List<String> accounts_table = new ArrayList<>();
+                accounts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                accounts_table.add("name VARCHAR(20) UNIQUE NOT NULL, ");
+                accounts_table.add("email VARCHAR(50) UNIQUE NOT NULL, ");
+                accounts_table.add("password VARCHAR(100) NOT NULL, ");
+                accounts_table.add("encryption_key LONGTEXT NOT NULL, ");
+                accounts_table.add("sign_key LONGTEXT NOT NULL, ");
+                accounts_table.add("session_id BIGINT UNIQUE, ");
+                accounts_table.add("ip_address TEXT, ");
+                accounts_table.add("session_expire SMALLINT, ");
+                accounts_table.add("last_edit_time TIMESTAMP NULL, ");
+                accounts_table.add("created_at TIMESTAMP NOT NULL, ");
+                accounts_table.add("friends TEXT NOT NULL, ");
+                accounts_table.add("starts_sub TIMESTAMP NULL, ");
+                accounts_table.add("ends_sub TIMESTAMP NULL, ");
+                accounts_table.add("bookmarks TEXT NOT NULL, ");
+                accounts_table.add("settings TEXT NOT NULL, ");
+                accounts_table.add("UNIQUE KEY (encryption_key(767)), ");
+                accounts_table.add("UNIQUE KEY (sign_key(767))");
 
-            List<String> reactions_table = new ArrayList<>();
-            reactions_table.add("channel_id BIGINT NOT NULL, ");
-            reactions_table.add("reaction VARCHAR(255) UNIQUE NOT NULL, ");
-            reactions_table.add("msg_id BIGINT NOT NULL, ");
-            reactions_table.add("post_id BIGINT NOT NULL, ");
-            reactions_table.add("member_id BIGINT NOT NULL, ");
-            reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+                List<String> chats_table = new ArrayList<>();
+                chats_table.add("channel_id BIGINT NOT NULL, ");
+                chats_table.add("group_id BIGINT NOT NULL, ");
+                chats_table.add("msg VARCHAR(2000) NOT NULL, ");
+                chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
+                chats_table.add("send_by BIGINT NOT NULL, ");
+                chats_table.add("msg_id BIGINT NOT NULL, ");
+                chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
-            List<String> group_table = new ArrayList<>();
-            group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            group_table.add("name VARCHAR(50) NOT NULL, ");
-            group_table.add("owner_id BIGINT NOT NULL, ");
-            group_table.add("logo TEXT NOT NULL, ");
-            group_table.add("banner TEXT NOT NULL, ");
-            group_table.add("animations TEXT NOT NULL, ");
-            group_table.add("settings TEXT NOT NULL, ");
-            group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
-            group_table.add("group_events TEXT, ");
-            group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
+                List<String> reactions_table = new ArrayList<>();
+                reactions_table.add("channel_id BIGINT NOT NULL, ");
+                reactions_table.add("reaction LONGTEXT NOT NULL, ");
+                reactions_table.add("msg_id BIGINT NOT NULL, ");
+                reactions_table.add("post_id BIGINT NOT NULL, ");
+                reactions_table.add("member_id BIGINT NOT NULL, ");
+                reactions_table.add("UNIQUE KEY (reaction(767)), ");
+                reactions_table.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
-            List<String> group_members_tabls = new ArrayList<>();
-            group_members_tabls.add("group_id BIGINT, ");
-            group_members_tabls.add("member_id BIGINT, ");
-            group_members_tabls.add("roles_id TEXT NOT NULL, ");
-            group_members_tabls.add("nickname VARCHAR(50) NULL, ");
-            group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
+                List<String> group_table = new ArrayList<>();
+                group_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                group_table.add("name VARCHAR(50) NOT NULL, ");
+                group_table.add("owner_id BIGINT NOT NULL, ");
+                group_table.add("logo TEXT NOT NULL, ");
+                group_table.add("banner TEXT NOT NULL, ");
+                group_table.add("animations TEXT NOT NULL, ");
+                group_table.add("settings TEXT NOT NULL, ");
+                group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
+                group_table.add("group_events TEXT, ");
+                group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
 
-            List<String> group_channels_tabls = new ArrayList<>();
-            group_channels_tabls.add("group_id BIGINT, ");
-            group_channels_tabls.add("channel_id BIGINT, ");
-            group_channels_tabls.add("name TEXT NOT NULL, ");
-            group_channels_tabls.add("permissions TEXT NOT NULL, ");
-            group_channels_tabls.add("channel_type TEXT NOT NULL, ");
-            group_channels_tabls.add("categories_id TEXT NOT NULL, ");
-            group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+                List<String> group_members_tabls = new ArrayList<>();
+                group_members_tabls.add("group_id BIGINT, ");
+                group_members_tabls.add("member_id BIGINT, ");
+                group_members_tabls.add("roles_id TEXT NOT NULL, ");
+                group_members_tabls.add("nickname VARCHAR(50) NULL, ");
+                group_members_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+                group_members_tabls.add("FOREIGN KEY (member_id) REFERENCES accounts(id)");
 
-            List<String> group_categories_tabls = new ArrayList<>();
-            group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            group_categories_tabls.add("group_id BIGINT NOT NULL, ");
-            group_categories_tabls.add("name TEXT NOT NULL, ");
-            group_categories_tabls.add("category_type TEXT NOT NULL, ");
-            group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+                List<String> group_channels_tabls = new ArrayList<>();
+                group_channels_tabls.add("group_id BIGINT, ");
+                group_channels_tabls.add("channel_id BIGINT, ");
+                group_channels_tabls.add("name TEXT NOT NULL, ");
+                group_channels_tabls.add("permissions TEXT NOT NULL, ");
+                group_channels_tabls.add("channel_type TEXT NOT NULL, ");
+                group_channels_tabls.add("categories_id TEXT NOT NULL, ");
+                group_channels_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
-            List<String> group_roles_tabls = new ArrayList<>();
-            group_roles_tabls.add("group_id BIGINT, ");
-            group_roles_tabls.add("role_id BIGINT, ");
-            group_roles_tabls.add("name TEXT NOT NULL, ");
-            group_roles_tabls.add("permissions TEXT NOT NULL, ");
-            group_roles_tabls.add("role_type TEXT NOT NULL, ");
-            group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
+                List<String> group_categories_tabls = new ArrayList<>();
+                group_categories_tabls.add("category_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                group_categories_tabls.add("group_id BIGINT NOT NULL, ");
+                group_categories_tabls.add("name TEXT NOT NULL, ");
+                group_categories_tabls.add("category_type TEXT NOT NULL, ");
+                group_categories_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
-            List<String> group_logs_tabls = new ArrayList<>();
-            group_logs_tabls.add("group_id BIGINT, ");
-            group_logs_tabls.add("actor_id BIGINT, ");
-            group_logs_tabls.add("log_type TEXT NOT NULL, ");
-            group_logs_tabls.add("log_message TEXT NOT NULL, ");
-            group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
-            group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
-            group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
+                List<String> group_roles_tabls = new ArrayList<>();
+                group_roles_tabls.add("group_id BIGINT, ");
+                group_roles_tabls.add("role_id BIGINT, ");
+                group_roles_tabls.add("name TEXT NOT NULL, ");
+                group_roles_tabls.add("permissions TEXT NOT NULL, ");
+                group_roles_tabls.add("role_type TEXT NOT NULL, ");
+                group_roles_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id)");
 
-            List<String> captchas_table = new ArrayList<>();
-            captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            captchas_table.add("answer TEXT NOT NULL, ");
-            captchas_table.add("time SMALLINT NOT NULL, ");
-            captchas_table.add("last_edit_time TIMESTAMP(6) NOT NULL");
+                List<String> group_logs_tabls = new ArrayList<>();
+                group_logs_tabls.add("group_id BIGINT, ");
+                group_logs_tabls.add("actor_id BIGINT, ");
+                group_logs_tabls.add("log_type TEXT NOT NULL, ");
+                group_logs_tabls.add("log_message TEXT NOT NULL, ");
+                group_logs_tabls.add("acted_at TIMESTAMP(6) NOT NULL, ");
+                group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
+                group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
-            List<String> posts_table = new ArrayList<>();
-            posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_table.add("send_by BIGINT NOT NULL, ");
-            posts_table.add("send_at TIMESTAMP NOT NULL, ");
-            posts_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_table.add("background TEXT NULL, ");
-            posts_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
+                List<String> captchas_table = new ArrayList<>();
+                captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                captchas_table.add("answer TEXT NOT NULL, ");
+                captchas_table.add("time SMALLINT NOT NULL, ");
+                captchas_table.add("last_edit_time TIMESTAMP(6) NOT NULL");
 
-            List<String> posts_comment_table = new ArrayList<>();
-            posts_comment_table.add("post_id BIGINT NOT NULL, ");
-            posts_comment_table.add("send_by BIGINT NOT NULL, ");
-            posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
-            posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
-            posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-            posts_comment_table.add("repl_to TEXT NOT NULL, ");
-            posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
-            posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
+                List<String> posts_table = new ArrayList<>();
+                posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                posts_table.add("send_by BIGINT NOT NULL, ");
+                posts_table.add("send_at TIMESTAMP NOT NULL, ");
+                posts_table.add("msg VARCHAR(200) NOT NULL, ");
+                posts_table.add("background TEXT NULL, ");
+                posts_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
 
-            List<String> profiles_table = new ArrayList<>();
-            profiles_table.add("id BIGINT NOT NULL, ");
-            profiles_table.add("pfp TEXT NOT NULL, ");
-            profiles_table.add("banner TEXT NOT NULL, ");
-            profiles_table.add("badges TEXT NOT NULL, ");
-            profiles_table.add("animations TEXT NULL, ");
-            profiles_table.add("about_me TEXT NOT NULL, ");
-            profiles_table.add("stats TEXT NOT NULL, ");
-            profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+                List<String> posts_comment_table = new ArrayList<>();
+                posts_comment_table.add("post_id BIGINT NOT NULL, ");
+                posts_comment_table.add("send_by BIGINT NOT NULL, ");
+                posts_comment_table.add("send_at TIMESTAMP(6) NOT NULL, ");
+                posts_comment_table.add("msg VARCHAR(200) NOT NULL, ");
+                posts_comment_table.add("msg_id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                posts_comment_table.add("repl_to TEXT NOT NULL, ");
+                posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
+                posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
-            List<String> friends_table = new ArrayList<>();
-            friends_table.add("id BIGINT NOT NULL, ");
-            friends_table.add("id2 BIGINT NOT NULL, ");
-            friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
-            friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+                List<String> profiles_table = new ArrayList<>();
+                profiles_table.add("id BIGINT NOT NULL, ");
+                profiles_table.add("pfp TEXT NOT NULL, ");
+                profiles_table.add("banner TEXT NOT NULL, ");
+                profiles_table.add("badges TEXT NOT NULL, ");
+                profiles_table.add("animations TEXT NULL, ");
+                profiles_table.add("about_me TEXT NOT NULL, ");
+                profiles_table.add("stats TEXT NOT NULL, ");
+                profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
-            List<String> notifi_table = new ArrayList<>();
-            notifi_table.add("id BIGINT NOT NULL, ");
-            notifi_table.add("update TEXT NOT NULL, ");
-            notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+                List<String> friends_table = new ArrayList<>();
+                friends_table.add("id BIGINT NOT NULL, ");
+                friends_table.add("id2 BIGINT NOT NULL, ");
+                friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
+                friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
 
-            List<String> uploads_table = new ArrayList<>();
-            uploads_table.add("server TEXT NOT NULL, ");
-            uploads_table.add("name TEXT NOT NULL, ");
-            uploads_table.add("user_id TEXT NOT NULL");
-            friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+                List<String> notifi_table = new ArrayList<>();
+                notifi_table.add("id BIGINT NOT NULL, ");
+                notifi_table.add("notification LONGTEXT NOT NULL, ");
+                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
-            deleteTableSQL(table_profiles);
-            deleteTableSQL(table_notifications);
-            deleteTableSQL(table_uploads);
-            deleteTableSQL(table_friend_requests);
-            deleteTableSQL(table_post_comments);
-            deleteTableSQL(table_posts);
-            deleteTableSQL(table_group_members);
-            deleteTableSQL(table_group_channels);
-            deleteTableSQL(table_group_category);
-            deleteTableSQL(table_group_roles);
-            deleteTableSQL(table_group_logs);
-            deleteTableSQL(table_groups);
-            deleteTableSQL(table_reactions);
-            deleteTableSQL(table_chats);
-            deleteTableSQL(table_captchas);
-            deleteTableSQL(table_accounts);
+                List<String> uploads_table = new ArrayList<>();
+                uploads_table.add("server TEXT NOT NULL, ");
+                uploads_table.add("name TEXT NOT NULL, ");
+                uploads_table.add("user_id BIGINT NOT NULL, ");
+                uploads_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
 
-            createTableSQL( table_accounts, accounts_table);
-            createTableSQL(table_uploads, uploads_table);
-            createTableSQL(table_notifications, notifi_table);
-            createTableSQL( table_captchas, captchas_table);
-            createTableSQL( table_profiles, profiles_table);
-            createTableSQL( table_posts, posts_table);
-            createTableSQL(table_post_comments, posts_comment_table);
-            createTableSQL( table_chats, chats_table);
-            createTableSQL(table_reactions, reactions_table);
-            createTableSQL(table_groups, group_table);
-            createTableSQL(table_group_members, group_members_tabls);
-            createTableSQL(table_group_category, group_categories_tabls);
-            createTableSQL(table_group_channels, group_channels_tabls);
-            createTableSQL(table_group_roles, group_roles_tabls);
-            createTableSQL(table_group_logs, group_logs_tabls);
-            createTableSQL(table_friend_requests, friends_table);
+                deleteTableSQL(table_profiles);
+                deleteTableSQL(table_notifications);
+                deleteTableSQL(table_uploads);
+                deleteTableSQL(table_friend_requests);
+                deleteTableSQL(table_post_comments);
+                deleteTableSQL(table_posts);
+                deleteTableSQL(table_group_members);
+                deleteTableSQL(table_group_channels);
+                deleteTableSQL(table_group_category);
+                deleteTableSQL(table_group_roles);
+                deleteTableSQL(table_group_logs);
+                deleteTableSQL(table_groups);
+                deleteTableSQL(table_reactions);
+                deleteTableSQL(table_chats);
+                deleteTableSQL(table_captchas);
+                deleteTableSQL(table_accounts);
+
+                createTableSQL(table_accounts, accounts_table);
+                createTableSQL(table_uploads, uploads_table);
+                createTableSQL(table_notifications, notifi_table);
+                createTableSQL(table_captchas, captchas_table);
+                createTableSQL(table_profiles, profiles_table);
+                createTableSQL(table_posts, posts_table);
+                createTableSQL(table_post_comments, posts_comment_table);
+                createTableSQL(table_chats, chats_table);
+                createTableSQL(table_reactions, reactions_table);
+                createTableSQL(table_groups, group_table);
+                createTableSQL(table_group_members, group_members_tabls);
+                createTableSQL(table_group_category, group_categories_tabls);
+                createTableSQL(table_group_channels, group_channels_tabls);
+                createTableSQL(table_group_roles, group_roles_tabls);
+                createTableSQL(table_group_logs, group_logs_tabls);
+                createTableSQL(table_friend_requests, friends_table);
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -431,28 +440,31 @@ public class DatabaseManager {
             mongoClient = MongoClients.create(mongo_url);
             mongoDatabase = mongoClient.getDatabase(mongo_database);
 
-            MongoDeleteCollectionNoSQL(table_accounts);
-            MongoDeleteCollectionNoSQL(table_profiles);
-            MongoDeleteCollectionNoSQL(table_captchas);
-            MongoDeleteCollectionNoSQL(table_chats);
-            MongoDeleteCollectionNoSQL(table_reactions);
-            MongoDeleteCollectionNoSQL(table_uploads);
-            MongoDeleteCollectionNoSQL(table_posts);
-            MongoDeleteCollectionNoSQL(table_groups);
-            MongoDeleteCollectionNoSQL(table_friend_requests);
-            MongoDeleteCollectionNoSQL(table_notifications);
+            if (debug) {
+
+                MongoDeleteCollectionNoSQL(table_accounts);
+                MongoDeleteCollectionNoSQL(table_profiles);
+                MongoDeleteCollectionNoSQL(table_captchas);
+                MongoDeleteCollectionNoSQL(table_chats);
+                MongoDeleteCollectionNoSQL(table_reactions);
+                MongoDeleteCollectionNoSQL(table_uploads);
+                MongoDeleteCollectionNoSQL(table_posts);
+                MongoDeleteCollectionNoSQL(table_groups);
+                MongoDeleteCollectionNoSQL(table_friend_requests);
+                MongoDeleteCollectionNoSQL(table_notifications);
 
 
-            MongoCreateCollectionNoSQL(table_accounts);
-            MongoCreateCollectionNoSQL(table_profiles);
-            MongoCreateCollectionNoSQL(table_captchas);
-            MongoCreateCollectionNoSQL(table_chats);
-            MongoCreateCollectionNoSQL(table_reactions);
-            MongoCreateCollectionNoSQL(table_uploads);
-            MongoCreateCollectionNoSQL(table_posts);
-            MongoCreateCollectionNoSQL(table_groups);
-            MongoCreateCollectionNoSQL(table_friend_requests);
-            MongoCreateCollectionNoSQL(table_notifications);
+                MongoCreateCollectionNoSQL(table_accounts);
+                MongoCreateCollectionNoSQL(table_profiles);
+                MongoCreateCollectionNoSQL(table_captchas);
+                MongoCreateCollectionNoSQL(table_chats);
+                MongoCreateCollectionNoSQL(table_reactions);
+                MongoCreateCollectionNoSQL(table_uploads);
+                MongoCreateCollectionNoSQL(table_posts);
+                MongoCreateCollectionNoSQL(table_groups);
+                MongoCreateCollectionNoSQL(table_friend_requests);
+                MongoCreateCollectionNoSQL(table_notifications);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -472,7 +484,9 @@ public class DatabaseManager {
                 mongoClient.close();
 
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -495,6 +509,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception  e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -513,6 +528,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception  e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -531,6 +547,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -546,6 +563,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -897,6 +915,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -915,6 +934,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
 
@@ -936,6 +956,7 @@ public class DatabaseManager {
             return true;
 
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -974,6 +995,7 @@ public class DatabaseManager {
             return readOutputSQL(((PreparedStatement) setDataSQL((short) 1, conditionData, preparedStatement).get(1)).executeQuery());
 
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
 
