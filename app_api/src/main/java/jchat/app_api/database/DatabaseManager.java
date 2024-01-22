@@ -190,10 +190,10 @@ public class DatabaseManager {
                 profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
                 List<String> friends_table = new ArrayList<>();
-                friends_table.add("id BIGINT NOT NULL, ");
-                friends_table.add("id2 BIGINT NOT NULL, ");
-                friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
-                friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+                friends_table.add("name VARCHAR(20) NOT NULL, ");
+                friends_table.add("name2 VARCHAR(20) NOT NULL, ");
+                friends_table.add("FOREIGN KEY (name) REFERENCES accounts(name), ");
+                friends_table.add("FOREIGN KEY (name2) REFERENCES accounts(name)");
 
                 List<String> notifi_table = new ArrayList<>();
                 notifi_table.add("id BIGINT NOT NULL, ");
@@ -379,10 +379,10 @@ public class DatabaseManager {
                 profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
                 List<String> friends_table = new ArrayList<>();
-                friends_table.add("id BIGINT NOT NULL, ");
-                friends_table.add("id2 BIGINT NOT NULL, ");
-                friends_table.add("FOREIGN KEY (id) REFERENCES accounts(id), ");
-                friends_table.add("FOREIGN KEY (id2) REFERENCES accounts(id)");
+                friends_table.add("name VARCHAR(20) NOT NULL, ");
+                friends_table.add("name2 VARCHAR(20) NOT NULL, ");
+                friends_table.add("FOREIGN KEY (name) REFERENCES accounts(name), ");
+                friends_table.add("FOREIGN KEY (name2) REFERENCES accounts(name)");
 
                 List<String> notifi_table = new ArrayList<>();
                 notifi_table.add("id BIGINT NOT NULL, ");

@@ -281,6 +281,30 @@ public class DatabaseHandler {
         return null;
     }
 
+
+    public long getUserIDByName(String name) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(name);
+
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                        "id", "name = ?", condition, null, "", 0).get("id").get(0)));
+
+            } catch (Exception e) {
+                return 0;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            try {
+                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("name", name), true, 0, "id").get(0).get("id")));
+            } catch (Exception e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
     public Map<String, Object> getUserByID(long id) {
         if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts)) {
             return null;
@@ -3964,11 +3988,13 @@ public class DatabaseHandler {
         return false;
     }
 
+
     public boolean checkFriendRequest(long id, long id2) {
         if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts) ||
                 !databaseManager.checkIDExists(id2, DatabaseManager.table_accounts)) {
             return false;
         }
+
 
         if (databaseManager.isSQL()) {
             List<Object> users = new ArrayList<>();

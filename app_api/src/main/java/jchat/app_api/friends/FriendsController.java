@@ -54,14 +54,12 @@ public class FriendsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("modif")) {
+        if (data == null || !data.containsKey("modif") || !data.containsKey("friend_name")) {
             return null;
         }
 
-        long user_id1;
-        try {
-            user_id1 = Long.parseLong((String) data.get("friend_id"));
-        } catch (Exception e) {
+        long user_id1 = API.databaseHandler.getUserIDByName(String.valueOf(data.get("friend_name")));
+        if (user_id1 == 0) {
             return null;
         }
 

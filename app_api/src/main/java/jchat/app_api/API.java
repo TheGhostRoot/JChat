@@ -324,9 +324,9 @@ public class API {
         SpringApplication app = new SpringApplication(API.class);
         Map<String, Object> config = new HashMap<>();
         config.put("server.port", readPortFromConfig());
-        config.put("server.max-http-header-size", "1MB");
-        config.put("spring.servlet.multipart.max-file-size", "10MB");
-        config.put("spring.servlet.multipart.max-request-size", "10MB");
+        config.put("server.max-http-header-size", "10MB");
+        config.put("spring.servlet.multipart.max-file-size", "10GB");
+        config.put("spring.servlet.multipart.max-request-size", "10GB");
         //config.put("spring.web.resources.static-locations", "file:D:\\ToolBox\\Tools\\Kit\\JChat\\app_api\\public");
 
 
