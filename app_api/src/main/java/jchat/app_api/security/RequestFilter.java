@@ -89,16 +89,18 @@ public class RequestFilter extends OncePerRequestFilter {
                 }
 
                 Map<String, Object> data = API.jwtService.getData(authHeader,
-                        String.valueOf(userByID.get(API.DB_ENCRYP_KEY)), String.valueOf(userByID.get(API.DB_SIGN_KEY)));
+                            String.valueOf(userByID.get(API.DB_ENCRYP_KEY)), String.valueOf(userByID.get(API.DB_SIGN_KEY)));
                 if (data == null) {
                     response.sendError(403);
                     return;
                 }
 
+
                 if (data.isEmpty()) {
                     response.sendError(403);
                     return;
                 }
+
             } else if (null == API.jwtService.getData(authHeader, null, null)) {
                 response.sendError(403);
                 return;

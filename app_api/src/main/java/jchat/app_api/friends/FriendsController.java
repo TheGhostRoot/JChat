@@ -6,6 +6,7 @@ import jchat.app_api.API;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController()
@@ -25,6 +26,17 @@ public class FriendsController {
         Map<String, Object> user_data = API.databaseHandler.getUserByID(user_id);
         if (user_data == null) {
             return null;
+        }
+
+
+
+        if (request.getHeader("Friend_requests") != null) {
+            // get friend requests
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("friend_requests", API.databaseHandler.getFriendRequestsForUser(user_id));
+
+            return API.jwtService.generateUserJwt(claims, String.valueOf(user_data.get(API.DB_SIGN_KEY)),
+                    String.valueOf(user_data.get(API.DB_ENCRYP_KEY)));
         }
 
         Map<String, Object> claims = new HashMap<>();

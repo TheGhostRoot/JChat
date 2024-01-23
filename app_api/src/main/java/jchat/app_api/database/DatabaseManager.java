@@ -574,6 +574,10 @@ public class DatabaseManager {
             return null;
         }
 
+        if (condition != null && condition.containsKey("email") && condition.containsKey("password") && collectionName == "accounts") {
+            API.logger.info("1");
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
 
         List<String> filter_list = Arrays.stream(filters).toList();
@@ -609,13 +613,15 @@ public class DatabaseManager {
                                                       Document next, List<String> filter_list,
                                                       HashMap<String, Object> data_to_add) {
         if (condition != null) {
-            boolean contains = false;
+            int amountOfContains = 0;
             for (Map.Entry<String, Object> entry2 : condition.entrySet()) {
                 String key = entry2.getKey();
-                contains = next.containsKey(key) && next.get(key) != null && next.get(key).equals(entry2.getValue());
+                if (next.containsKey(key) && next.get(key) != null && next.get(key).equals(entry2.getValue())) {
+                    amountOfContains++;
+                }
             }
 
-            if (contains) {
+            if (amountOfContains == condition.size()) {
                 if (filter_list != null) {
                     data_to_add = FilterHandler(data_to_add, next, filter_list);
 

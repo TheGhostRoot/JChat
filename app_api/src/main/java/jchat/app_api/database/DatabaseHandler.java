@@ -237,11 +237,13 @@ public class DatabaseHandler {
             }
 
         } else if (databaseManager.isMongo()) {
+
+            List<Map<String, Object>> f = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    password == null ? new Document("email", email) :
+                            new Document("email", email).append("password", password),
+                    true, 0, "id");
             try {
-                return Long.parseLong(String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
-                        password == null ? new Document("email", email) :
-                                new Document("email", email).append("password", password),
-                        true, 0, "id").get(0).get("id")));
+                return Long.parseLong(String.valueOf(f.get(0).get("id")));
             } catch (Exception e) {
                 return null;
             }
@@ -305,6 +307,32 @@ public class DatabaseHandler {
         }
         return 0;
     }
+
+
+    public String getUserNameByID(long id) {
+        if (databaseManager.isSQL()) {
+            List<Object> condition = new ArrayList<>();
+            condition.add(id);
+
+            try {
+                return String.valueOf(databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                        "name", "id = ?", condition, null, "", 0).get("name").get(0));
+
+            } catch (Exception e) {
+                return null;
+            }
+
+        } else if (databaseManager.isMongo()) {
+            try {
+                return String.valueOf(databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                        new Document("id", id), true, 0, "name").get(0).get("name"));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     public Map<String, Object> getUserByID(long id) {
         if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts)) {
             return null;
@@ -4025,6 +4053,107 @@ public class DatabaseHandler {
         }
 
         return false;
+    }
+
+    public Map<String, Long> getFriendRequestsForUser(long id) {
+        if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts)) {
+            return null;
+        }
+
+
+        if (databaseManager.isSQL()) {
+            List<Object> users = new ArrayList<>();
+            users.add(id);
+            users.add(id);
+
+            Map<String, List<Object>> request_data = databaseManager.getDataSQL(DatabaseManager.table_friend_requests,
+                    "id, id2", "id = ? OR id2 = ?", users, null, "", 0);
+
+            if (request_data == null) {
+                return null;
+            }
+
+            List<Object> allIDs = request_data.get("id2");
+            allIDs.addAll(request_data.get("id"));
+
+            if (allIDs.isEmpty()) {
+                return new HashMap<>();
+            }
+
+            Set<Object> allReq = new HashSet<>(allIDs);
+            Map<String, Long> friends_names = new HashMap<>();
+            for (Object d : allReq) {
+                long friend_id;
+                try {
+                    friend_id = Long.parseLong(String.valueOf(d));
+                } catch (Exception e) {
+                    continue;
+                }
+
+                if (friend_id != id) {
+                    String friend_name = getUserNameByID(friend_id);
+                    if (friend_name != null) {
+                        friends_names.put(friend_name, friend_id);
+                    }
+                }
+            }
+
+            return friends_names;
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> request_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
+                    new Document("id", id), true, 0);
+
+            if (request_data == null) {
+                return null;
+            }
+
+            List<Map<String, Object>> request_data2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
+                    new Document("id2", id), true, 0);
+
+            if (request_data2 == null) {
+                return null;
+            }
+
+            request_data.addAll(request_data2);
+
+            Map<String, Long> friends_names = new HashMap<>();
+            for (Map<String, Object> map : request_data) {
+                Long friend_id = null;
+                Long friend_id2 = null;
+                if (map.containsKey("id")) {
+                    try {
+                        friend_id = Long.parseLong(String.valueOf(map.get("id")));
+                    } catch (Exception e) {}
+                }
+                if (map.containsKey("id2")) {
+                    try {
+                        friend_id2 = Long.parseLong(String.valueOf(map.get("id2")));
+                    } catch (Exception e) {}
+                }
+
+                if (friend_id != null && friend_id2 != null) {
+                    if (friend_id == id && friend_id2 != id) {
+                        String name = getUserNameByID(friend_id2);
+                        if (name != null) {
+                            friends_names.put(name, friend_id2);
+                        }
+
+
+                    } else if (friend_id != id && friend_id2 == id) {
+                        String name = getUserNameByID(friend_id);
+                        if (name != null) {
+                            friends_names.put(name, friend_id);
+                        }
+                    }
+                }
+            }
+
+            return friends_names;
+
+        }
+
+        return null;
     }
 
 
