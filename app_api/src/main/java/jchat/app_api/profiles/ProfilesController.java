@@ -69,16 +69,6 @@ public class ProfilesController {
             claims.put("stats", API.databaseHandler.updateUserName(user_id, String.valueOf(data.get("name"))));
         }
 
-        if (data.containsKey("animations")) {
-            boolean suess = API.databaseHandler.updateProfileAnimations(user_id, String.valueOf(data.get("animations")));
-            if (claims.containsKey("stats")) {
-                claims.put("stats", suess && Boolean.valueOf(claims.get("stats").toString()));
-
-            } else {
-                claims.put("stats", suess);
-            }
-        }
-
         if (data.containsKey("about_me")) {
             boolean suess = API.databaseHandler.updateProfileAboutMe(user_id, String.valueOf(data.get("about_me")));
             if (claims.containsKey("stats")) {

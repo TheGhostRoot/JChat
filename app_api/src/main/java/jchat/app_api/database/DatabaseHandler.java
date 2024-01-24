@@ -138,8 +138,8 @@ public class DatabaseHandler {
             }
             profile_details.add(id);
 
-            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, badges, animations, about_me, stats",
-                    "?, '', '', '', NULL, '', '0'", profile_details)) {
+            if (!databaseManager.addDataSQL(DatabaseManager.table_profiles, "id, pfp, banner, badges, about_me, stats",
+                    "?, '', '', '', '', '0'", profile_details)) {
 
                 databaseManager.deleteDataSQL(DatabaseManager.table_accounts, "id = ?", profile_details);
                 return null;
@@ -182,7 +182,6 @@ public class DatabaseHandler {
                     new Document("id", account_ID)
                     .append("pfp", "").append("banner", "")
                     .append("badges", "")
-                    .append("animations", null)
                             .append("about_me", "").append("stats", "0"), null)) {
 
 
@@ -881,18 +880,33 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean addUserFriend(long id, long friend_id, String current_friends) {
+    public boolean addUserFriend(long id, long friend_id) {
+        /*
         if (current_friends.contains("," + friend_id) ||
+                !databaseManager.checkIDExists(friend_id, DatabaseManager.table_accounts)) {
+            return false;
+        }
+        String current_friends
+         */
+
+        if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts) &&
                 !databaseManager.checkIDExists(friend_id, DatabaseManager.table_accounts)) {
             return false;
         }
 
 
-        String friends_value = new StringBuilder(current_friends).append(",").append(friend_id).toString();
+        //String friends_value = new StringBuilder(current_friends).append(",").append(friend_id).toString();
         if (databaseManager.isSQL()) {
 
             List<Object> account_where = new ArrayList<>();
             account_where.add(id);
+
+            List<Object> account_friends = new ArrayList<>();
+            account_friends.add(","+id);
+            //account_friends.add(friends_value);
+
+
+            /*
 
             List<Object> account_friends = new ArrayList<>();
             account_friends.add(friends_value);
@@ -900,51 +914,77 @@ public class DatabaseHandler {
             return databaseManager.editDataSQL(DatabaseManager.table_accounts, "friends = ?",
                     account_friends, "id = ?", account_where);
 
-            /*
-            return databaseManager.editDataSQL(databaseManager.table_accounts,
+             */
+
+
+            return databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     databaseManager.postgressql_connection != null ? "friends = friends || ?" :
-                            "friends = CONCAT(friends, ?)", account_friends, "id = ?", account_where);*/
+                            "friends = CONCAT(friends, ?)", account_friends, "id = ?", account_where);
 
         } else if (databaseManager.isMongo()) {
 
+            List<Map<String, Object>> res = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", id), true, 0, "friends");
+
+            if (res == null || res.isEmpty()) {
+                return false;
+            }
+
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
-                    new Document("friends", friends_value));
+                    new Document("friends", String.valueOf(res.get(0).get("friends")) + "," + friend_id));
 
         }
         return false;
     }
 
-    public boolean removeUserFriend(long id, long friend_id, String current_friends) {
+    public boolean removeUserFriend(long id, long friend_id) {
+        /*
         String friend_text = "," + friend_id;
         if (!current_friends.contains(friend_text) ||
                 !databaseManager.checkIDExists(friend_id, DatabaseManager.table_accounts)) {
             return false;
         }
+        String current_friends
+         */
 
-        String friends_value = current_friends.replace(friend_text, "");
+        if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts) &&
+                !databaseManager.checkIDExists(friend_id, DatabaseManager.table_accounts)) {
+            return false;
+        }
+
         if (databaseManager.isSQL()) {
             List<Object> account_where = new ArrayList<>();
             account_where.add(id);
 
             List<Object> account_friends = new ArrayList<>();
-            account_friends.add(friends_value);
+            account_friends.add(","+friend_id);
 
+            /*
             return databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     "friends = ?", account_friends, "id = ?",
                     account_where);
 
-            /*
+             */
+
+
             return databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     "friends = REPLACE(friends, ?, '')", account_friends, "id = ?",
                     account_where);
 
-             */
+
 
         } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> res = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", id), true, 0, "friends");
+
+            if (res == null || res.isEmpty()) {
+                return false;
+            }
+
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
-                    new Document("friends", friends_value));
+                    new Document("friends", String.valueOf(res.get(0).get("friends")).replace(","+friend_id, "")));
 
         }
         return false;
@@ -2020,29 +2060,6 @@ public class DatabaseHandler {
         return false;
     }
 
-    public boolean updateProfileAnimations(long id, String given_animations) {
-        // can be jwt token
-        if (databaseManager.isSQL()) {
-            List<Object> condition_data = new ArrayList<>();
-            condition_data.add(id);
-
-            List<Object> profile_data = new ArrayList<>();
-            profile_data.add(given_animations);
-
-            return databaseManager.editDataSQL(DatabaseManager.table_profiles,
-                    "animations = ?", profile_data,
-                    "id = ?", condition_data);
-
-        } else if (databaseManager.isMongo()) {
-
-            return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_profiles,
-                    new Document("id", id),
-                    new Document("animations", given_animations));
-
-        }
-        return false;
-    }
-
     public boolean updateProfileAboutMe(long id, String given_about_me) {
         // can be jwt token
         if (databaseManager.isSQL()) {
@@ -2172,7 +2189,6 @@ public class DatabaseHandler {
             result.put("id", new ArrayList<>());
             result.put("logo", new ArrayList<>());
             result.put("banner", new ArrayList<>());
-            result.put("animations", new ArrayList<>());
             result.put("created_at", new ArrayList<>());
 
             return databaseManager.transformMongoToSQL(amount, groups, result);
@@ -2211,7 +2227,7 @@ public class DatabaseHandler {
         return null;
     }
 
-    public boolean createGroup(long owner_id, String name, String logo, String banner, String animations) {
+    public boolean createGroup(long owner_id, String name, String logo, String banner) {
         if (!databaseManager.checkIDExists(owner_id, DatabaseManager.table_accounts)) {
             return false;
         }
@@ -2223,12 +2239,11 @@ public class DatabaseHandler {
             group_data.add(owner_id);
             group_data.add(logo);
             group_data.add(banner);
-            group_data.add(animations);
             group_data.add(now);
 
             if (!databaseManager.addDataSQL(DatabaseManager.table_groups,
-                    "name, owner_id, logo, banner, animations, settings, created_at, group_events",
-                    "?, ?, ?, ?, ?, '', ?, ''",
+                    "name, owner_id, logo, banner, settings, created_at, group_events",
+                    "?, ?, ?, ?, '', ?, ''",
                     group_data)) {
                 return false;
             }
@@ -2264,7 +2279,6 @@ public class DatabaseHandler {
                     new Document("id", databaseManager.MongoGenerateID(all_groups_id, "id"))
                             .append("name", name).append("owner_id", owner_id)
                             .append("logo", logo).append("banner", banner)
-                            .append("animations", animations)
                             .append("settings", "").append("members",
                                     Arrays.asList(new Document("member_id", owner_id)
                                             .append("roles_id", "").append("nickname", null)))
@@ -2388,7 +2402,7 @@ public class DatabaseHandler {
                     "members", filter);
 
             List<Map<String, Object>> group_info = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                    filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
+                    filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at");
 
             if (all_members == null || group_info == null) {
                 return false;
@@ -2870,7 +2884,7 @@ public class DatabaseHandler {
                                     actor_id, group_id))) {
 
                         List<Map<String, Object>> group_info = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_groups,
-                                filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at", "animations");
+                                filter, true, 0, "owner_id", "name", "id", "logo", "banner", "created_at");
 
                         if (group_info == null) {
                             return false;
@@ -3957,7 +3971,7 @@ public class DatabaseHandler {
     }
 
     public boolean createFriendRequest(long id, long id2) {
-        if (checkFriendRequest(id, id2)) {
+        if (checkFriendRequest(id, id2) || checkFriendExists(id, id2)) {
             return false;
         }
 
@@ -4016,6 +4030,27 @@ public class DatabaseHandler {
         return false;
     }
 
+    public boolean checkFriendExists(long id, long friend_id) {
+        if (databaseManager.isSQL()) {
+            List<Object> users = new ArrayList<>();
+            users.add(id);
+
+            Map<String, List<Object>> request_data = databaseManager.getDataSQL(DatabaseManager.table_accounts,
+                    "friends", "id = ?", users, null, "", 0);
+
+            return request_data != null && request_data.get("friends").contains(","+friend_id);
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> request_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", id), true, 0, "friends");
+
+            return (request_data != null && String.valueOf(request_data.get(0).get("friends")).contains(","+friend_id));
+
+
+        }
+
+        return false;
+    }
 
     public boolean checkFriendRequest(long id, long id2) {
         if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts) ||
@@ -4064,17 +4099,15 @@ public class DatabaseHandler {
         if (databaseManager.isSQL()) {
             List<Object> users = new ArrayList<>();
             users.add(id);
-            users.add(id);
 
             Map<String, List<Object>> request_data = databaseManager.getDataSQL(DatabaseManager.table_friend_requests,
-                    "id, id2", "id = ? OR id2 = ?", users, null, "", 0);
+                    "id", "id2 = ?", users, null, "", 0);
 
             if (request_data == null) {
                 return null;
             }
 
-            List<Object> allIDs = request_data.get("id2");
-            allIDs.addAll(request_data.get("id"));
+            List<Object> allIDs = request_data.get("id");
 
             if (allIDs.isEmpty()) {
                 return new HashMap<>();
@@ -4102,49 +4135,100 @@ public class DatabaseHandler {
 
         } else if (databaseManager.isMongo()) {
             List<Map<String, Object>> request_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
-                    new Document("id", id), true, 0);
+                    new Document("id2", id), false, 0, "id");
 
             if (request_data == null) {
                 return null;
             }
 
-            List<Map<String, Object>> request_data2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
-                    new Document("id2", id), true, 0);
+            Map<String, Long> friends_names = new HashMap<>();
+            for (Map<String, Object> map : request_data) {
+                long friend_id;
+                try {
+                    friend_id = Long.parseLong(String.valueOf(map.get("id")));
+                } catch (Exception e) {
+                    continue;
+                }
 
-            if (request_data2 == null) {
+                if (friend_id != id) {
+                    String name = getUserNameByID(friend_id);
+                    if (name != null) {
+                        friends_names.put(name, friend_id);
+                    }
+                }
+            }
+
+            return friends_names;
+
+        }
+
+        return null;
+    }
+
+    public Map<String, Long> getPendingRequestsForUser(long id) {
+        if (!databaseManager.checkIDExists(id, DatabaseManager.table_accounts)) {
+            return null;
+        }
+
+
+        if (databaseManager.isSQL()) {
+            List<Object> users = new ArrayList<>();
+            users.add(id);
+
+            Map<String, List<Object>> request_data = databaseManager.getDataSQL(DatabaseManager.table_friend_requests,
+                    "id2", "id = ?", users, null, "", 0);
+
+            if (request_data == null) {
                 return null;
             }
 
-            request_data.addAll(request_data2);
+            List<Object> allIDs = request_data.get("id2");
+
+            if (allIDs.isEmpty()) {
+                return new HashMap<>();
+            }
+
+            Set<Object> allReq = new HashSet<>(allIDs);
+            Map<String, Long> friends_names = new HashMap<>();
+            for (Object d : allReq) {
+                long friend_id;
+                try {
+                    friend_id = Long.parseLong(String.valueOf(d));
+                } catch (Exception e) {
+                    continue;
+                }
+
+                if (friend_id != id) {
+                    String friend_name = getUserNameByID(friend_id);
+                    if (friend_name != null) {
+                        friends_names.put(friend_name, friend_id);
+                    }
+                }
+            }
+
+            return friends_names;
+
+        } else if (databaseManager.isMongo()) {
+            List<Map<String, Object>> request_data = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_friend_requests,
+                    new Document("id", id), false, 0, "id2");
+
+            if (request_data == null) {
+                return null;
+            }
 
             Map<String, Long> friends_names = new HashMap<>();
             for (Map<String, Object> map : request_data) {
-                Long friend_id = null;
-                Long friend_id2 = null;
-                if (map.containsKey("id")) {
-                    try {
-                        friend_id = Long.parseLong(String.valueOf(map.get("id")));
-                    } catch (Exception e) {}
-                }
-                if (map.containsKey("id2")) {
-                    try {
-                        friend_id2 = Long.parseLong(String.valueOf(map.get("id2")));
-                    } catch (Exception e) {}
+                long friend_id;
+                try {
+                    friend_id = Long.parseLong(String.valueOf(map.get("id2")));
+                } catch (Exception e) {
+                    continue;
                 }
 
-                if (friend_id != null && friend_id2 != null) {
-                    if (friend_id == id && friend_id2 != id) {
-                        String name = getUserNameByID(friend_id2);
-                        if (name != null) {
-                            friends_names.put(name, friend_id2);
-                        }
-
-
-                    } else if (friend_id != id && friend_id2 == id) {
-                        String name = getUserNameByID(friend_id);
-                        if (name != null) {
-                            friends_names.put(name, friend_id);
-                        }
+                if (friend_id != id) {
+                    String name = getUserNameByID(friend_id);
+                    if (name != null) {
+                        friends_names.put(name, friend_id);
                     }
                 }
             }

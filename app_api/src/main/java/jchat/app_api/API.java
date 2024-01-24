@@ -164,6 +164,7 @@ public class API {
 
         databaseHandler = new DatabaseHandler(databaseManager);
 
+
         /*
         long user_id = databaseHandler.createUser("John", "john@mail.com", "YCRTUVYIUHOIOugy",
                 "TCVYBUOINPNHug76", "H7G86F8giuo");
@@ -601,7 +602,7 @@ public class API {
 
 
 
-    public static String sendRequestToUploads(String server, String authHeader, long user_id, String method, boolean isVideo) {
+    public static String sendRequestToUploads(String server, String authHeader, String method, boolean isVideo) {
         if (upload_server == null || upload_server.isEmpty()) { return null; }
 
         try {
@@ -611,7 +612,7 @@ public class API {
             con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
             con.addRequestProperty("Accept", "*/*");
             con.addRequestProperty("Host", url.getHost());
-            con.addRequestProperty("user_id", String.valueOf(user_id));
+            //con.addRequestProperty("user_id", String.valueOf(user_id));
             con.setDoOutput(true);
 
             // global encrypted

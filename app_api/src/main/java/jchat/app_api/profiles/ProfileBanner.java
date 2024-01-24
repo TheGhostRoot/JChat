@@ -109,7 +109,7 @@ public class ProfileBanner {
             boolean isVideo = server.startsWith("video;");
 
             String base64Banner = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
-                    request.getHeader(API.REQ_HEADER_AUTH), user_id,"GET", isVideo);
+                    request.getHeader(API.REQ_HEADER_AUTH),"GET", isVideo);
 
             if (base64Banner == null) {
                 return null;

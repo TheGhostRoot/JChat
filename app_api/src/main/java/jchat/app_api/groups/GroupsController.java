@@ -74,9 +74,8 @@ public class GroupsController {
         String name = String.valueOf(data.get("name"));
         String logo = String.valueOf(data.get("logo"));
         String banner = String.valueOf(data.get("profile/banner"));
-        String animations = String.valueOf(data.get("anim"));
 
-        if (API.databaseHandler.createGroup(user_id, name, logo, banner, animations)) {
+        if (API.databaseHandler.createGroup(user_id, name, logo, banner)) {
             Map<String, Object> claims = new HashMap<>();
             claims.put("group_id", API.databaseHandler.getLatestCreatedGroupByOwner(user_id));
 

@@ -109,7 +109,6 @@ public class DatabaseManager {
                 group_table.add("owner_id BIGINT NOT NULL, ");
                 group_table.add("logo TEXT NOT NULL, ");
                 group_table.add("banner TEXT NOT NULL, ");
-                group_table.add("animations TEXT NOT NULL, ");
                 group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
                 group_table.add("group_events TEXT, ");
                 group_table.add("FOREIGN KEY (owner_id) REFERENCES accounts(id)");
@@ -184,7 +183,6 @@ public class DatabaseManager {
                 profiles_table.add("pfp TEXT NOT NULL, ");
                 profiles_table.add("banner TEXT NOT NULL, ");
                 profiles_table.add("badges TEXT NOT NULL, ");
-                profiles_table.add("animations TEXT, ");
                 profiles_table.add("about_me TEXT NOT NULL, ");
                 profiles_table.add("stats TEXT NOT NULL, ");
                 profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
@@ -297,7 +295,6 @@ public class DatabaseManager {
                 group_table.add("owner_id BIGINT NOT NULL, ");
                 group_table.add("logo TEXT NOT NULL, ");
                 group_table.add("banner TEXT NOT NULL, ");
-                group_table.add("animations TEXT NOT NULL, ");
                 group_table.add("settings TEXT NOT NULL, ");
                 group_table.add("created_at TIMESTAMP(6) NOT NULL, ");
                 group_table.add("group_events TEXT, ");
@@ -373,7 +370,6 @@ public class DatabaseManager {
                 profiles_table.add("pfp TEXT NOT NULL, ");
                 profiles_table.add("banner TEXT NOT NULL, ");
                 profiles_table.add("badges TEXT NOT NULL, ");
-                profiles_table.add("animations TEXT NULL, ");
                 profiles_table.add("about_me TEXT NOT NULL, ");
                 profiles_table.add("stats TEXT NOT NULL, ");
                 profiles_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");

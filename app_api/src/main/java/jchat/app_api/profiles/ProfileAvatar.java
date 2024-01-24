@@ -55,8 +55,7 @@ public class ProfileAvatar {
 
             } else {
                 try {
-                    byte[] encoded = Base64.encodeBase64(FileUtils.readFileToByteArray(new File("profile/avatar/pfp.jpg")));
-                    return new String(encoded, StandardCharsets.US_ASCII);
+                    return new String(Base64.encodeBase64(FileUtils.readFileToByteArray(new File("profile/avatar/pfp.jpg"))), StandardCharsets.US_ASCII);
 
                 } catch (Exception e) {
                     return null;
@@ -73,15 +72,15 @@ public class ProfileAvatar {
                 }
 
                 return """
-                <html><head></head> 
-                <body> 
-                
+                <html><head></head>
+                <body>
+
                 <video controls autoplay muted name="media">
                     <source type="video/mp4" src="/attachments/"""+ given_user_id + """
-                 /avatar.mp4"> 
-                 
+                 /avatar.mp4">
+
                  </video>
-                 
+
                  </body></html>""";
 
 
@@ -90,12 +89,12 @@ public class ProfileAvatar {
 
 
                 return """
-                        <html><head></head> 
-                        <body> 
-                                        
+                        <html><head></head>
+                        <body>
+
                                 <img src="/attachments/"""+ given_user_id + """
-                         /black.jpg">  
-                         
+                         /black.jpg">
+
                          </body></html>""";
 
 
@@ -103,10 +102,10 @@ public class ProfileAvatar {
 
             }
             return """
-        <html><head></head><body> 
-        
-        <img src="/profile/avatar/pfp.jpg">  
-        
+        <html><head></head><body>
+
+        <img src="/profile/avatar/pfp.jpg">
+
         </body></html>""";*/
 
         } else {
@@ -125,7 +124,7 @@ public class ProfileAvatar {
             boolean isVideo = server.startsWith("video;");
 
             String base64Avatar = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
-                    request.getHeader(API.REQ_HEADER_AUTH), user_id,"GET", isVideo);
+                    request.getHeader(API.REQ_HEADER_AUTH),"GET", isVideo);
 
 
             if (base64Avatar == null) {
