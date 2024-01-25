@@ -87,6 +87,8 @@ public class FriendsController {
             friend.put("pfpBase64", isVideo ? "video;" : pfpRes);
             friend.put("id", friend_id);
             friend.put("channel_id", 0);
+            friend.put("stats", friend_profile.get("stats"));
+            friend.put("badges", friend_profile.get("badges"));
 
             allFriends.add(friend);
         }
