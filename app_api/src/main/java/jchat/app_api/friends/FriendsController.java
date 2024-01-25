@@ -63,14 +63,6 @@ public class FriendsController {
                 continue;
             }
 
-            Map<String, Object> uploadAuthClaims = new HashMap<>();
-            uploadAuthClaims.put("id", friend_id);
-
-            String auth = API.jwtService.generateGlobalJwt(uploadAuthClaims, true);
-            if (auth == null) {
-                return null;
-            }
-
             Map<String, Object> friend_profile = API.databaseHandler.getProfile(friend_id);
             if (friend_profile == null) {
                 return null;
@@ -85,7 +77,7 @@ public class FriendsController {
 
             boolean isVideo = pfpServer.startsWith("video;");
 
-            String pfpRes = API.sendRequestToUploads(isVideo ? pfpServer.substring(6) : pfpServer, auth,"GET", isVideo);
+            String pfpRes = API.sendRequestToUploads(isVideo ? pfpServer.substring(6) : pfpServer,"GET", isVideo, friend_id);
             if (pfpRes == null) {
                 return null;
             }

@@ -570,10 +570,6 @@ public class DatabaseManager {
             return null;
         }
 
-        if (condition != null && condition.containsKey("email") && condition.containsKey("password") && collectionName == "accounts") {
-            API.logger.info("1");
-        }
-
         List<Map<String, Object>> result = new ArrayList<>();
 
         List<String> filter_list = Arrays.stream(filters).toList();

@@ -19,9 +19,9 @@ public class ProfileAvatar {
 
     @GetMapping
     public Object getProfileAvatar(HttpServletRequest request, @RequestParam("redirected") boolean redirected,
-                                   @RequestParam("type") String type) {
+                                   @RequestParam("type") String type, @RequestParam("user_id") String uid) {
 
-
+        /*
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), null, null);
         if (data == null) {
             return null;
@@ -30,6 +30,17 @@ public class ProfileAvatar {
         long user_id;
         try {
             user_id = Long.parseLong(String.valueOf(data.get("id")));
+        } catch (Exception e) {
+            return null;
+        }
+
+         */
+
+        uid = uid.substring(1, uid.length() -1);
+        type = type.substring(1, type.length() -1);
+        long user_id;
+        try {
+            user_id = Long.parseLong(uid);
         } catch (Exception e) {
             return null;
         }
@@ -123,8 +134,7 @@ public class ProfileAvatar {
 
             boolean isVideo = server.startsWith("video;");
 
-            String base64Avatar = API.sendRequestToUploads((isVideo ? server.substring(6) : server),
-                    request.getHeader(API.REQ_HEADER_AUTH),"GET", isVideo);
+            String base64Avatar = API.sendRequestToUploads((isVideo ? server.substring(6) : server),"GET", isVideo, user_id);
 
 
             if (base64Avatar == null) {

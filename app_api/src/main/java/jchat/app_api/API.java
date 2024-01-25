@@ -602,17 +602,15 @@ public class API {
 
 
 
-    public static String sendRequestToUploads(String server, String authHeader, String method, boolean isVideo) {
+    public static String sendRequestToUploads(String server, String method, boolean isVideo, long user_id) {
         if (upload_server == null || upload_server.isEmpty()) { return null; }
 
         try {
-            URL url = new URL(server + "?redirected=true&type=" + (isVideo ? "video" : "image"));
+            URL url = new URL(server + "?redirected=true&type='" + (isVideo ? "video'" : "image'") + "&user_id='" + user_id + "'");
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod(method);
-            con.addRequestProperty(REQ_HEADER_AUTH, authHeader);
             con.addRequestProperty("Accept", "*/*");
             con.addRequestProperty("Host", url.getHost());
-            //con.addRequestProperty("user_id", String.valueOf(user_id));
             con.setDoOutput(true);
 
             // global encrypted
