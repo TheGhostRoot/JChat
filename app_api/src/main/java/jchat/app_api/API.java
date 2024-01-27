@@ -322,6 +322,39 @@ public class API {
         tempDir = new File("/temp/");
         tempDir.mkdirs();
 
+        String settings = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZnAiOiIiLCJiYW5uZXIiOltdLCJiaW8iOiIiLCJzdGF0cyI6Im9mZmxpbmUiLCJjaGFuZ2VfcGFzc3dvcmQiOnRydWUsInN0YXJ0X3N1YiI6dHJ1ZSwiZW5kX3N1YiI6dHJ1ZSwibmV3X21lc3NhZ2UiOnRydWUsImVkaXRlZF9tZXNzYWdlIjp0cnVlLCJuZXdfY29pbnMiOnRydWUsIm5ld19iYWRnZXMiOnRydWUsImRlbGV0ZWRfZ3JvdXAiOnRydWUsIm5ld19vd25lciI6dHJ1ZSwibGVhdmUiOnRydWUsImZyaWVuZF9yZXF1ZXN0cyI6dHJ1ZX0.rEdysn9gyAy40zkcxe5fbG1MEEtv89QV3aSNX4MIwjQ";
+        String password = "dNA4MOFIqWy67mJCYYo3b25fIw8JsXUig.brHz42Dz1";
+
+        long user_id1 = databaseHandler.createUser("Hello",
+                "kriskata5000@gmail.com", password,
+                criptionService.GlobalEncrypt(databaseHandler.generateUserEncryptionKey()),
+                criptionService.GlobalEncrypt(databaseHandler.generateUserSignKey()),
+                settings);
+
+        long user_id2 = databaseHandler.createUser("Hi",
+                "kriskata50@gmail.com", password,
+                criptionService.GlobalEncrypt(databaseHandler.generateUserEncryptionKey()),
+                criptionService.GlobalEncrypt(databaseHandler.generateUserSignKey()),
+                settings);
+
+        long user_id3 = databaseHandler.createUser("Hello2",
+                "thegoldenmineplugin@gmail.com", password,
+                criptionService.GlobalEncrypt(databaseHandler.generateUserEncryptionKey()),
+                criptionService.GlobalEncrypt(databaseHandler.generateUserSignKey()),
+                settings);
+
+        /*
+        long user_id3 = databaseHandler.createUser("Hello",
+                "kriskata5000@gmail.com", "",
+                criptionService.GlobalEncrypt(databaseHandler.generateUserEncryptionKey()),
+                criptionService.GlobalEncrypt(API.databaseHandler.generateUserSignKey()),
+                "");
+        password: dNA4MOFIqWy67mJCYYo3b25fIw8JsXUig.brHz42Dz1
+        password = 1
+
+        settings = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZnAiOiIiLCJiYW5uZXIiOltdLCJiaW8iOiIiLCJzdGF0cyI6Im9mZmxpbmUiLCJjaGFuZ2VfcGFzc3dvcmQiOnRydWUsInN0YXJ0X3N1YiI6dHJ1ZSwiZW5kX3N1YiI6dHJ1ZSwibmV3X21lc3NhZ2UiOnRydWUsImVkaXRlZF9tZXNzYWdlIjp0cnVlLCJuZXdfY29pbnMiOnRydWUsIm5ld19iYWRnZXMiOnRydWUsImRlbGV0ZWRfZ3JvdXAiOnRydWUsIm5ld19vd25lciI6dHJ1ZSwibGVhdmUiOnRydWUsImZyaWVuZF9yZXF1ZXN0cyI6dHJ1ZX0.rEdysn9gyAy40zkcxe5fbG1MEEtv89QV3aSNX4MIwjQ
+         */
+
         SpringApplication app = new SpringApplication(API.class);
         Map<String, Object> config = new HashMap<>();
         config.put("server.port", readPortFromConfig());

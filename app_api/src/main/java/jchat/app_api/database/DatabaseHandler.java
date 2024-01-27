@@ -960,6 +960,12 @@ public class DatabaseHandler {
             List<Object> account_friends = new ArrayList<>();
             account_friends.add(","+friend_id);
 
+            List<Object> account_where2 = new ArrayList<>();
+            account_where2.add(friend_id);
+
+            List<Object> account_friends2 = new ArrayList<>();
+            account_friends2.add(","+id);
+
             /*
             return databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     "friends = ?", account_friends, "id = ?",
@@ -969,6 +975,9 @@ public class DatabaseHandler {
 
 
             return databaseManager.editDataSQL(DatabaseManager.table_accounts,
+                    "friends = REPLACE(friends, ?, '')", account_friends2, "id = ?",
+                    account_where2) &&
+                    databaseManager.editDataSQL(DatabaseManager.table_accounts,
                     "friends = REPLACE(friends, ?, '')", account_friends, "id = ?",
                     account_where);
 
@@ -982,9 +991,19 @@ public class DatabaseHandler {
                 return false;
             }
 
+            List<Map<String, Object>> res2 = databaseManager.MongoReadCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", friend_id), true, 0, "friends");
+
+            if (res2 == null || res2.isEmpty()) {
+                return false;
+            }
+
             return databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
                     new Document("id", id),
-                    new Document("friends", String.valueOf(res.get(0).get("friends")).replace(","+friend_id, "")));
+                    new Document("friends", String.valueOf(res.get(0).get("friends")).replace(","+friend_id, ""))) &&
+                    databaseManager.MongoUpdateDocumentInCollectionNoSQL(DatabaseManager.table_accounts,
+                    new Document("id", friend_id),
+                    new Document("friends", String.valueOf(res2.get(0).get("friends")).replace(","+id, "")));
 
         }
         return false;

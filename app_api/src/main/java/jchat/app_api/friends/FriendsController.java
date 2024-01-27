@@ -199,19 +199,20 @@ public class FriendsController {
 
         Map<String, Object> data = API.jwtService.getData(request.getHeader(API.REQ_HEADER_AUTH), user_encryp_key,
                 user_sign_key);
-        if (data == null || !data.containsKey("friends")) {
+        if (data == null || !data.containsKey("friend_id")) {
             return null;
         }
 
         long user_id1;
         try {
-            user_id1 = Long.parseLong((String) data.get("friend_id"));
+            user_id1 = Long.parseLong(String.valueOf(data.get("friend_id")));
+
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("stats", API.databaseHandler.removeUserFriend(user_id1, user_id));
+        claims.put("stats", API.databaseHandler.removeUserFriend(user_id, user_id1));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
