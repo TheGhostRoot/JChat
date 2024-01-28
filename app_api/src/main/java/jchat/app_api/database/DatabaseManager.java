@@ -10,9 +10,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class DatabaseManager {
 
@@ -56,7 +53,7 @@ public class DatabaseManager {
 
 
 
-    public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+    //public static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
 
     private final boolean debug = true;
 
@@ -81,19 +78,21 @@ public class DatabaseManager {
                 accounts_table.add("last_edit_time timestamp, ");
                 accounts_table.add("created_at timestamp NOT NULL, ");
                 accounts_table.add("friends TEXT NOT NULL, ");
-                accounts_table.add("starts_sub TIMESTAMP NULL, ");
-                accounts_table.add("ends_sub TIMESTAMP NULL, ");
-                accounts_table.add("bookmarks TEXT NOT NULL, ");
-                accounts_table.add("settings TEXT NOT NULL");
+                //accounts_table.add("starts_sub TIMESTAMP NULL, ");
+                //accounts_table.add("ends_sub TIMESTAMP NULL, ");
+                //accounts_table.add("bookmarks TEXT NOT NULL, ");
+                //accounts_table.add("settings TEXT NOT NULL");
 
                 List<String> chats_table = new ArrayList<>();
                 chats_table.add("channel_id BIGINT NOT NULL, ");
-                chats_table.add("group_id BIGINT NOT NULL, ");
+                //chats_table.add("group_id BIGINT NOT NULL, ");
                 chats_table.add("msg VARCHAR(2000) NOT NULL, ");
                 chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
                 chats_table.add("send_by BIGINT NOT NULL, ");
                 chats_table.add("msg_id BIGINT NOT NULL");
                 chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
+
+                /*
 
                 List<String> reactions_table = new ArrayList<>();
                 reactions_table.add("channel_id BIGINT NOT NULL, ");
@@ -154,11 +153,10 @@ public class DatabaseManager {
                 group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
                 group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
-                List<String> captchas_table = new ArrayList<>();
-                captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
-                captchas_table.add("answer TEXT NOT NULL, ");
-                captchas_table.add("time smallint NOT NULL, ");
-                captchas_table.add("last_edit_time TEXT NOT NULL");
+                List<String> notifi_table = new ArrayList<>();
+                notifi_table.add("id BIGINT NOT NULL, ");
+                notifi_table.add("notification LONGTEXT NOT NULL, ");
+                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
 
                 List<String> posts_table = new ArrayList<>();
                 posts_table.add("id bigserial PRIMARY KEY NOT NULL, ");
@@ -178,6 +176,20 @@ public class DatabaseManager {
                 posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
                 posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
+                List<String> uploads_table = new ArrayList<>();
+                uploads_table.add("server TEXT NOT NULL, ");
+                uploads_table.add("name TEXT NOT NULL, ");
+                uploads_table.add("user_id TEXT NOT NULL");
+                friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+
+                 */
+
+                List<String> captchas_table = new ArrayList<>();
+                captchas_table.add("id BIGINT PRIMARY KEY NOT NULL, ");
+                captchas_table.add("answer TEXT NOT NULL, ");
+                captchas_table.add("time smallint NOT NULL, ");
+                captchas_table.add("last_edit_time TEXT NOT NULL");
+
                 List<String> profiles_table = new ArrayList<>();
                 profiles_table.add("id BIGINT NOT NULL, ");
                 profiles_table.add("pfp TEXT NOT NULL, ");
@@ -193,22 +205,15 @@ public class DatabaseManager {
                 friends_table.add("FOREIGN KEY (name) REFERENCES accounts(name), ");
                 friends_table.add("FOREIGN KEY (name2) REFERENCES accounts(name)");
 
-                List<String> notifi_table = new ArrayList<>();
-                notifi_table.add("id BIGINT NOT NULL, ");
-                notifi_table.add("notification LONGTEXT NOT NULL, ");
-                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-
-                List<String> uploads_table = new ArrayList<>();
-                uploads_table.add("server TEXT NOT NULL, ");
-                uploads_table.add("name TEXT NOT NULL, ");
-                uploads_table.add("user_id TEXT NOT NULL");
-                friends_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
-
                 deleteTableSQL(table_profiles);
+                deleteTableSQL(table_friend_requests);
+                deleteTableSQL(table_chats);
+                deleteTableSQL(table_captchas);
+                deleteTableSQL(table_accounts);
+
+                /*
                 deleteTableSQL(table_notifications);
                 deleteTableSQL(table_uploads);
-                deleteTableSQL(table_friend_requests);
                 deleteTableSQL(table_post_comments);
                 deleteTableSQL(table_posts);
                 deleteTableSQL(table_group_members);
@@ -218,18 +223,10 @@ public class DatabaseManager {
                 deleteTableSQL(table_group_logs);
                 deleteTableSQL(table_groups);
                 deleteTableSQL(table_reactions);
-                deleteTableSQL(table_chats);
-                deleteTableSQL(table_captchas);
-                deleteTableSQL(table_accounts);
 
-                createTableSQL(table_accounts, accounts_table);
-                createTableSQL(table_uploads, uploads_table);
-                createTableSQL(table_notifications, notifi_table);
-                createTableSQL(table_captchas, captchas_table);
-                createTableSQL(table_profiles, profiles_table);
                 createTableSQL(table_posts, posts_table);
                 createTableSQL(table_post_comments, posts_comment_table);
-                createTableSQL(table_chats, chats_table);
+                createTableSQL(table_notifications, notifi_table);
                 createTableSQL(table_reactions, reactions_table);
                 createTableSQL(table_groups, group_table);
                 createTableSQL(table_group_members, group_members_tabls);
@@ -237,6 +234,13 @@ public class DatabaseManager {
                 createTableSQL(table_group_channels, group_channels_tabls);
                 createTableSQL(table_group_roles, group_roles_tabls);
                 createTableSQL(table_group_logs, group_logs_tabls);
+                createTableSQL(table_uploads, uploads_table);
+                 */
+
+                createTableSQL(table_accounts, accounts_table);
+                createTableSQL(table_captchas, captchas_table);
+                createTableSQL(table_profiles, profiles_table);
+                createTableSQL(table_chats, chats_table);
                 createTableSQL(table_friend_requests, friends_table);
             }
 
@@ -264,21 +268,23 @@ public class DatabaseManager {
                 accounts_table.add("last_edit_time TIMESTAMP NULL, ");
                 accounts_table.add("created_at TIMESTAMP NOT NULL, ");
                 accounts_table.add("friends TEXT NOT NULL, ");
-                accounts_table.add("starts_sub TIMESTAMP NULL, ");
-                accounts_table.add("ends_sub TIMESTAMP NULL, ");
-                accounts_table.add("bookmarks TEXT NOT NULL, ");
-                accounts_table.add("settings TEXT NOT NULL, ");
+                //accounts_table.add("starts_sub TIMESTAMP NULL, ");
+                //accounts_table.add("ends_sub TIMESTAMP NULL, ");
+                //accounts_table.add("bookmarks TEXT NOT NULL, ");
+                //accounts_table.add("settings TEXT NOT NULL, ");
                 accounts_table.add("UNIQUE KEY (encryption_key(767)), ");
                 accounts_table.add("UNIQUE KEY (sign_key(767))");
 
                 List<String> chats_table = new ArrayList<>();
                 chats_table.add("channel_id BIGINT NOT NULL, ");
-                chats_table.add("group_id BIGINT NOT NULL, ");
+                //chats_table.add("group_id BIGINT NOT NULL, ");
                 chats_table.add("msg VARCHAR(2000) NOT NULL, ");
                 chats_table.add("send_at TIMESTAMP(6) NOT NULL, ");
                 chats_table.add("send_by BIGINT NOT NULL, ");
                 chats_table.add("msg_id BIGINT NOT NULL, ");
                 chats_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id)");
+
+                /*
 
                 List<String> reactions_table = new ArrayList<>();
                 reactions_table.add("channel_id BIGINT NOT NULL, ");
@@ -341,12 +347,6 @@ public class DatabaseManager {
                 group_logs_tabls.add("FOREIGN KEY (group_id) REFERENCES chat_groups(id), ");
                 group_logs_tabls.add("FOREIGN KEY (actor_id) REFERENCES accounts(id)");
 
-                List<String> captchas_table = new ArrayList<>();
-                captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
-                captchas_table.add("answer TEXT NOT NULL, ");
-                captchas_table.add("time SMALLINT NOT NULL, ");
-                captchas_table.add("last_edit_time TIMESTAMP(6) NOT NULL");
-
                 List<String> posts_table = new ArrayList<>();
                 posts_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
                 posts_table.add("send_by BIGINT NOT NULL, ");
@@ -365,6 +365,25 @@ public class DatabaseManager {
                 posts_comment_table.add("FOREIGN KEY (send_by) REFERENCES accounts(id), ");
                 posts_comment_table.add("FOREIGN KEY (post_id) REFERENCES posts(id)");
 
+
+                List<String> notifi_table = new ArrayList<>();
+                notifi_table.add("id BIGINT NOT NULL, ");
+                notifi_table.add("notification LONGTEXT NOT NULL, ");
+                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
+
+                List<String> uploads_table = new ArrayList<>();
+                uploads_table.add("server TEXT NOT NULL, ");
+                uploads_table.add("name TEXT NOT NULL, ");
+                uploads_table.add("user_id BIGINT NOT NULL, ");
+                uploads_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
+                 */
+
+                List<String> captchas_table = new ArrayList<>();
+                captchas_table.add("id BIGINT AUTO_INCREMENT PRIMARY KEY, ");
+                captchas_table.add("answer TEXT NOT NULL, ");
+                captchas_table.add("time SMALLINT NOT NULL, ");
+                captchas_table.add("last_edit_time TIMESTAMP(6) NOT NULL");
+
                 List<String> profiles_table = new ArrayList<>();
                 profiles_table.add("id BIGINT NOT NULL, ");
                 profiles_table.add("pfp TEXT NOT NULL, ");
@@ -380,21 +399,15 @@ public class DatabaseManager {
                 friends_table.add("FOREIGN KEY (name) REFERENCES accounts(name), ");
                 friends_table.add("FOREIGN KEY (name2) REFERENCES accounts(name)");
 
-                List<String> notifi_table = new ArrayList<>();
-                notifi_table.add("id BIGINT NOT NULL, ");
-                notifi_table.add("notification LONGTEXT NOT NULL, ");
-                notifi_table.add("FOREIGN KEY (id) REFERENCES accounts(id)");
-
-                List<String> uploads_table = new ArrayList<>();
-                uploads_table.add("server TEXT NOT NULL, ");
-                uploads_table.add("name TEXT NOT NULL, ");
-                uploads_table.add("user_id BIGINT NOT NULL, ");
-                uploads_table.add("FOREIGN KEY (user_id) REFERENCES accounts(id)");
-
                 deleteTableSQL(table_profiles);
+                deleteTableSQL(table_friend_requests);
+                deleteTableSQL(table_chats);
+                deleteTableSQL(table_captchas);
+                deleteTableSQL(table_accounts);
+
+                /*
                 deleteTableSQL(table_notifications);
                 deleteTableSQL(table_uploads);
-                deleteTableSQL(table_friend_requests);
                 deleteTableSQL(table_post_comments);
                 deleteTableSQL(table_posts);
                 deleteTableSQL(table_group_members);
@@ -404,18 +417,11 @@ public class DatabaseManager {
                 deleteTableSQL(table_group_logs);
                 deleteTableSQL(table_groups);
                 deleteTableSQL(table_reactions);
-                deleteTableSQL(table_chats);
-                deleteTableSQL(table_captchas);
-                deleteTableSQL(table_accounts);
 
-                createTableSQL(table_accounts, accounts_table);
-                createTableSQL(table_uploads, uploads_table);
+
                 createTableSQL(table_notifications, notifi_table);
-                createTableSQL(table_captchas, captchas_table);
-                createTableSQL(table_profiles, profiles_table);
                 createTableSQL(table_posts, posts_table);
                 createTableSQL(table_post_comments, posts_comment_table);
-                createTableSQL(table_chats, chats_table);
                 createTableSQL(table_reactions, reactions_table);
                 createTableSQL(table_groups, group_table);
                 createTableSQL(table_group_members, group_members_tabls);
@@ -423,6 +429,13 @@ public class DatabaseManager {
                 createTableSQL(table_group_channels, group_channels_tabls);
                 createTableSQL(table_group_roles, group_roles_tabls);
                 createTableSQL(table_group_logs, group_logs_tabls);
+                createTableSQL(table_uploads, uploads_table);
+                 */
+
+                createTableSQL(table_accounts, accounts_table);
+                createTableSQL(table_captchas, captchas_table);
+                createTableSQL(table_profiles, profiles_table);
+                createTableSQL(table_chats, chats_table);
                 createTableSQL(table_friend_requests, friends_table);
             }
 
@@ -442,24 +455,30 @@ public class DatabaseManager {
                 MongoDeleteCollectionNoSQL(table_profiles);
                 MongoDeleteCollectionNoSQL(table_captchas);
                 MongoDeleteCollectionNoSQL(table_chats);
+                MongoDeleteCollectionNoSQL(table_friend_requests);
+
+
+                /*
                 MongoDeleteCollectionNoSQL(table_reactions);
                 MongoDeleteCollectionNoSQL(table_uploads);
                 MongoDeleteCollectionNoSQL(table_posts);
                 MongoDeleteCollectionNoSQL(table_groups);
-                MongoDeleteCollectionNoSQL(table_friend_requests);
                 MongoDeleteCollectionNoSQL(table_notifications);
 
+
+                MongoCreateCollectionNoSQL(table_posts);
+                MongoCreateCollectionNoSQL(table_reactions);
+                MongoCreateCollectionNoSQL(table_groups);
+                MongoCreateCollectionNoSQL(table_notifications);
+                MongoCreateCollectionNoSQL(table_uploads);
+                 */
 
                 MongoCreateCollectionNoSQL(table_accounts);
                 MongoCreateCollectionNoSQL(table_profiles);
                 MongoCreateCollectionNoSQL(table_captchas);
                 MongoCreateCollectionNoSQL(table_chats);
-                MongoCreateCollectionNoSQL(table_reactions);
-                MongoCreateCollectionNoSQL(table_uploads);
-                MongoCreateCollectionNoSQL(table_posts);
-                MongoCreateCollectionNoSQL(table_groups);
                 MongoCreateCollectionNoSQL(table_friend_requests);
-                MongoCreateCollectionNoSQL(table_notifications);
+
             }
 
         } catch (Exception e) {
@@ -1060,6 +1079,8 @@ public class DatabaseManager {
         return false;
     }
 
+
+    /*
     protected boolean checkRoleExists(long role_id, long group_id) {
         if (isSQL()) {
             List<Object> condition_data = new ArrayList<>();
@@ -1090,6 +1111,8 @@ public class DatabaseManager {
         return false;
     }
 
+     */
+
     protected boolean checkNotUniqueWithStream(List<Map<String, Object>> values, String key, Object key_to_check) {
         return values.stream().anyMatch(map ->
                 String.valueOf(map.get(key)).equals(key_to_check));
@@ -1104,6 +1127,8 @@ public class DatabaseManager {
         }
         return extracted_data;
     }
+
+
 
     protected List<Object> extract_all_content(Map<String, List<Object>> sql_data, String to_extract) {
         List<Object> extracted_data = new ArrayList<>();
@@ -1146,7 +1171,7 @@ public class DatabaseManager {
         return result;
     }
 
-
+/*
 
     protected List<Long> getUserRolesID(long user_id, long group_id) {
         // we assume that user_id and group_id are valid
@@ -1441,6 +1466,7 @@ public class DatabaseManager {
         return amount_of_matches == needed_permissions.size();
     }
 
+
     protected boolean doesUserHavePermissions(List<String> needed_permissions, long user_id, long group_id) {
         if (checkOwner(user_id, group_id)) { return true; }
 
@@ -1450,9 +1476,12 @@ public class DatabaseManager {
         return validateRolesPermissions(needed_permissions, user_permissions);
     }
 
+     */
 
-    protected boolean handleMessage(long channel_id, long sender_id, String message, LocalDateTime now,
-                                    long resiver_id, long group_id) {
+
+    protected boolean handleMessage(long sender_id, String message, LocalDateTime now,
+                                    long resiver_id) {
+        /*
         if (isSQL()) {
             List<Object> edit_condition_data = new ArrayList<>();
             edit_condition_data.add(channel_id);
@@ -1476,11 +1505,6 @@ public class DatabaseManager {
             // MESSAGE END -> {}                no data at all
 
             // Find all matches
-            String message_json = getMessageJson(message);
-            if (message_json == null) {
-                message_json = "{}";
-                message += message_json;
-            }
 
             if (!current_chat_data.get("msg").isEmpty()) {
                 List<Object> chat_data = new ArrayList<>();
@@ -1493,18 +1517,10 @@ public class DatabaseManager {
                 try {
                     long msg_id_to_concat = Long.parseLong(String.valueOf(current_chat_data.get("msg_id").get(0)));
                     String old_message = String.valueOf(current_chat_data.get("msg").get(0));
-                    String old_message_json = getMessageJson(old_message);
-                    if (old_message_json == null) {
-                        old_message_json = "{}";
-                    }
 
-                    if (msg_id_to_concat == sender_id && old_message_json.equals(message_json)) {
-
-                        String new_message = old_message.substring(0, old_message.length() - old_message_json.length())
-                                + message.substring(0, message.length() - message_json.length()) + old_message_json;
-
+                    if (msg_id_to_concat == sender_id) {
                         List<Object> set_data = new ArrayList<>();
-                        set_data.add(new_message);
+                        set_data.add(old_message);
 
                         edit_condition_data.add(msg_id_to_concat);
                         if (editDataSQL(table_chats, "msg = ?", set_data,
@@ -1535,35 +1551,31 @@ public class DatabaseManager {
 
                 List<Object> new_chat_data = new ArrayList<>();
                 new_chat_data.add(channel_id == 0L ? generateID(channel_ids.get("channel_id")) : channel_id);
-                new_chat_data.add(group_id);
                 new_chat_data.add(message);
                 new_chat_data.add(now.truncatedTo(ChronoUnit.MICROS));
                 new_chat_data.add(sender_id);
                 new_chat_data.add(generateID(current_chat_data.get("msg_id")));
 
-                return addDataSQL(table_chats, "channel_id, group_id, msg, send_at, send_by, msg_id",
-                        "?, ?, ?, ?, ?, ?", new_chat_data);
+                return addDataSQL(table_chats, "channel_id, msg, send_at, send_by, msg_id",
+                        "?, ?, ?, ?, ?", new_chat_data);
 
             }
-        } else if (isMongo()) {
-            Document convId = new Document("channel_id", channel_id).append("group_id", group_id);
-            List<Map<String, Object>> chat_msgs = getCollectionMongo(table_chats, "msgs", convId);
 
-            if (chat_msgs == null) {
+         */
+        if (isMongo()) {
+            Document convId = new Document("user1", sender_id);
+            Document convId2 = new Document("user2", sender_id);
+            List<Map<String, Object>> chat_msgs = getCollectionMongo(table_chats, "msgs", convId);
+            List<Map<String, Object>> chat_msgs2 = getCollectionMongo(table_chats, "msgs", convId2);
+
+            if (chat_msgs == null || chat_msgs2 == null) {
                 return false;
             }
 
-            String message_json = getMessageJson(message);
-            if (message_json == null) {
-                message_json = "{}";
-                message += message_json;
-            }
-
-            if (chat_msgs.isEmpty() || chat_msgs.get(0).isEmpty()) {
+            List<Map<String, Object>> chat = !chat_msgs.isEmpty() && !chat_msgs.get(0).isEmpty() ? chat_msgs : chat_msgs2;
+            if (chat.isEmpty() || chat.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
-                        new Document("channel_id", channel_id == 0L ?
-                                generateID(new ArrayList<>()) : channel_id).append("group_id", group_id)
-                                .append("user1", sender_id)
+                        new Document("user1", sender_id)
                                 .append("user2", resiver_id)
                                 .append("msgs",
                                         Arrays.asList(new Document("msg", message)
@@ -1573,7 +1585,7 @@ public class DatabaseManager {
                         null);
 
             } else {
-                List<Object> all_ids = extract_all_content(chat_msgs, "msg_id");
+                List<Object> all_ids = extract_all_content(chat, "msg_id");
 
                 LocalDateTime mostRecentDate = null;
                 Long resent_msg_id = null;
@@ -1581,7 +1593,7 @@ public class DatabaseManager {
                 Long message_sender_id = null;
 
                 try {
-                    for (Map<String, Object> map : chat_msgs) {
+                    for (Map<String, Object> map : chat) {
                         LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")));
                         if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
                             mostRecentDate = dateTime;
@@ -1594,12 +1606,12 @@ public class DatabaseManager {
                     return false;
                 }
 
-                if (message_sender_id == sender_id && message_json.equals("{}")) {
+                if (message_sender_id == sender_id) {
                     try {
-                        String new_message = old_message + message.substring(0, message.length() - 2) + message_json;
+                        String new_message = old_message + message.substring(0, message.length() - 2);
 
-                        for (int i = 0; i < chat_msgs.size(); i++) {
-                            Map<String, Object> current_msg = chat_msgs.get(i);
+                        for (int i = 0; i < chat.size(); i++) {
+                            Map<String, Object> current_msg = chat.get(i);
                             if (Long.valueOf(String.valueOf(current_msg.get("send_by"))) == sender_id &&
                                     Long.valueOf(String.valueOf(current_msg.get("msg_id"))) == resent_msg_id) {
                                 current_msg.put("msg", new_message);
@@ -1617,17 +1629,17 @@ public class DatabaseManager {
                     new_msg.put("send_at", now);
                     new_msg.put("msg", message);
 
-                    chat_msgs.add(new_msg);
+                    chat.add(new_msg);
 
                 }
-                return MongoUpdateDocumentInCollectionNoSQL(table_chats, convId, new Document("msgs", chat_msgs));
+                return MongoUpdateDocumentInCollectionNoSQL(table_chats, convId, new Document("msgs", chat));
 
             }
 
         }
         return false;
     }
-
+/*
     protected String getMessageJson(String message) {
         String lastMatch = null;
         Matcher matcher = Pattern.compile("\\{.*?\\}").matcher(message);
@@ -1641,6 +1653,8 @@ public class DatabaseManager {
         return lastMatch;
     }
 
+
+ */
     protected boolean messageDeletionMongo(long channel_id, List<Map<String, Object>> the_messages, long msg_id) {
         MongoDeleteDataFromCollectionNoSQL(table_reactions, new Document("channel_id", channel_id)
                 .append("msg_id", msg_id).append("post_id", 0l));
@@ -1681,7 +1695,7 @@ public class DatabaseManager {
 
         return MongoAddDataToCollectionNoSQL(table_reactions, data,null);
     }
-
+/*
     protected Map<String, Boolean> calculateGroupSettings(long group_id) {
         Map<String, Boolean> settings = new HashMap<>();
         if (isSQL()) {
@@ -1799,6 +1813,8 @@ public class DatabaseManager {
     }
 
 
+
+
     protected boolean updateGroupLogs(long actor_id, long group_id, String log_message, LocalDateTime now,
                                     String log_type) {
         if (isSQL()) {
@@ -1832,6 +1848,8 @@ public class DatabaseManager {
         return false;
     }
 
+
+
     protected boolean handleMemberLeaveGroupMongo(long member_id, long group_id, String leave_type, String log_message,
                                                   LocalDateTime now, Document filter,
                                                   List<Map<String, Object>> all_members) {
@@ -1846,6 +1864,8 @@ public class DatabaseManager {
                 filter, new Document("members", all_members)) &&
                 updateGroupLogs(member_id, group_id, log_message, now, leave_type);
     }
+
+     */
 
 
     protected List<Map<String, Object>> MongoUpdateValueInCollection(List<Map<String, Object>> collection,
@@ -1879,6 +1899,8 @@ public class DatabaseManager {
         return mongoClient != null && mongoDatabase != null;
     }
 
+    /*
+
     protected boolean handleReactionsSQL(long channel_id, long message_id, long post_id, String reaction, long actor_id) {
         List<Object> addData = new ArrayList<>();
         addData.add(channel_id);
@@ -1898,11 +1920,12 @@ public class DatabaseManager {
             return false;
         }
 
-         */
+
 
         return addDataSQL(table_reactions, "channel_id, reaction, msg_id, post_id, member_id",
                 "?, ?, ?, ?, ?", addData);
     }
+    */
 
 
     public boolean handleEditMessage(long msg_id, String new_message, long channel_id, long group_id) {

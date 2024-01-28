@@ -35,17 +35,15 @@ public class ChatsController {
             return null;
         }
 
-        long channel_id;
-        int amount;
+        long friend_id;
         try {
-            channel_id = Long.parseLong(String.valueOf(data.get("channel_id")));
-            amount = Integer.parseInt(String.valueOf(data.get("amount")));
+            friend_id = Long.parseLong(String.valueOf(data.get("friend_id")));
         } catch (Exception e) {
             return null;
         }
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("messages", API.databaseHandler.getMessages(channel_id, 0l, amount));
+        claims.put("messages", API.databaseHandler.getMessages(user_id, friend_id));
 
         return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
     }
@@ -73,26 +71,19 @@ public class ChatsController {
             return null;
         }
 
-        long channel_id;
-        long other_member;
+        long friend_id;
         String message = String.valueOf(data.get("message"));
         try {
-            channel_id = Long.parseLong(String.valueOf(data.get("channel_id")));
-            other_member = Long.parseLong(String.valueOf(data.get("resv_id")));
+            friend_id = Long.parseLong(String.valueOf(data.get("friend_id")));
         } catch (Exception e) {
             return null;
         }
 
-        if (API.databaseHandler.addMessage(channel_id, user_id, other_member, message, 0L)) {
-            long message_id;
+        if (API.databaseHandler.addMessage(user_id, friend_id, message)) {
+            Map<String, List<Object>> message_data;
             try {
-                if (API.databaseManager.isSQL()) {
-                    message_id = Long.parseLong(String.valueOf(API.databaseHandler.getMessages(channel_id, 0L, 1)
-                            .get("msg_id")));
-
-                } else if (API.databaseManager.isMongo()) {
-                    message_id = (long) ((List<Map<String, Object>>) API.databaseHandler
-                            .getMessages(channel_id, 0l, 0).get("msgs").get(0)).get(0).get("msg_id");
+                if (API.databaseManager.isMongo()) {
+                    message_data = API.databaseHandler.getMessages(user_id, friend_id);
 
                 } else {
                     return null;
@@ -102,7 +93,7 @@ public class ChatsController {
             }
 
             Map<String, Object> claims = new HashMap<>();
-            claims.put("message_id", message_id);
+            claims.put("message_data", message_data);
 
             return API.jwtService.generateUserJwt(claims, user_sign_key, user_encryp_key);
         }
