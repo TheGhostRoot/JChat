@@ -1572,7 +1572,9 @@ public class DatabaseManager {
                 return false;
             }
 
-            List<Map<String, Object>> chat = !chat_msgs.isEmpty() && !chat_msgs.get(0).isEmpty() ? chat_msgs : chat_msgs2;
+            boolean isFirst = !chat_msgs.isEmpty() && !chat_msgs.get(0).isEmpty();
+            List<Map<String, Object>> chat = isFirst ? chat_msgs : chat_msgs2;
+
             if (chat.isEmpty() || chat.get(0).isEmpty()) {
                 return MongoAddDataToCollectionNoSQL(table_chats,
                         new Document("user1", sender_id)
@@ -1588,32 +1590,28 @@ public class DatabaseManager {
                 List<Object> all_ids = extract_all_content(chat, "msg_id");
 
                 LocalDateTime mostRecentDate = null;
-                Long resent_msg_id = null;
-                String old_message = "";
-                Long message_sender_id = null;
+                Long resent_msg_id;
+                String old_message;
+                Long message_sender_id;
 
                 try {
-                    for (Map<String, Object> map : chat) {
-                        LocalDateTime dateTime = LocalDateTime.parse(String.valueOf(map.get("send_at")));
-                        if (mostRecentDate == null || dateTime.isBefore(mostRecentDate)) {
-                            mostRecentDate = dateTime;
-                            resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
-                            old_message = String.valueOf(map.get("msg"));
-                            message_sender_id = Long.valueOf(String.valueOf(map.get("send_by")));
-                        }
-                    }
+                    Map<String, Object> map = chat.get(chat.size() - 1);
+                    mostRecentDate = LocalDateTime.parse(String.valueOf(map.get("send_at")),
+                                    DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH));
+                    resent_msg_id = Long.valueOf(String.valueOf(map.get("msg_id")));
+                    old_message = String.valueOf(map.get("msg"));
+                    message_sender_id = Long.valueOf(String.valueOf(map.get("send_by")));
                 } catch (Exception e) {
                     return false;
                 }
 
                 if (message_sender_id == sender_id) {
                     try {
-                        String new_message = old_message + message.substring(0, message.length() - 2);
-
+                        String new_message = old_message +" " + message;
                         for (int i = 0; i < chat.size(); i++) {
                             Map<String, Object> current_msg = chat.get(i);
-                            if (Long.valueOf(String.valueOf(current_msg.get("send_by"))) == sender_id &&
-                                    Long.valueOf(String.valueOf(current_msg.get("msg_id"))) == resent_msg_id) {
+                            if (Long.parseLong(String.valueOf(current_msg.get("send_by"))) == sender_id &&
+                                    Long.parseLong(String.valueOf(current_msg.get("msg_id"))) == resent_msg_id) {
                                 current_msg.put("msg", new_message);
                                 break;
                             }
@@ -1632,7 +1630,8 @@ public class DatabaseManager {
                     chat.add(new_msg);
 
                 }
-                return MongoUpdateDocumentInCollectionNoSQL(table_chats, convId, new Document("msgs", chat));
+
+                return MongoUpdateDocumentInCollectionNoSQL(table_chats, isFirst ? convId : convId2, new Document("msgs", chat));
 
             }
 

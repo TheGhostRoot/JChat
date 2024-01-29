@@ -6,9 +6,11 @@ import org.bson.Document;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.Date;
 
 public class DatabaseHandler {
 
@@ -1199,7 +1201,18 @@ public class DatabaseHandler {
             } else {
                 List<Map<String, Object>> messages = (List<Map<String, Object>>) transformed.get("msgs").get(0);
 
-                messages.sort((map1, map2) -> ((LocalDateTime) map2.get("send_at")).compareTo(((LocalDateTime) map1.get("send_at"))));
+                messages.sort((map1, map2) -> {
+                    Date date1 = (Date) map1.get("send_at");
+                    Date date2 = (Date) map2.get("send_at");
+
+                    LocalDateTime localDateTime1 = date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    LocalDateTime localDateTime2 = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+                    return localDateTime2.compareTo(localDateTime1);
+                });
+
+                Collections.reverse(messages);
+
                 transformed.put("msgs", Collections.singletonList(messages));
 
                 return transformed;
